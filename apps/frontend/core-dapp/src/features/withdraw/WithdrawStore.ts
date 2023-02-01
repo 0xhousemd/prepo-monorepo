@@ -46,7 +46,7 @@ export class WithdrawStore {
 
   // TODO: preCTTokenStore's abi is outdated. Update to use withdrawFee instead of redepmtionFee when we update collateral contract
   // returns withdrawalAmount * fee in Collateral token's decimals
-  get withdrawalFees(): BigNumber | undefined {
+  get withdrawalFeesAmountBN(): BigNumber | undefined {
     const { redemptionFee, feeDenominator } = this.root.preCTTokenStore
     if (
       this.withdrawalAmountBN === undefined ||
@@ -57,14 +57,17 @@ export class WithdrawStore {
     return this.withdrawalAmountBN.mul(redemptionFee).div(feeDenominator)
   }
 
-  get receivedAmount(): string | undefined {
+  get receivedAmount(): number | undefined {
     if (this.receivedAmountBN === undefined) return undefined
-    return this.root.preCTTokenStore.formatUnits(this.receivedAmountBN)
+    const amountString = this.root.preCTTokenStore.formatUnits(this.receivedAmountBN)
+    if (amountString === undefined) return undefined
+    return +amountString
   }
 
   get receivedAmountBN(): BigNumber | undefined {
-    if (this.withdrawalAmountBN === undefined || this.withdrawalFees === undefined) return undefined
-    return this.withdrawalAmountBN.sub(this.withdrawalFees)
+    if (this.withdrawalAmountBN === undefined || this.withdrawalFeesAmountBN === undefined)
+      return undefined
+    return this.withdrawalAmountBN.sub(this.withdrawalFeesAmountBN)
   }
 
   get withdrawUILoading(): boolean {
@@ -75,5 +78,11 @@ export class WithdrawStore {
       this.withdrawalAmountBN === undefined ||
       this.isLoadingBalance
     )
+  }
+
+  get withdrawalFee(): number | undefined {
+    const { redemptionFee, feeDenominator } = this.root.preCTTokenStore
+    if (redemptionFee === undefined || feeDenominator === undefined) return undefined
+    return redemptionFee.toNumber() / feeDenominator.toNumber()
   }
 }

@@ -4,12 +4,12 @@ import TransactionSummary from '../../components/TransactionSummary/TransactionS
 import { Callback } from '../../types/common.types'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { RowData } from '../../components/Table'
-import { EstimatedWithdrawAmount } from '../definitions'
+import { EstimatedWithdrawalReceivedAmount } from '../definitions'
 
 const WithdrawTransactionSummary: React.FC = () => {
   const router = useRouter()
   const { preCTTokenStore, withdrawStore } = useRootStore()
-  const { receivedAmount, withdrawalDisabled, withdrawUILoading } = withdrawStore
+  const { receivedAmount, withdrawalDisabled, withdrawUILoading, withdrawalFee } = withdrawStore
   const { withdrawHash } = preCTTokenStore
 
   const onCancel = (): void => {
@@ -35,7 +35,7 @@ const WithdrawTransactionSummary: React.FC = () => {
   const withdrawTransactionSummary: RowData[] = [
     {
       label: 'Estimated Received Amount',
-      tooltip: <EstimatedWithdrawAmount />,
+      tooltip: <EstimatedWithdrawalReceivedAmount fee={withdrawalFee} />,
       amount: receivedAmount || '0',
     },
   ]

@@ -20,7 +20,7 @@ const Wrapper = styled(Flex)`
 `
 const SummaryRecord: React.FC<Props> = ({ children, label, tooltip }) => (
   <Wrapper alignItems="center" justifyContent="space-between" width="100%">
-    <Flex gap={8}>
+    <Flex gap={4}>
       <LabelText>{label}</LabelText>
       {tooltip !== undefined && (
         <Tooltip overlay={tooltip}>

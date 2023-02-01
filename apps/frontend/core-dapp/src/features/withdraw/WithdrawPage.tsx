@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { CurrencyInput } from 'prepo-ui'
+import WithdrawSummary from './WithdrawSummary'
 import WithdrawTransactionSummary from './WithdrawTransactionSummary'
 import { useRootStore } from '../../context/RootStoreProvider'
 import PageCard from '../../components/PageCard'
@@ -21,6 +22,7 @@ const WithdrawPage: React.FC = () => {
         showBalance
       />
       <WithdrawTransactionSummary />
+      <WithdrawSummary />
     </PageCard>
   )
 }
