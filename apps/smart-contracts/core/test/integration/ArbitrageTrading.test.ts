@@ -1181,7 +1181,7 @@ describe('=> Arbitrage Trading', () => {
         fakeArbitrageBroker = await fakeArbitrageBrokerFixture()
       })
 
-      it("calls 'executeTrade()' if profit > min", async () => {
+      it("calls 'executeTrade()' and sleep() if profit > min", async () => {
         const attachedBroker = attachArbitrageBroker(ethers.provider, fakeArbitrageBroker.address)
         const testEstimate = {
           tradeSize: parseEther('2'),
@@ -1206,10 +1206,10 @@ describe('=> Arbitrage Trading', () => {
         expect(mockExecuteTrade.firstCall.args[2]).eq(attachedBroker)
         expect(mockExecuteTrade.firstCall.args[3]).eq(core.markets[TEST_NAME_SUFFIX].address)
         expect(mockExecuteTrade.firstCall.args[4]).eq(testEstimate)
-        expect(mockSleep.callCount).eq(0)
+        expect(mockSleep.callCount).eq(1)
       })
 
-      it("calls 'executeTrade()' if profit = min", async () => {
+      it("calls 'executeTrade()' and sleep() if profit = min", async () => {
         const attachedBroker = attachArbitrageBroker(ethers.provider, fakeArbitrageBroker.address)
         const testEstimate = {
           tradeSize: parseEther('2'),
@@ -1234,10 +1234,10 @@ describe('=> Arbitrage Trading', () => {
         expect(mockExecuteTrade.firstCall.args[2]).eq(attachedBroker)
         expect(mockExecuteTrade.firstCall.args[3]).eq(core.markets[TEST_NAME_SUFFIX].address)
         expect(mockExecuteTrade.firstCall.args[4]).eq(testEstimate)
-        expect(mockSleep.callCount).eq(0)
+        expect(mockSleep.callCount).eq(1)
       })
 
-      it("calls 'sleep()' if profit < min", async () => {
+      it("doesn't call 'executeTrade()' if profit < min", async () => {
         const attachedBroker = attachArbitrageBroker(ethers.provider, fakeArbitrageBroker.address)
         const testEstimate = {
           tradeSize: parseEther('2'),

@@ -394,11 +394,9 @@ export const executeTradeIfProfitable = async (
   minNetProfit: BigNumber,
   delay: number
 ): Promise<void> => {
-  if (estimate.profit.gte(minNetProfit)) {
-    executeTrade(signer, arbitrageStrategy, arbitrageBroker, marketAddress, estimate)
-  } else {
-    await sleep(delay)
-  }
+  if (estimate.profit.gte(minNetProfit))
+    await executeTrade(signer, arbitrageStrategy, arbitrageBroker, marketAddress, estimate)
+  await sleep(delay)
 }
 
 export const arbitragePools = async (
