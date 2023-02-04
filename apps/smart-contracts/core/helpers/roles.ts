@@ -1,6 +1,6 @@
 import { MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { batchGrantAndAcceptRoles } from '../test/utils'
+import { utils } from 'prepo-hardhat'
 import {
   Collateral,
   DepositHook,
@@ -9,6 +9,8 @@ import {
   TokenSender,
   WithdrawHook,
 } from '../types/generated'
+
+const { batchGrantAndAcceptRoles } = utils
 
 export async function assignCollateralRoles(
   rootAdmin: SignerWithAddress,

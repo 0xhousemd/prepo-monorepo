@@ -5,6 +5,7 @@ import { MerkleTree } from 'merkletreejs'
 import keccak256 from 'keccak256'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { FakeContract, MockContract, SmockContractBase } from '@defi-wonderland/smock'
+import { FEE_DENOMINATOR } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import { expect } from 'chai'
 import { id } from 'ethers/lib/utils'
@@ -12,12 +13,7 @@ import { IDepositTradeHelper } from '../types/generated'
 
 const { getPermitSignature } = utils
 
-export const FEE_DENOMINATOR = 1000000
-export const COLLATERAL_FEE_LIMIT = 100000
-export const MARKET_FEE_LIMIT = 100000
-export const MAX_PAYOUT = parseEther('1')
 export const DEFAULT_TIME_DELAY = 5
-export const PERCENT_DENOMINATOR = 1000000
 
 export function calculateFee(amount: BigNumber, factor: BigNumber): BigNumber {
   return amount.mul(factor).div(FEE_DENOMINATOR)
@@ -60,30 +56,6 @@ export function hashAddress(address: string): Buffer {
 export function generateMerkleTree(addresses: string[]): MerkleTree {
   const leaves = addresses.map(hashAddress)
   return new MerkleTree(leaves, keccak256, { sortPairs: true })
-}
-
-export async function grantAndAcceptRole(
-  contract: Contract | SmockContractBase<Contract>,
-  admin: SignerWithAddress,
-  nominee: SignerWithAddress,
-  role: string
-): Promise<void> {
-  await contract.connect(admin).grantRole(role, nominee.address)
-  await contract.connect(nominee).acceptRole(role)
-}
-
-export async function batchGrantAndAcceptRoles(
-  contract: Contract | SmockContractBase<Contract>,
-  admin: SignerWithAddress,
-  nominee: SignerWithAddress,
-  roleGetters: Promise<string>[]
-): Promise<void> {
-  const promises: Promise<void>[] = []
-  const roles = await Promise.all(roleGetters)
-  roles.forEach((role) => {
-    promises.push(grantAndAcceptRole(contract, admin, nominee, role))
-  })
-  await Promise.all(promises)
 }
 
 export async function getSignerForContract(

@@ -9,12 +9,12 @@ dotenv.config({
   path: '../.env',
 })
 
-const deployFunction: DeployFunction = async function deployDepositRecord(
+const deployFunction: DeployFunction = async function deployManagerWithdrawHook(
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
   await deployNonUpgradeableContract(
-    'DepositRecord',
-    DEPLOYMENT_NAMES.preUSDC.depositRecord.name,
+    'ManagerWithdrawHook',
+    DEPLOYMENT_NAMES.preUSDC.managerWithdrawHook.name,
     [],
     hre
   )
@@ -22,4 +22,4 @@ const deployFunction: DeployFunction = async function deployDepositRecord(
 
 export default deployFunction
 
-deployFunction.tags = ['DepositRecord']
+deployFunction.tags = ['ManagerWithdrawHook']

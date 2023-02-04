@@ -7,7 +7,7 @@ import { utils } from 'prepo-hardhat'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { withdrawHookFixture } from '../fixtures/HookFixture'
 import { smockDepositRecordFixture } from '../fixtures/DepositRecordFixture'
-import { grantAndAcceptRole, batchGrantAndAcceptRoles, setAccountBalance } from '../utils'
+import { setAccountBalance } from '../utils'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
 import { smockTokenSenderFixture } from '../fixtures/TokenSenderFixture'
@@ -21,7 +21,7 @@ import {
 
 chai.use(smock.matchers)
 
-const { getLastTimestamp, setNextTimestamp } = utils
+const { getLastTimestamp, setNextTimestamp, grantAndAcceptRole, batchGrantAndAcceptRoles } = utils
 
 describe('=> WithdrawHook', () => {
   let withdrawHook: WithdrawHook

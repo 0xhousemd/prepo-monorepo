@@ -11,6 +11,7 @@ export type ImportantKeywords =
   | 'UNIV3_FACTORY'
   | 'UNIV3_POSITION_MANAGER'
   | 'UNIV3_SWAP_ROUTER'
+  | 'PPO'
 
 export type ImportantAddresses = {
   [key in ImportantKeywords]?: ImportantAddress
@@ -37,6 +38,9 @@ export const PREPO_ADDRESSES: ImportantAddresses = {
   UNIV3_SWAP_ROUTER: {
     arbitrumTestnet: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
     arbitrumOne: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  },
+  PPO: {
+    arbitrumOne: '0xB40DBBb7931Cfef8Be73AEEC6c67d3809bD4600B',
   },
 }
 

@@ -4,8 +4,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { parseEther } from 'ethers/lib/utils'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { ZERO_ADDRESS } from 'prepo-constants'
+import { utils } from 'prepo-hardhat'
 import { depositHookFixture, fakeAccountListFixture } from '../fixtures/HookFixture'
-import { setAccountBalance, grantAndAcceptRole, testRoleConstants } from '../utils'
+import { setAccountBalance, testRoleConstants } from '../utils'
 import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
@@ -23,6 +24,8 @@ import {
 } from '../../types/generated'
 
 chai.use(smock.matchers)
+
+const { grantAndAcceptRole } = utils
 const snapshotter = new Snapshotter()
 
 describe('=> DepositHook', () => {

@@ -4,30 +4,27 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { BigNumber, Contract } from 'ethers'
 import { formatBytes32String } from 'ethers/lib/utils'
 import { FakeContract, smock } from '@defi-wonderland/smock'
-import { DEFAULT_ADMIN_ROLE, ZERO_ADDRESS } from 'prepo-constants'
+import {
+  DEFAULT_ADMIN_ROLE,
+  FEE_DENOMINATOR,
+  MARKET_FEE_LIMIT,
+  MAX_PAYOUT,
+  ZERO_ADDRESS,
+} from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { LongShortTokenAttachFixture } from '../fixtures/LongShortTokenFixture'
 import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
 import { fakeMintHookFixture } from '../fixtures/HookFixture'
-import {
-  MAX_PAYOUT,
-  calculateFee,
-  MARKET_FEE_LIMIT,
-  FEE_DENOMINATOR,
-  getLastTimestamp,
-  batchGrantAndAcceptRoles,
-  revertsIfNotRoleHolder,
-  testRoleConstants,
-} from '../utils'
+import { calculateFee, getLastTimestamp, revertsIfNotRoleHolder, testRoleConstants } from '../utils'
 import { createMarket } from '../../helpers'
 import { CreateMarketParams } from '../../types'
 import { PrePOMarketFactory, PrePOMarket, LongShortToken, TestERC20 } from '../../types/generated'
 
 chai.use(smock.matchers)
 
-const { nowPlusMonths } = utils
+const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
 
 describe('=> prePOMarket', () => {
   let collateralToken: TestERC20

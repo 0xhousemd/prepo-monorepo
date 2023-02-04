@@ -4,7 +4,14 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { id, parseEther, parseUnits } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { FakeContract, smock } from '@defi-wonderland/smock'
-import { DEFAULT_ADMIN_ROLE, ZERO_ADDRESS } from 'prepo-constants'
+import {
+  COLLATERAL_FEE_LIMIT,
+  DEFAULT_ADMIN_ROLE,
+  FEE_DENOMINATOR,
+  PERCENT_DENOMINATOR,
+  ZERO_ADDRESS,
+} from 'prepo-constants'
+import { utils } from 'prepo-hardhat'
 import {
   fakeAccountListFixture,
   fakeDepositHookFixture,
@@ -14,13 +21,6 @@ import {
 import { collateralFixture } from '../fixtures/CollateralFixture'
 import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
-import {
-  FEE_DENOMINATOR,
-  COLLATERAL_FEE_LIMIT,
-  grantAndAcceptRole,
-  PERCENT_DENOMINATOR,
-  batchGrantAndAcceptRoles,
-} from '../utils'
 import {
   AccountList,
   Collateral,
@@ -32,6 +32,8 @@ import {
 } from '../../types/generated'
 
 chai.use(smock.matchers)
+
+const { batchGrantAndAcceptRoles, grantAndAcceptRole } = utils
 
 describe('=> Collateral', () => {
   let deployer: SignerWithAddress

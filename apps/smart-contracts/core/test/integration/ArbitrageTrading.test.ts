@@ -13,7 +13,6 @@ import {
 } from '../fixtures/ArbitrageBrokerFixture'
 import { create2DeployerFixture } from '../fixtures/Create2DeployerFixtures'
 import { Snapshotter } from '../snapshots'
-import { batchGrantAndAcceptRoles } from '../utils'
 import { MockCore } from '../../harnesses/mock'
 import { assignCollateralRoles } from '../../helpers/roles'
 import {
@@ -58,7 +57,7 @@ import {
   getWeiPricesFromPools,
 } from '../../scripts/ArbitragePools'
 
-const { nowPlusMonths } = utils
+const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
 
 chai.use(smock.matchers)
 const snapshotter = new Snapshotter()
@@ -148,12 +147,15 @@ describe('=> Arbitrage Trading', () => {
      * for the Long and Short tokens.
      */
     univ3Factory = await attachUniV3Factory(
+      ethers,
       getPrePOAddressForNetwork('UNIV3_FACTORY', 'arbitrumOne')
     )
     positionManager = await attachNonfungiblePositionManager(
+      ethers,
       getPrePOAddressForNetwork('UNIV3_POSITION_MANAGER', 'arbitrumOne')
     )
     swapRouter = await attachSwapRouter(
+      ethers,
       getPrePOAddressForNetwork('UNIV3_SWAP_ROUTER', 'arbitrumOne')
     )
     // Only need to assign deposit fee since test is only using deposit
@@ -542,11 +544,13 @@ describe('=> Arbitrage Trading', () => {
 
       it('returns wei prices for pools', async () => {
         const expectedLongPoolPrice = await getPoolPriceInWei(
+          ethers,
           univ3Factory,
           core.markets[TEST_NAME_SUFFIX].longToken.address,
           core.collateral.address
         )
         const expectedShortPoolPrice = await getPoolPriceInWei(
+          ethers,
           univ3Factory,
           core.markets[TEST_NAME_SUFFIX].shortToken.address,
           core.collateral.address

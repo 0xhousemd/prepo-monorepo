@@ -1,11 +1,11 @@
-import { BigNumber } from 'ethers'
-import { ethers } from 'hardhat'
+import { BigNumber, constants } from 'ethers'
 import JSBI from 'jsbi'
 import { POOL_FEE_TIER } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import { MockContract } from '@defi-wonderland/smock'
 import { parseEther } from '@ethersproject/units'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
 import { abi as UNIV3_FACTORY_ABI } from '@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json'
 import { abi as UNIV3_POOL_ABI } from '@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json'
 import { abi as SWAP_ROUTER_ABI } from '@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
@@ -26,21 +26,31 @@ import { IncreaseLiquidityEvent } from '../types/generated/externalArtifacts/INo
 
 const { nowPlusMonths } = utils
 
-export function attachUniV3Factory(address: string): Promise<UniswapV3Factory> {
+export function attachUniV3Factory(
+  ethers: HardhatEthersHelpers,
+  address: string
+): Promise<UniswapV3Factory> {
   return ethers.getContractAt(UNIV3_FACTORY_ABI, address)
 }
 
-export function attachUniV3Pool(address: string): Promise<UniswapV3Pool> {
+export function attachUniV3Pool(
+  ethers: HardhatEthersHelpers,
+  address: string
+): Promise<UniswapV3Pool> {
   return ethers.getContractAt(UNIV3_POOL_ABI, address)
 }
 
 export function attachNonfungiblePositionManager(
+  ethers: HardhatEthersHelpers,
   address: string
 ): Promise<NonfungiblePositionManager> {
   return ethers.getContractAt(POSITION_MANAGER_ABI, address)
 }
 
-export function attachSwapRouter(address: string): Promise<SwapRouter> {
+export function attachSwapRouter(
+  ethers: HardhatEthersHelpers,
+  address: string
+): Promise<SwapRouter> {
   return ethers.getContractAt(SWAP_ROUTER_ABI, address)
 }
 
@@ -149,10 +159,8 @@ export async function getAmountOutForExactInputSingle(
     sqrtPriceLimitX96: 0,
   }
   // While the swap will be simulated, the swap needs to be approved by the funder
-  if (
-    (await tokenIn.allowance(funder.address, swapRouter.address)).lt(ethers.constants.MaxUint256)
-  ) {
-    await tokenIn.connect(funder).approve(swapRouter.address, ethers.constants.MaxUint256)
+  if ((await tokenIn.allowance(funder.address, swapRouter.address)).lt(constants.MaxUint256)) {
+    await tokenIn.connect(funder).approve(swapRouter.address, constants.MaxUint256)
   }
   return swapRouter.connect(funder).callStatic.exactInputSingle(simulationParams)
 }
@@ -183,35 +191,35 @@ export async function getAmountInForExactOutputSingle(
     recipient,
     deadline,
     amountOut,
-    amountInMaximum: ethers.constants.MaxUint256,
+    amountInMaximum: constants.MaxUint256,
     sqrtPriceLimitX96: 0,
   }
   // While the swap will be simulated, the swap needs to be approved by the funder
-  if (
-    (await tokenIn.allowance(funder.address, swapRouter.address)).lt(ethers.constants.MaxUint256)
-  ) {
-    await tokenIn.connect(funder).approve(swapRouter.address, ethers.constants.MaxUint256)
+  if ((await tokenIn.allowance(funder.address, swapRouter.address)).lt(constants.MaxUint256)) {
+    await tokenIn.connect(funder).approve(swapRouter.address, constants.MaxUint256)
   }
   return swapRouter.connect(funder).callStatic.exactOutputSingle(simulationParams)
 }
 
 export async function getPoolPriceInSqrtX96(
+  ethers: HardhatEthersHelpers,
   univ3Factory: UniswapV3Factory,
   token0: string,
   token1: string
 ): Promise<BigNumber> {
   const poolAddress = await univ3Factory.getPool(token0, token1, POOL_FEE_TIER)
-  const pool = await attachUniV3Pool(poolAddress)
+  const pool = await attachUniV3Pool(ethers, poolAddress)
   const slot0 = await pool.slot0()
   return slot0.sqrtPriceX96
 }
 
 export async function getPoolPriceInWei(
+  ethers: HardhatEthersHelpers,
   univ3Factory: UniswapV3Factory,
   token0: string,
   token1: string
 ): Promise<BigNumber> {
-  const sqrtPriceX96 = await getPoolPriceInSqrtX96(univ3Factory, token0, token1)
+  const sqrtPriceX96 = await getPoolPriceInSqrtX96(ethers, univ3Factory, token0, token1)
   return getWeiFromSqrtX96(sqrtPriceX96)
 }
 

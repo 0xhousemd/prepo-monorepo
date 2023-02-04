@@ -7,7 +7,7 @@ import { parseEther } from '@ethersproject/units'
 import { id } from 'ethers/lib/utils'
 import { utils } from 'prepo-hardhat'
 import { Snapshotter } from '../snapshots'
-import { batchGrantAndAcceptRoles, revertsIfNotRoleHolder } from '../utils'
+import { revertsIfNotRoleHolder } from '../utils'
 import { arbitrageBrokerFixture } from '../fixtures/ArbitrageBrokerFixture'
 import { fakeLongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
 import { fakePrePOMarketFixture } from '../fixtures/PrePOMarketFixture'
@@ -18,7 +18,7 @@ import { PromiseOrValue } from '../../types/generated/common'
 
 chai.use(smock.matchers)
 const snapshotter = new Snapshotter()
-const { nowPlusMonths } = utils
+const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
 
 describe('=> ArbitrageBroker', () => {
   let core: MockCore

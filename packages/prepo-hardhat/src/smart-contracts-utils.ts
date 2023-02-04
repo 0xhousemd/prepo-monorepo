@@ -212,6 +212,30 @@ function generateAddressLessThan(
   }
 }
 
+export async function grantAndAcceptRole(
+  contract: Contract | SmockContractBase<Contract>,
+  admin: SignerWithAddress,
+  nominee: SignerWithAddress,
+  role: string
+): Promise<void> {
+  await contract.connect(admin).grantRole(role, nominee.address)
+  await contract.connect(nominee).acceptRole(role)
+}
+
+export async function batchGrantAndAcceptRoles(
+  contract: Contract | SmockContractBase<Contract>,
+  admin: SignerWithAddress,
+  nominee: SignerWithAddress,
+  roleGetters: Promise<string>[]
+): Promise<void> {
+  const promises: Promise<void>[] = []
+  const roles = await Promise.all(roleGetters)
+  roles.forEach((role) => {
+    promises.push(grantAndAcceptRole(contract, admin, nominee, role))
+  })
+  await Promise.all(promises)
+}
+
 export const utils = {
   expandToDecimals,
   expandTo6Decimals,
@@ -229,4 +253,6 @@ export const utils = {
   mineBlock,
   getPermitSignature,
   generateAddressLessThan,
+  grantAndAcceptRole,
+  batchGrantAndAcceptRoles,
 }

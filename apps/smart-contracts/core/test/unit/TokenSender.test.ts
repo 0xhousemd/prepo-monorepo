@@ -3,16 +3,18 @@ import chai, { expect } from 'chai'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { id } from 'ethers/lib/utils'
 import { ZERO_ADDRESS } from 'prepo-constants'
+import { utils } from 'prepo-hardhat'
 import { BigNumber } from 'ethers'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { tokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
-import { grantAndAcceptRole } from '../utils'
 import { fakeTestUintValueFixture } from '../fixtures/TestUintValueFixture'
 import { fakeAccountListFixture } from '../fixtures/HookFixture'
 import { AccountList, TestERC20, TestUintValue, TokenSender } from '../../types/generated'
 
 chai.use(smock.matchers)
+
+const { grantAndAcceptRole } = utils
 
 describe('=> TokenSender', () => {
   const MULTIPLIER_DENOMINATOR = 10000

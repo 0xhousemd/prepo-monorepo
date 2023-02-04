@@ -41,7 +41,13 @@ export abstract class Base {
     recipient: string,
     collateralAmount: BigNumber
   ): Promise<BigNumber> {
-    return mintCollateralFromBaseToken(funder, recipient, collateralAmount, this.collateral)
+    return mintCollateralFromBaseToken(
+      this.ethers,
+      funder,
+      recipient,
+      collateralAmount,
+      this.collateral
+    )
   }
 
   public async mintLSFromCollateral(
@@ -49,7 +55,7 @@ export abstract class Base {
     lsAmount: BigNumber,
     marketSuffix: string
   ): Promise<void> {
-    await mintLSFromCollateral(funder, lsAmount, this.markets[marketSuffix])
+    await mintLSFromCollateral(this.ethers, funder, lsAmount, this.markets[marketSuffix])
   }
 
   public mintLSFromBaseToken(
@@ -58,7 +64,7 @@ export abstract class Base {
     lsAmount: BigNumber,
     marketSuffix: string
   ): Promise<BigNumber> {
-    return mintLSFromBaseToken(funder, recipient, lsAmount, this.markets[marketSuffix])
+    return mintLSFromBaseToken(this.ethers, funder, recipient, lsAmount, this.markets[marketSuffix])
   }
 
   public async generateLongShortSalts(
@@ -104,7 +110,7 @@ export abstract class Base {
       this.collateral.address,
       POOL_FEE_TIER
     )
-    const longPool = await attachUniV3Pool(longPoolAddress)
+    const longPool = await attachUniV3Pool(this.ethers, longPoolAddress)
     await longPool.initialize(getNearestSqrtX96FromWei(approxLongPoolWeiPrice))
     await univ3Factory.createPool(
       this.markets[tokenNameSuffix].shortToken.address,
@@ -116,7 +122,7 @@ export abstract class Base {
       this.collateral.address,
       POOL_FEE_TIER
     )
-    const shortPool = await attachUniV3Pool(shortPoolAddress)
+    const shortPool = await attachUniV3Pool(this.ethers, shortPoolAddress)
     await shortPool.initialize(getNearestSqrtX96FromWei(approxShortPoolWeiPrice))
   }
 }

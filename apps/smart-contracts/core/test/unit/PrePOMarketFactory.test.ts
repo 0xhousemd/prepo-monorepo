@@ -8,12 +8,12 @@ import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { LongShortTokenAttachFixture } from '../fixtures/LongShortTokenFixture'
 import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
-import { batchGrantAndAcceptRoles, revertsIfNotRoleHolder, testRoleConstants } from '../utils'
+import { revertsIfNotRoleHolder, testRoleConstants } from '../utils'
 import { createMarket } from '../../helpers'
 import { CreateMarketParams } from '../../types'
 import { PrePOMarketFactory, TestERC20 } from '../../types/generated'
 
-const { nowPlusMonths } = utils
+const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
 
 describe('=> PrePOMarketFactory', () => {
   let prePOMarketFactory: PrePOMarketFactory

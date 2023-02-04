@@ -4,15 +4,17 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { id, parseEther } from 'ethers/lib/utils'
 import { Contract } from 'ethers'
 import { MockContract, FakeContract, smock } from '@defi-wonderland/smock'
-import { ZERO_ADDRESS } from 'prepo-constants'
+import { PERCENT_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
+import { utils } from 'prepo-hardhat'
 import { managerWithdrawHookFixture } from '../fixtures/HookFixture'
 import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeDepositRecordFixture } from '../fixtures/DepositRecordFixture'
-import { grantAndAcceptRole, PERCENT_DENOMINATOR } from '../utils'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
 import { Collateral, DepositRecord, ManagerWithdrawHook, TestERC20 } from '../../types/generated'
 
 chai.use(smock.matchers)
+
+const { grantAndAcceptRole } = utils
 
 describe('=> ManagerWithdrawHook', () => {
   let deployer: SignerWithAddress

@@ -1,12 +1,11 @@
 import { BigNumber, BigNumberish } from 'ethers'
-import { ZERO_ADDRESS, USDC_DENOMINATOR } from 'prepo-constants'
+import { FEE_DENOMINATOR, USDC_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
 import { MockContract } from '@defi-wonderland/smock'
 import { formatEther, parseEther, formatUnits } from '@ethersproject/units'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { ethers } from 'hardhat'
+import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
 import { findMarketAddedEvent, findTransferEvent } from './events'
 import { CreateMarketParams, CreateMarketResult } from '../types'
-import { FEE_DENOMINATOR } from '../test/utils'
 import { Collateral, DepositHook, DepositRecord, ERC20, PrePOMarket } from '../types/generated'
 
 export * from './events'
@@ -61,6 +60,7 @@ export async function getCollateralAmount(
 }
 
 export async function depositRecordExists(
+  ethers: HardhatEthersHelpers,
   collateral: Collateral | MockContract<Collateral>
 ): Promise<boolean> {
   const depositHookAddress = await collateral.getDepositHook()
@@ -110,11 +110,12 @@ export async function checkGlobalNetDepositCap(
 }
 
 export async function checkDepositCap(
+  ethers: HardhatEthersHelpers,
   recipient: string,
   baseTokenAmountAfterFee: BigNumber,
   collateral: Collateral | MockContract<Collateral>
 ): Promise<void> {
-  if (await depositRecordExists(collateral)) {
+  if (await depositRecordExists(ethers, collateral)) {
     const depositHook = (await ethers.getContractAt(
       'DepositHook',
       await collateral.getDepositHook()
@@ -130,13 +131,14 @@ export async function checkDepositCap(
 
 /// @dev Assumes account has sufficient Base Token to fund Collateral deposit
 export async function mintCollateralFromBaseToken(
+  ethers: HardhatEthersHelpers,
   funder: SignerWithAddress,
   recipient: string,
   collateralAmount: BigNumber,
   collateral: Collateral | MockContract<Collateral>
 ): Promise<BigNumber> {
   const baseTokenAmountAfterFee = getBaseTokenAmountAfterFee(collateralAmount, USDC_DENOMINATOR)
-  await checkDepositCap(recipient, baseTokenAmountAfterFee, collateral)
+  await checkDepositCap(ethers, recipient, baseTokenAmountAfterFee, collateral)
   const baseToken = (await ethers.getContractAt('ERC20', await collateral.getBaseToken())) as ERC20
   const baseTokenAmount = await getBaseTokenAmount(collateral, collateralAmount)
   await baseToken.connect(funder).approve(collateral.address, baseTokenAmount)
@@ -150,6 +152,7 @@ export async function mintCollateralFromBaseToken(
  * since there is no market minting fee.
  */
 export async function mintLSFromCollateral(
+  ethers: HardhatEthersHelpers,
   funder: SignerWithAddress,
   lsAmount: BigNumber,
   market: PrePOMarket | MockContract<PrePOMarket>
@@ -163,6 +166,7 @@ export async function mintLSFromCollateral(
 }
 
 export async function mintLSFromBaseToken(
+  ethers: HardhatEthersHelpers,
   funder: SignerWithAddress,
   recipient: SignerWithAddress,
   lsAmount: BigNumber,
@@ -173,11 +177,12 @@ export async function mintLSFromBaseToken(
     await market.getCollateral()
   )) as Collateral
   const collateralMinted = await mintCollateralFromBaseToken(
+    ethers,
     funder,
     recipient.address,
     lsAmount,
     collateral
   )
-  await mintLSFromCollateral(recipient, collateralMinted, market)
+  await mintLSFromCollateral(ethers, recipient, collateralMinted, market)
   return collateralMinted
 }

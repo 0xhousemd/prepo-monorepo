@@ -32,6 +32,57 @@ export const DEPLOYMENT_NAMES = {
   miniSalesFlag: {
     name: 'MiniSalesFlag',
   },
+  preUSDC: {
+    name: 'preUSDC',
+    depositHook: {
+      name: 'preUSDC-DepositHook',
+      allowlist: {
+        name: 'preUSDC-DepositHook-Allowlist',
+      },
+      depositRecord: {
+        name: 'preUSDC-DepositRecord',
+      },
+      tokenSender: {
+        name: 'PPOTokenSender',
+      },
+    },
+    managerWithdrawHook: {
+      name: 'preUSDC-ManagerWithdrawHook',
+      depositRecord: {
+        name: 'preUSDC-DepositRecord',
+      },
+    },
+    withdrawHook: {
+      name: 'preUSDC-WithdrawHook',
+      depositRecord: {
+        name: 'preUSDC-DepositRecord',
+      },
+      tokenSender: {
+        name: 'PPOTokenSender',
+      },
+    },
+    depositRecord: {
+      name: 'preUSDC-DepositRecord',
+      allowedMsgSenders: {
+        name: 'preUSDC-DepositRecord-AllowedMsgSenders',
+      },
+    },
+  },
+  tokenSender: {
+    name: 'PPOTokenSender',
+    allowedMsgSenders: {
+      name: 'PPOTokenSender-AllowedMsgSenders',
+    },
+  },
+  depositTradeHelper: {
+    name: 'DepositTradeHelper',
+  },
+  arbitrageBroker: {
+    name: 'ArbitrageBroker',
+  },
+  prePOMarketFactory: {
+    name: 'PrePOMarketFactory',
+  },
 } as const
 
 export type DeploymentNames = typeof DEPLOYMENT_NAMES
