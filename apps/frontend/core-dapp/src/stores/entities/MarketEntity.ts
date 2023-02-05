@@ -138,7 +138,7 @@ export class MarketEntity
     reaction(
       () => ({
         historicalData: this.historicalData,
-        selectedTimeframe: this.root.tradeStore.selectedTimeframe,
+        selectedTimeframe: this.root.tradeStore?.selectedTimeframe,
       }),
       ({ historicalData, selectedTimeframe }) => {
         runInAction(() => {
@@ -332,7 +332,7 @@ export class MarketEntity
 
   get historicalDataDateRange(): DateRange {
     return getDateRangeFromHours(
-      Math.min(getProjectStartedHours(), timeframeMap[this.root.tradeStore.selectedTimeframe])
+      Math.min(getProjectStartedHours(), timeframeMap[this.root.tradeStore?.selectedTimeframe])
     )
   }
 

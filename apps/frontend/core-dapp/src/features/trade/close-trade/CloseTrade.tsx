@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { CurrencyInput, spacingIncrement } from 'prepo-ui'
 import styled from 'styled-components'
+import ClosePositionButton from './ClosePositionButton'
 import PositionsSlideUp from './PositionsSlideUp'
 import { useRootStore } from '../../../context/RootStoreProvider'
 
@@ -16,7 +17,7 @@ const Wrapper = styled.div`
 const CloseTrade: React.FC = () => {
   const { tradeStore, web3Store } = useRootStore()
   const { connected } = web3Store
-  const { closeTradeAmount, selectedPosition } = tradeStore
+  const { closingPosition, closePositionValue, selectedPosition } = tradeStore
 
   return (
     <Wrapper>
@@ -24,13 +25,13 @@ const CloseTrade: React.FC = () => {
       <CurrencyInput
         balance={selectedPosition?.totalValue}
         currency={{ icon: 'cash', text: 'USD' }}
-        disabled={!selectedPosition || !connected}
+        disabled={!selectedPosition || !connected || closingPosition}
         isBalanceZero={selectedPosition?.totalValueBN?.eq(0)}
-        onChange={tradeStore.setCloseTradeAmount}
+        onChange={tradeStore.setClosePositionValue}
         showBalance
-        value={closeTradeAmount}
+        value={closePositionValue}
       />
-      <p>TODO: Button</p>
+      <ClosePositionButton />
       <p>TODO: Summary</p>
     </Wrapper>
   )

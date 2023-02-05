@@ -9,6 +9,7 @@ import { TradeType } from '../../stores/SwapStore'
 import { ChartTimeframe } from '../../types/market.types'
 import { makeQueryString } from '../../utils/makeQueryString'
 import { calculateValuation } from '../../utils/market-utils'
+import { WEI_DENOMINATOR } from '../../lib/constants'
 
 export type Direction = 'long' | 'short'
 export type TradeAction = 'open' | 'close'
@@ -19,9 +20,11 @@ const DEFAULT_DIRECTION = 'long'
 export class TradeStore {
   action: TradeAction = 'open'
   approving = false
+  approvingClosePositions = false
   closeTradeHash?: string
   direction: Direction = DEFAULT_DIRECTION
-  closeTradeAmount = ''
+  closePositionValue = ''
+  closingPosition = false
   openTradeAmount = ''
   openTradeAmountOutBN?: BigNumber
   openTradeHash?: string
@@ -121,8 +124,8 @@ export class TradeStore {
     return this.tradeUrl
   }
 
-  setCloseTradeAmount(amount: string): void {
-    if (validateStringToBN(amount)) this.closeTradeAmount = amount
+  setClosePositionValue(value: string): void {
+    if (validateStringToBN(value)) this.closePositionValue = value
   }
 
   setCloseTradeHash(hash?: string): void {
@@ -170,8 +173,78 @@ export class TradeStore {
     this.openTradeHash = hash
   }
 
-  get closeTradeAmountBN(): BigNumber | undefined {
-    return this.root.preCTTokenStore.parseUnits(this.closeTradeAmount)
+  get closePositionValueBN(): BigNumber | undefined {
+    return this.selectedPosition?.token.parseUnits(this.closePositionValue)
+  }
+
+  get closePositionDisabled(): boolean {
+    return Boolean(
+      !this.selectedPosition ||
+        this.closePositionValue === '' ||
+        this.closePositionValueBN?.eq(0) ||
+        this.closePositionButtonLoading ||
+        this.insufficientBalanceForClosePosition
+    )
+  }
+
+  get closePositionButtonInitialLoading(): boolean {
+    if (this.closePositionValue === '') return false
+    const loadingSelectedPosition =
+      this.selectedPosition !== undefined && this.selectedPosition.hasPosition === undefined
+
+    return (
+      loadingSelectedPosition ||
+      // these values should only be undefined once while token's decimals is undefined
+      this.closePositionValueBN === undefined ||
+      this.closePositionNeedApproval === undefined ||
+      this.insufficientBalanceForClosePosition === undefined
+    )
+  }
+
+  get closePositionButtonLoading(): boolean {
+    return (
+      this.closePositionButtonInitialLoading || this.approvingClosePositions || this.closingPosition
+    )
+  }
+
+  get closePositionNeedApproval(): boolean | undefined {
+    if (!this.selectedPosition || !this.root.web3Store.connected) return false
+    if (this.closePositionAmount === undefined) return undefined
+
+    return this.selectedPosition.token.needToAllowFor(
+      this.closePositionAmount,
+      'UNISWAP_SWAP_ROUTER'
+    )
+  }
+
+  get closePositionAmountBN(): BigNumber | undefined {
+    if (
+      !this.selectedPosition ||
+      this.selectedPosition.totalValueBN === undefined ||
+      this.selectedPosition.priceBN === undefined ||
+      this.closePositionValueBN === undefined
+    )
+      return undefined
+
+    // we converted price to priceBN with WEI_DENOMINATOR to hold decimals in the price for more precise calculation (18 decimals)
+    // so when converting from value to long/short token amount, we need to multiply the denominator
+    // because when we divide priceBN, the price has been multiplied by the same WEI_DENOMINATOR
+    return this.closePositionValueBN.mul(WEI_DENOMINATOR).div(this.selectedPosition.priceBN)
+  }
+
+  get closePositionAmount(): string | undefined {
+    if (this.closePositionAmountBN === undefined || this.selectedPosition === undefined)
+      return undefined
+
+    return this.selectedPosition.token.formatUnits(this.closePositionAmountBN)
+  }
+
+  get insufficientBalanceForClosePosition(): boolean | undefined {
+    if (!this.selectedPosition || !this.root.web3Store.connected) return false
+    if (this.closePositionValueBN === undefined || this.selectedPosition.totalValueBN === undefined)
+      return undefined
+
+    return this.closePositionValueBN.gt(this.selectedPosition.totalValueBN)
   }
 
   get needApproval(): boolean | undefined {
@@ -295,6 +368,16 @@ export class TradeStore {
     })
   }
 
+  async approveClosePositions(): Promise<void> {
+    if (!this.selectedPosition || this.approvingClosePositions) return
+    this.approvingClosePositions = true
+    await this.selectedPosition.token.unlockPermanently('UNISWAP_SWAP_ROUTER')
+    runInAction(() => {
+      this.approvingClosePositions = false
+    })
+  }
+
+  // TODO: delete this function when we remove ClosePositionSummary
   // eslint-disable-next-line require-await
   async closeTrade(
     token: Erc20Store,
@@ -318,6 +401,45 @@ export class TradeStore {
       toAmount: tokensReceivable,
       type: TradeType.EXACT_INPUT,
       onHash: (hash) => this.setCloseTradeHash(hash),
+    })
+  }
+
+  async closePosition(): Promise<void> {
+    const { address: preCTAddress } = this.root.preCTTokenStore
+
+    if (
+      !this.selectedPosition ||
+      this.selectedPosition.pool.poolImmutables?.fee === undefined ||
+      this.selectedPosition.token.address === undefined ||
+      this.closePositionAmountBN === undefined ||
+      this.closePositionValueBN === undefined ||
+      preCTAddress === undefined
+    )
+      return
+
+    const { swap } = this.root.swapStore
+    const { fee } = this.selectedPosition.pool.poolImmutables
+    const { address } = this.selectedPosition.token
+
+    this.closingPosition = true
+    const { error } = await swap({
+      fee,
+      fromAmount: this.closePositionAmountBN,
+      fromTokenAddress: address,
+      toAmount: this.closePositionValueBN,
+      toTokenAddress: preCTAddress,
+      type: TradeType.EXACT_INPUT,
+    })
+
+    if (error) {
+      this.root.toastStore.errorToast('Trade failed', error)
+    } else {
+      this.root.toastStore.successToast('Trade was successful 🎉')
+    }
+
+    runInAction(() => {
+      this.closingPosition = false
+      if (!error) this.closePositionValue = ''
     })
   }
 

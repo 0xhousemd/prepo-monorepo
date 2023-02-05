@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers'
+
 export const PROJECT_NAME = 'core-dapp'
 export const PREPO_WEBSITE = 'https://prepo.io'
 export const PREPO_TWITTER = 'https://twitter.com/prepo_io'
@@ -38,5 +40,6 @@ export const CURRENTPRICE_MULTIPLIER = BigNumberPadding.THREE
 export const SLIPPAGE_MULTIPLIER = BigNumberPadding.THREE
 
 export const ERC20_UNITS = 18
+export const WEI_DENOMINATOR = BigNumber.from(10).pow(ERC20_UNITS)
 
 export const CHARACTERS_ON_WALLET = 42

@@ -37,15 +37,19 @@ const PositionsSlideUp: React.FC = () => {
   const { portfolioStore, tradeStore, web3Store } = useRootStore()
   const { connected } = web3Store
   const { userPositions } = portfolioStore
-  const { slideUpContent, setSlideUpContent, selectedPosition } = tradeStore
+  const { closingPosition, slideUpContent, setSlideUpContent, selectedPosition } = tradeStore
 
   const hasNoPosition = userPositions !== undefined && userPositions.length === 0
   // slide up is disabled if:
   // - not connected: button shows "Connect Wallet"
-  // - loading posiitions: loading skeleton in button
+  // - loading positions: loading skeleton in button
   // - user has no position and nothing selected: Show "No Opened Position"
+  // - user is closing a position
   const isSlideUpDisabled =
-    !connected || userPositions === undefined || (hasNoPosition && !selectedPosition)
+    !connected ||
+    userPositions === undefined ||
+    (hasNoPosition && !selectedPosition) ||
+    closingPosition
 
   const handleSelectPosition = (position: PositionEntity): void => {
     tradeStore.setSelectedMarket(position.market.urlId)

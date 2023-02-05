@@ -6,7 +6,7 @@ import { Erc20Store } from './Erc20.entity'
 import { MarketEntity } from './MarketEntity'
 import { Direction } from '../../features/trade/TradeStore'
 import { RootStore } from '../RootStore'
-import { ERC20_UNITS } from '../../lib/constants'
+import { ERC20_UNITS, WEI_DENOMINATOR } from '../../lib/constants'
 
 export class PositionEntity {
   constructor(private root: RootStore, public market: MarketEntity, public direction: Direction) {
@@ -59,8 +59,7 @@ export class PositionEntity {
 
   get totalValueBN(): BigNumber | undefined {
     if (this.token.balanceOfSigner === undefined || this.priceBN === undefined) return undefined
-    const priceDenominatorBN = BigNumber.from(10).pow(ERC20_UNITS)
-    return this.token.balanceOfSigner.mul(this.priceBN).div(priceDenominatorBN)
+    return this.token.balanceOfSigner.mul(this.priceBN).div(WEI_DENOMINATOR)
   }
 
   get totalPnl(): number | undefined {
