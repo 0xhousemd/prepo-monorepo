@@ -1,8 +1,11 @@
 import { makeError } from 'prepo-utils'
-import { BigNumber } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import { makeAutoObservable } from 'mobx'
 import { RootStore } from './RootStore'
 import { SLIPPAGE_MULTIPLIER } from '../lib/constants'
+import { debounce } from '../utils/debounce'
+import { UNISWAP_QUOTER_ADDRESS } from '../lib/external-contracts'
+import QuoterABI from '../../abi/uniswapV3Quoter.abi.json'
 
 export enum TradeType {
   EXACT_INPUT = 0,
@@ -28,6 +31,13 @@ export type SwapParameters = {
   toTokenAddress: string
   onHash?: (hash: string) => unknown
 } & (SwapExactInputParameters | SwapExactOutputParameters)
+
+export type QuoteExactInputProps = {
+  fromAddress: string
+  toAddress: string
+  amountBN: BigNumber
+  fee: number
+}
 
 export type SwapResult = { success: boolean; error?: string }
 
@@ -112,4 +122,40 @@ export class SwapStore {
       return { error: makeError(error).message, success: false }
     }
   }
+
+  quoteExactInput = debounce(
+    async ({
+      amountBN,
+      fromAddress,
+      toAddress,
+      fee,
+    }: QuoteExactInputProps): Promise<
+      { cachedInAmount: BigNumber; output: BigNumber } | undefined
+    > => {
+      if (amountBN.eq(0)) return { cachedInAmount: amountBN, output: BigNumber.from(0) }
+
+      const quoterContract = new ethers.Contract(
+        UNISWAP_QUOTER_ADDRESS.mainnet ?? '', // all uniswap contracts has same address on all chains
+        QuoterABI,
+        this.root.web3Store.coreProvider
+      )
+
+      const cachedInAmount = amountBN // cache amount at time when check is fired
+      const sqrtPriceLimitX96 = 0 // The price limit of the pool that cannot be exceeded by the swap
+      try {
+        const output = await quoterContract.callStatic.quoteExactInputSingle(
+          fromAddress,
+          toAddress,
+          fee,
+          amountBN,
+          sqrtPriceLimitX96
+        )
+
+        return { cachedInAmount, output }
+      } catch (e) {
+        return undefined
+      }
+    },
+    400
+  )
 }

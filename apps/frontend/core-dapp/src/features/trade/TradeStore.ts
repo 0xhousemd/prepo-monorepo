@@ -1,15 +1,12 @@
-import { BigNumber, ethers } from 'ethers'
+import { BigNumber } from 'ethers'
 import { makeAutoObservable, reaction, runInAction } from 'mobx'
 import { validateStringToBN } from 'prepo-utils'
-import QuoterABI from '../../../abi/uniswapV3Quoter.abi.json'
-import { UNISWAP_QUOTER_ADDRESS } from '../../lib/external-contracts'
 import { Erc20Store } from '../../stores/entities/Erc20.entity'
 import { MarketEntity } from '../../stores/entities/MarketEntity'
 import { PositionEntity } from '../../stores/entities/Position.entity'
 import { RootStore } from '../../stores/RootStore'
 import { TradeType } from '../../stores/SwapStore'
 import { ChartTimeframe } from '../../types/market.types'
-import { debounce } from '../../utils/debounce'
 import { makeQueryString } from '../../utils/makeQueryString'
 import { calculateValuation } from '../../utils/market-utils'
 
@@ -42,25 +39,41 @@ export class TradeStore {
   subscribeOpenTradeAmountOut(): void {
     reaction(
       () => ({
-        selectedMarket: this.selectedMarket,
+        selectedPosition: this.selectedPosition,
         openTradeAmountBN: this.openTradeAmountBN,
-        direction: this.direction,
         marketValuation: this.selectedMarket?.estimatedValuation,
       }),
-      async ({ openTradeAmountBN, selectedMarket }) => {
-        if (!selectedMarket || openTradeAmountBN === undefined) {
-          this.openTradeAmountOutBN = undefined
-          return
-        }
-        if (openTradeAmountBN.eq(0)) {
-          this.openTradeAmountOutBN = BigNumber.from(0)
-          return
-        }
-
+      async ({ openTradeAmountBN, selectedPosition }) => {
         this.openTradeAmountOutBN = undefined // clean up while new amountOut gets loaded
-        const openTradeAmountOutBN = await this.quoteExactInput(selectedMarket)
+
+        const { address: preCTAddress } = this.root.preCTTokenStore
+
+        if (
+          openTradeAmountBN === undefined ||
+          !preCTAddress ||
+          !selectedPosition ||
+          !selectedPosition.token.address ||
+          selectedPosition.pool.poolImmutables?.fee === undefined
+        )
+          return
+
+        const { fee } = selectedPosition.pool.poolImmutables
+
+        const output = await this.root.swapStore.quoteExactInput({
+          amountBN: openTradeAmountBN,
+          fromAddress: preCTAddress,
+          toAddress: selectedPosition.token.address,
+          fee,
+        })
+
         runInAction(() => {
-          if (openTradeAmountOutBN !== undefined) this.openTradeAmountOutBN = openTradeAmountOutBN
+          const shouldNotUpdate =
+            output === undefined ||
+            this.openTradeAmountBN === undefined ||
+            !output.cachedInAmount.eq(this.openTradeAmountBN)
+
+          if (shouldNotUpdate) return
+          this.openTradeAmountOutBN = output.output
         })
       }
     )
@@ -220,50 +233,6 @@ export class TradeStore {
 
     return inRange || this.openTradeAmountBN.eq(0)
   }
-
-  quoteExactInput = debounce(
-    async (selectedMarket: MarketEntity): Promise<BigNumber | undefined> => {
-      const selectedToken = selectedMarket[`${this.direction}Token`]
-      const pool = selectedMarket[`${this.direction}Pool`]
-      const state = pool?.poolState
-      const fee = pool?.poolImmutables?.fee
-      if (
-        !fee ||
-        !selectedToken ||
-        !state ||
-        !this.openTradeAmountBN ||
-        this.openTradeAmountBN.eq(0) ||
-        !selectedToken.address
-      ) {
-        return undefined
-      }
-      const tokenAddressFrom = this.root.preCTTokenStore.uniswapToken.address
-      const tokenAddressTo = selectedToken.address
-      const quoterContract = new ethers.Contract(
-        UNISWAP_QUOTER_ADDRESS.mainnet ?? '', // all uniswap contracts has same address on all chains
-        QuoterABI,
-        this.root.web3Store.coreProvider
-      )
-
-      try {
-        const cachedOpenAmountBN = this.openTradeAmountBN // cache amount at time when check is fired
-        const sqrtPriceLimitX96 = 0 // The price limit of the pool that cannot be exceeded by the swap
-        const output = await quoterContract.callStatic.quoteExactInputSingle(
-          tokenAddressFrom,
-          tokenAddressTo,
-          fee,
-          this.openTradeAmountBN,
-          sqrtPriceLimitX96
-        )
-        // only update openTradeAmountOutBN if amount hasn't changed since last check was fired
-        return cachedOpenAmountBN.eq(this.openTradeAmountBN) ? output : undefined
-      } catch (e) {
-        this.root.toastStore.errorToast('Error calculating output amount', e)
-        return undefined
-      }
-    },
-    400
-  )
 
   async approve(): Promise<void> {
     this.approving = true

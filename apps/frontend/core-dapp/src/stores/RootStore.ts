@@ -74,17 +74,17 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.localStorageStore = new LocalStorageStore(this, `prepo.${PROJECT_NAME}`, initLocalStorage)
     this.uiStore = new UiStore(this)
     this.preCTTokenStore = new CollateralStore(this)
+    this.marketStore = new MarketStore(this)
+    this.portfolioStore = new PortfolioStore(this)
     this.depositStore = new DepositStore(this)
     this.withdrawStore = new WithdrawStore(this)
     this.tradeStore = new TradeStore(this)
-    this.marketStore = new MarketStore(this)
     this.advancedSettingsStore = new AdvancedSettingsStore(this)
     this.baseTokenStore = new Erc20Store({
       root: this,
       tokenName: 'MBT',
       symbolOverride: USDC_SYMBOL,
     })
-    this.portfolioStore = new PortfolioStore(this)
     this.uniswapRouterStore = new UniswapRouterStore(this)
     this.filterStore = new FilterStore(this)
     this.currenciesStore = new CurrenciesStore(this)
