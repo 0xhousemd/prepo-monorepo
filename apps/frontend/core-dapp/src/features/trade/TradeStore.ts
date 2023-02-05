@@ -21,6 +21,7 @@ export class TradeStore {
   approving = false
   closeTradeHash?: string
   direction: Direction = DEFAULT_DIRECTION
+  closeTradeAmount = ''
   openTradeAmount = ''
   openTradeAmountOutBN?: BigNumber
   openTradeHash?: string
@@ -120,6 +121,10 @@ export class TradeStore {
     return this.tradeUrl
   }
 
+  setCloseTradeAmount(amount: string): void {
+    if (validateStringToBN(amount)) this.closeTradeAmount = amount
+  }
+
   setCloseTradeHash(hash?: string): void {
     this.closeTradeHash = hash
   }
@@ -163,6 +168,10 @@ export class TradeStore {
 
   setOpenTradeHash(hash?: string): void {
     this.openTradeHash = hash
+  }
+
+  get closeTradeAmountBN(): BigNumber | undefined {
+    return this.root.preCTTokenStore.parseUnits(this.closeTradeAmount)
   }
 
   get needApproval(): boolean | undefined {
