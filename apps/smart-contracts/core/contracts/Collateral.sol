@@ -81,7 +81,11 @@ contract Collateral is
   }
 
   /// @dev Converts amount from collateral token units to base token units.
-  function withdraw(uint256 amount) external override nonReentrant {
+  function withdraw(address recipient, uint256 amount)
+    external
+    override
+    nonReentrant
+  {
     uint256 baseTokenAmount = (amount * _baseTokenDenominator) / 1e18;
     uint256 fee = (baseTokenAmount * _withdrawFee) / FEE_DENOMINATOR;
     if (_withdrawFee > 0) {
@@ -93,11 +97,11 @@ contract Collateral is
     uint256 baseTokenAmountAfterFee = baseTokenAmount - fee;
     if (address(_withdrawHook) != address(0)) {
       _baseToken.approve(address(_withdrawHook), fee);
-      _withdrawHook.hook(msg.sender, baseTokenAmount, baseTokenAmountAfterFee);
+      _withdrawHook.hook(recipient, baseTokenAmount, baseTokenAmountAfterFee);
       _baseToken.approve(address(_withdrawHook), 0);
     }
-    _baseToken.transfer(msg.sender, baseTokenAmountAfterFee);
-    emit Withdraw(msg.sender, baseTokenAmountAfterFee, fee);
+    _baseToken.transfer(recipient, baseTokenAmountAfterFee);
+    emit Withdraw(msg.sender, recipient, baseTokenAmountAfterFee, fee);
   }
 
   function managerWithdraw(uint256 amount)

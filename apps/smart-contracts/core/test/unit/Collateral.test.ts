@@ -38,7 +38,7 @@ const { batchGrantAndAcceptRoles, grantAndAcceptRole } = utils
 describe('=> Collateral', () => {
   let deployer: SignerWithAddress
   let user1: SignerWithAddress
-  let user2: SignerWithAddress
+  let recipient: SignerWithAddress
   let manager: SignerWithAddress
   let baseToken: TestERC20
   let collateral: Collateral
@@ -58,7 +58,7 @@ describe('=> Collateral', () => {
   const getSignersAndDeployContracts = async (
     baseTokenDecimals: number = USDC_DECIMALS
   ): Promise<void> => {
-    ;[deployer, manager, user1, user2] = await ethers.getSigners()
+    ;[deployer, manager, user1, recipient] = await ethers.getSigners()
     baseToken = await testERC20Fixture('Test Coin', 'TST', baseTokenDecimals)
     collateral = await collateralFixture(
       'prePO USDC Collateral',
@@ -624,11 +624,9 @@ describe('=> Collateral', () => {
 
   describe('# deposit', () => {
     let sender: SignerWithAddress
-    let recipient: SignerWithAddress
     before(async function () {
       await setupCollateralStackForDeposits()
       sender = user1
-      recipient = user2
       snapshotBeforeEachTest = await ethers.provider.send('evm_snapshot', [])
     })
 
@@ -969,13 +967,13 @@ describe('=> Collateral', () => {
     it('reverts if withdrawal = 0 and withdraw fee = 0%', async () => {
       await collateral.connect(deployer).setWithdrawFee(0)
 
-      await expect(collateral.connect(user1).withdraw(0)).revertedWith('amount = 0')
+      await expect(collateral.connect(user1).withdraw(user1.address, 0)).revertedWith('amount = 0')
     })
 
     it('reverts if withdrawal = 0 and withdraw fee > 0%', async () => {
       expect(await collateral.getWithdrawFee()).to.be.gt(0)
 
-      await expect(collateral.connect(user1).withdraw(0)).revertedWith('fee = 0')
+      await expect(collateral.connect(user1).withdraw(user1.address, 0)).revertedWith('fee = 0')
     })
 
     it('reverts if withdrawal > 0, fee = 0, and withdraw fee > 0%', async () => {
@@ -991,7 +989,9 @@ describe('=> Collateral', () => {
       expect(feeAmount).to.eq(0)
       expect(await collateral.getWithdrawFee()).to.be.gt(0)
 
-      await expect(collateral.connect(user1).withdraw(amountToWithdraw)).revertedWith('fee = 0')
+      await expect(
+        collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
+      ).revertedWith('fee = 0')
     })
 
     it('reverts if base token returned is 0 and withdraw fee = 0%', async () => {
@@ -1001,16 +1001,18 @@ describe('=> Collateral', () => {
       const baseTokenToReceive = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       expect(baseTokenToReceive).to.eq(0)
 
-      await expect(collateral.connect(user1).withdraw(amountToWithdraw)).revertedWith('amount = 0')
+      await expect(
+        collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
+      ).revertedWith('amount = 0')
     })
 
     it('reverts if insufficient balance', async () => {
       const amountToWithdraw = (await collateral.balanceOf(user1.address)).add(1)
       expect(amountToWithdraw).to.be.gt(0)
 
-      await expect(collateral.connect(user1).withdraw(amountToWithdraw)).revertedWith(
-        'ERC20: burn amount exceeds balance'
-      )
+      await expect(
+        collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
+      ).revertedWith('ERC20: burn amount exceeds balance')
     })
 
     it('reverts if hook reverts', async () => {
@@ -1019,7 +1021,7 @@ describe('=> Collateral', () => {
       expect(amountToWithdraw).to.be.gt(0)
       withdrawHook.hook.reverts()
 
-      await expect(collateral.connect(user1).withdraw(amountToWithdraw)).reverted
+      await expect(collateral.connect(user1).withdraw(user1.address, amountToWithdraw)).reverted
       expect(withdrawHook.hook).callCount(1)
     })
 
@@ -1031,7 +1033,7 @@ describe('=> Collateral', () => {
       expect(amountToWithdraw).to.be.gt(0)
       expect(await collateral.allowance(user1.address, collateral.address)).to.be.eq(0)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       expect(await collateral.totalSupply()).to.eq(totalSupplyBefore.sub(amountToWithdraw))
       expect(await collateral.balanceOf(user1.address)).to.eq(userCTBefore.sub(amountToWithdraw))
@@ -1048,14 +1050,14 @@ describe('=> Collateral', () => {
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       await expect(tx)
         .to.emit(baseToken, 'Approval')
         .withArgs(collateral.address, withdrawHook.address, fee)
     })
 
-    it('transfers base tokens to user adjusting for when decimals > base token decimals', async () => {
+    it('withdraws to recipient adjusting for when decimals > base token decimals', async () => {
       expect(await collateral.decimals()).to.be.gt(await baseToken.decimals())
       const userBTBefore = await baseToken.balanceOf(user1.address)
       const amountToWithdraw = await collateral.balanceOf(user1.address)
@@ -1063,7 +1065,7 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
 
-      await collateral.connect(user1).withdraw(amountToWithdraw)
+      await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user1.address)).to.eq(userBTBefore.add(expectedBT.sub(fee)))
     })
@@ -1077,14 +1079,14 @@ describe('=> Collateral', () => {
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       await expect(tx)
         .to.emit(baseToken, 'Approval')
         .withArgs(collateral.address, withdrawHook.address, fee)
     })
 
-    it('transfers base tokens to user adjusting for when decimals = base token decimals', async () => {
+    it('withdraws to recipient adjusting for when decimals = base token decimals', async () => {
       // Setup 18 decimal base token
       expect(await collateral.decimals()).to.eq(await baseToken.decimals())
       const userBTBefore = await baseToken.balanceOf(user1.address)
@@ -1093,7 +1095,7 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
 
-      await collateral.connect(user1).withdraw(amountToWithdraw)
+      await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user1.address)).to.eq(userBTBefore.add(expectedBT.sub(fee)))
     })
@@ -1108,14 +1110,14 @@ describe('=> Collateral', () => {
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       await expect(tx)
         .to.emit(baseToken, 'Approval')
         .withArgs(collateral.address, withdrawHook.address, fee)
     })
 
-    it('transfers base tokens to user adjusting for when decimals < base token decimals', async () => {
+    it('withdraws to recipient adjusting for when decimals < base token decimals', async () => {
       // Setup 19 decimal base token
       expect(await collateral.decimals()).to.be.lt(await baseToken.decimals())
       const userBTBefore = await baseToken.balanceOf(user1.address)
@@ -1125,7 +1127,7 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw.mul(GREATER_DECIMAL_DENOMINATOR).div(parseEther('1'))
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
 
-      await collateral.connect(user1).withdraw(amountToWithdraw)
+      await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user1.address)).to.eq(userBTBefore.add(expectedBT.sub(fee)))
     })
@@ -1136,7 +1138,7 @@ describe('=> Collateral', () => {
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
       expect(fee).to.be.gt(0)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       await expect(tx)
         .to.emit(baseToken, 'Approval')
@@ -1156,7 +1158,7 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
-      await collateral.connect(user1).withdraw(amountToWithdraw)
+      await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user1.address)).to.eq(userBTBefore.add(expectedBT))
       expect(await baseToken.balanceOf(collateral.address)).to.eq(contractBTBefore.sub(expectedBT))
@@ -1164,12 +1166,33 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
     })
 
+    it('withdraws to recipient if recipient != withdrawer', async () => {
+      expect(user1.address).not.eq(recipient.address)
+      const user1BTBefore = await baseToken.balanceOf(user1.address)
+      const recipientBTBefore = await baseToken.balanceOf(recipient.address)
+      const amountToWithdraw = await collateral.balanceOf(user1.address)
+      const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
+      expect(recipientBTBefore).to.eq(0)
+      expect(amountToWithdraw).to.be.gt(0)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const tx = await collateral.connect(user1).withdraw(recipient.address, amountToWithdraw)
+
+      await expect(tx)
+        .to.emit(collateral, 'Withdraw')
+        .withArgs(user1.address, recipient.address, expectedBT.sub(fee), fee)
+
+      expect(user1BTBefore).to.eq(await baseToken.balanceOf(user1.address))
+      expect(await baseToken.balanceOf(recipient.address)).to.eq(
+        recipientBTBefore.add(expectedBT.sub(fee))
+      )
+    })
+
     it('ignores hook if hook not set', async () => {
       const amountToWithdraw = await collateral.balanceOf(user1.address)
       expect(amountToWithdraw).to.be.gt(0)
       await collateral.connect(deployer).setWithdrawHook(ZERO_ADDRESS)
 
-      await collateral.connect(user1).withdraw(amountToWithdraw)
+      await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       expect(withdrawHook.hook).callCount(0)
     })
@@ -1182,7 +1205,7 @@ describe('=> Collateral', () => {
       await collateral.connect(deployer).setWithdrawHook(ZERO_ADDRESS)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.eq(0)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       await expect(tx).to.not.emit(baseToken, 'Approval')
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.eq(0)
@@ -1194,9 +1217,9 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
 
-      await collateral.connect(user1).withdraw(amountToWithdraw)
+      await collateral.connect(user1).withdraw(recipient.address, amountToWithdraw)
 
-      expect(withdrawHook.hook).calledWith(user1.address, expectedBT, expectedBT.sub(fee))
+      expect(withdrawHook.hook).calledWith(recipient.address, expectedBT, expectedBT.sub(fee))
     })
 
     it('emits Withdraw', async () => {
@@ -1205,11 +1228,11 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
 
-      const tx = await collateral.connect(user1).withdraw(amountToWithdraw)
+      const tx = await collateral.connect(user1).withdraw(user1.address, amountToWithdraw)
 
       await expect(tx)
         .to.emit(collateral, 'Withdraw')
-        .withArgs(user1.address, expectedBT.sub(fee), fee)
+        .withArgs(user1.address, user1.address, expectedBT.sub(fee), fee)
     })
 
     afterEach(() => {

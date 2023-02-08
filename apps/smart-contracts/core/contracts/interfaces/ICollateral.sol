@@ -15,6 +15,7 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
 
   event Withdraw(
     address indexed withdrawer,
+    address indexed recipient,
     uint256 amountAfterFee,
     uint256 fee
   );
@@ -35,7 +36,7 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
     external
     returns (uint256);
 
-  function withdraw(uint256 amount) external;
+  function withdraw(address recipient, uint256 amount) external;
 
   function managerWithdraw(uint256 amount) external;
 
