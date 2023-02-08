@@ -2,7 +2,6 @@ import { ethers } from 'hardhat'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { Create2Address } from 'prepo-hardhat'
 import { Create2Deployer, LongShortToken, LongShortToken__factory } from '../../types/generated'
-import { findDeployEvent } from '../../helpers'
 
 export async function LongShortTokenFixture(
   tokenName: string,

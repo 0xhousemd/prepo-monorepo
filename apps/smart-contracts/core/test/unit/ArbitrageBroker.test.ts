@@ -24,7 +24,6 @@ describe('=> ArbitrageBroker', () => {
   let core: MockCore
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
-  let user: SignerWithAddress
   let swapRouter: FakeContract<Contract>
   let market: FakeContract<Contract>
   let longToken: FakeContract<LongShortToken>
@@ -47,8 +46,8 @@ describe('=> ArbitrageBroker', () => {
 
   snapshotter.setupSnapshotContext('ArbitrageBroker')
   before(async () => {
-    core = await MockCore.Instance.init(ethers, parseEther('100000'), parseEther('10000'))
-    ;[deployer, governance, user] = core.accounts
+    core = await MockCore.Instance.init(ethers)
+    ;[deployer, governance] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
     arbitrageBroker = await arbitrageBrokerFixture(core.collateral.address, swapRouter.address)
     await batchGrantAndAcceptRoles(arbitrageBroker, deployer, governance, [
@@ -290,7 +289,11 @@ describe('=> ArbitrageBroker', () => {
       await arbitrageBroker.connect(governance).callStatic.buyAndRedeem(market.address, tradeParams)
 
       expect(swapRouter.exactOutputSingle.atCall(1)).calledImmediatelyBefore(market.redeem)
-      expect(market.redeem).calledWith(tradeParams.longShortAmount, tradeParams.longShortAmount)
+      expect(market.redeem).calledWith(
+        tradeParams.longShortAmount,
+        tradeParams.longShortAmount,
+        arbitrageBroker.address
+      )
     })
 
     it('returns profit earned and swap input values', async () => {

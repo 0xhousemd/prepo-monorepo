@@ -118,11 +118,11 @@ contract PrePOMarket is
     return _amount;
   }
 
-  function redeem(uint256 _longAmount, uint256 _shortAmount)
-    external
-    override
-    nonReentrant
-  {
+  function redeem(
+    uint256 _longAmount,
+    uint256 _shortAmount,
+    address _recipient
+  ) external override nonReentrant {
     require(
       longToken.balanceOf(msg.sender) >= _longAmount,
       "Insufficient long tokens"
@@ -131,7 +131,6 @@ contract PrePOMarket is
       shortToken.balanceOf(msg.sender) >= _shortAmount,
       "Insufficient short tokens"
     );
-
     uint256 _collateralAmount;
     if (finalLongPayout <= MAX_PAYOUT) {
       uint256 _shortPayout = MAX_PAYOUT - finalLongPayout;
@@ -158,7 +157,7 @@ contract PrePOMarket is
         address(_redeemHook)
       );
       _redeemHook.hook(
-        msg.sender,
+        _recipient,
         _collateralAmount,
         _collateralAmount - _expectedFee
       );
@@ -173,9 +172,9 @@ contract PrePOMarket is
     longToken.burnFrom(msg.sender, _longAmount);
     shortToken.burnFrom(msg.sender, _shortAmount);
     uint256 _collateralAfterFee = _collateralAmount - _actualFee;
-    collateral.transfer(msg.sender, _collateralAfterFee);
+    collateral.transfer(_recipient, _collateralAfterFee);
 
-    emit Redemption(msg.sender, _collateralAfterFee, _actualFee);
+    emit Redemption(msg.sender, _recipient, _collateralAfterFee, _actualFee);
   }
 
   function setMintHook(IHook mintHook)

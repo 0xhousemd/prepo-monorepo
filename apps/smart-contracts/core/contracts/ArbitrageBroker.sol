@@ -55,7 +55,11 @@ contract ArbitrageBroker is IArbitrageBroker, SafeAccessControlEnumerable {
       market.getShortToken(),
       false
     );
-    market.redeem(tradeParams.longShortAmount, tradeParams.longShortAmount);
+    market.redeem(
+      tradeParams.longShortAmount,
+      tradeParams.longShortAmount,
+      address(this)
+    );
     uint256 collateralAfter = _collateral.balanceOf(address(this));
     if (collateralBefore >= collateralAfter) {
       revert UnprofitableTrade(collateralBefore, collateralAfter);

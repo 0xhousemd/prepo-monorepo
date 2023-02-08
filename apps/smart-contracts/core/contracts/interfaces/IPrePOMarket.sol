@@ -39,6 +39,7 @@ interface IPrePOMarket {
 
   event Redemption(
     address indexed redeemer,
+    address indexed recipient,
     uint256 amountAfterFee,
     uint256 fee
   );
@@ -78,7 +79,11 @@ interface IPrePOMarket {
    * @param _longAmount Amount of Long tokens to redeem
    * @param _shortAmount Amount of Short tokens to redeem
    */
-  function redeem(uint256 _longAmount, uint256 _shortAmount) external;
+  function redeem(
+    uint256 _longAmount,
+    uint256 _shortAmount,
+    address _recipient
+  ) external;
 
   function setMintHook(IHook mintHook) external;
 

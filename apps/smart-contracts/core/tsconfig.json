@@ -8,6 +8,7 @@
     "./types/**/*.ts",
     "./tasks/**/*.ts",
     "./test/**/*.ts",
+    "./utils/**/*.ts",
     "./*.js",
     "./hardhat.config.ts",
     "index.ts",
