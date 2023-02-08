@@ -30,56 +30,24 @@ export const getUTCStartOfDay = (ms: number): number => {
   return localStartOfDay - offsetMins * MIN_IN_MS
 }
 
-export const getFullDateFromMs = (ms: number | string): string => {
-  try {
-    return format(new Date(ms), DATE_FORMAT)
-  } catch (error) {
-    return 'Invalid Date'
-  }
-}
+export const getFullDateFromMs = (ms: number): string => format(ms, DATE_FORMAT)
 
-export const getFullDateShortenMonthFromMs = (ms: number | string): string => {
-  try {
-    return format(new Date(ms), DATE_FORMAT_SHORTEN_MONTH)
-  } catch (error) {
-    return 'Invalid Date'
-  }
-}
+export const getFullDateShortenMonthFromMs = (ms: number): string =>
+  format(ms, DATE_FORMAT_SHORTEN_MONTH)
 
-export const getFullDateTimeFromSeconds = (seconds: number): string => {
-  try {
-    return format(seconds * SEC_IN_MS, `yyyy-MM-dd HH:mm:ss`)
-  } catch (error) {
-    return 'Invalid Date Time'
-  }
-}
+export const getFullDateTimeFromSeconds = (seconds: number): string =>
+  format(seconds * SEC_IN_MS, `yyyy-MM-dd HH:mm:ss`)
 
-export const getFullLiteralDateTimeFromSeconds = (seconds: number): string => {
-  try {
-    return format(seconds * SEC_IN_MS, `MMM do, yyyy, ${TIME_FORMAT_24}`)
-  } catch (error) {
-    return 'Invalid Date Time'
-  }
-}
+export const getFullLiteralDateTimeFromSeconds = (seconds: number): string =>
+  format(seconds * SEC_IN_MS, `MMM do, yyyy, ${TIME_FORMAT_24}`)
 
 export const getFullStringFromMs = (
-  ms: number | string,
+  ms: number,
   { date = DATE_FORMAT, time = TIME_FORMAT_12 }: { date?: string; time?: string } = {}
-): string => {
-  try {
-    return format(new Date(ms), `${date}, ${time}`)
-  } catch (error) {
-    return 'Invalid Date Time'
-  }
-}
+): string => format(ms, `${date}, ${time}`)
 
-export const get24TimeFromSeconds = (seconds: number): string => {
-  try {
-    return format(seconds * SEC_IN_MS, TIME_FORMAT_24)
-  } catch (error) {
-    return 'Invalid Time'
-  }
-}
+export const get24TimeFromSeconds = (seconds: number): string =>
+  format(seconds * SEC_IN_MS, TIME_FORMAT_24)
 
 export const getHoursByMiliseconds = (miliseconds: number): number =>
   Math.floor(miliseconds / 1000 / 60 / 60)
