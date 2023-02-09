@@ -21,6 +21,7 @@ import {
 import { collateralFixture } from '../fixtures/CollateralFixture'
 import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
+import { roleAssigners } from '../../helpers'
 import {
   AccountList,
   Collateral,
@@ -33,7 +34,7 @@ import {
 
 chai.use(smock.matchers)
 
-const { batchGrantAndAcceptRoles, grantAndAcceptRole } = utils
+const { grantAndAcceptRole } = utils
 
 describe('=> Collateral', () => {
   let deployer: SignerWithAddress
@@ -94,15 +95,7 @@ describe('=> Collateral', () => {
   }
 
   const setupCollateralRoles = async (): Promise<void> => {
-    await batchGrantAndAcceptRoles(collateral, deployer, deployer, [
-      collateral.MANAGER_WITHDRAW_ROLE(),
-      collateral.SET_MANAGER_ROLE(),
-      collateral.SET_DEPOSIT_FEE_ROLE(),
-      collateral.SET_WITHDRAW_FEE_ROLE(),
-      collateral.SET_DEPOSIT_HOOK_ROLE(),
-      collateral.SET_WITHDRAW_HOOK_ROLE(),
-      collateral.SET_MANAGER_WITHDRAW_HOOK_ROLE(),
-    ])
+    await roleAssigners.assignCollateralRoles(deployer, deployer, collateral)
     await collateral.connect(deployer).setManager(manager.address)
   }
 

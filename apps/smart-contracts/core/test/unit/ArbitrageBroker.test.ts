@@ -13,12 +13,13 @@ import { fakeLongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
 import { fakePrePOMarketFixture } from '../fixtures/PrePOMarketFixture'
 import { fakeSwapRouterFixture } from '../fixtures/UniswapFixtures'
 import { MockCore } from '../../harnesses/mock'
+import { roleAssigners } from '../../helpers'
 import { ArbitrageBroker, IArbitrageBroker, LongShortToken } from '../../types/generated'
 import { PromiseOrValue } from '../../types/generated/common'
 
 chai.use(smock.matchers)
 const snapshotter = new Snapshotter()
-const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
+const { nowPlusMonths } = utils
 
 describe('=> ArbitrageBroker', () => {
   let core: MockCore
@@ -50,11 +51,7 @@ describe('=> ArbitrageBroker', () => {
     ;[deployer, governance] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
     arbitrageBroker = await arbitrageBrokerFixture(core.collateral.address, swapRouter.address)
-    await batchGrantAndAcceptRoles(arbitrageBroker, deployer, governance, [
-      arbitrageBroker.BUY_AND_REDEEM_ROLE(),
-      arbitrageBroker.MINT_AND_SELL_ROLE(),
-      arbitrageBroker.SET_MARKET_VALIDITY_ROLE(),
-    ])
+    await roleAssigners.assignArbitrageBrokerRoles(deployer, governance, arbitrageBroker)
     market = await fakePrePOMarketFixture()
     longToken = await fakeLongShortTokenFixture()
     shortToken = await fakeLongShortTokenFixture()

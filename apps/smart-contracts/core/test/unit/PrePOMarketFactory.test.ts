@@ -9,11 +9,11 @@ import { LongShortTokenAttachFixture } from '../fixtures/LongShortTokenFixture'
 import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
 import { revertsIfNotRoleHolder, testRoleConstants } from '../utils'
-import { createMarket } from '../../helpers'
+import { createMarket, roleAssigners } from '../../helpers'
 import { CreateMarketParams } from '../../types'
 import { PrePOMarketFactory, TestERC20 } from '../../types/generated'
 
-const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
+const { nowPlusMonths } = utils
 
 describe('=> PrePOMarketFactory', () => {
   let prePOMarketFactory: PrePOMarketFactory
@@ -35,11 +35,7 @@ describe('=> PrePOMarketFactory', () => {
     collateralToken = await testERC20Fixture('prePO USDC Collateral', 'preUSD', 18)
     await collateralToken.mint(deployer.address, MOCK_COLLATERAL_SUPPLY)
     prePOMarketFactory = await prePOMarketFactoryFixture()
-
-    await batchGrantAndAcceptRoles(prePOMarketFactory, deployer, deployer, [
-      prePOMarketFactory.CREATE_MARKET_ROLE(),
-      prePOMarketFactory.SET_COLLATERAL_VALIDITY_ROLE(),
-    ])
+    await roleAssigners.assignPrePOMarketFactoryRoles(deployer, deployer, prePOMarketFactory)
   })
 
   describe('# initialize', () => {

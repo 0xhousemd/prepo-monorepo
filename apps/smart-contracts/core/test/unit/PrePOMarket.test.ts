@@ -18,7 +18,7 @@ import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
 import { fakeMintHookFixture, fakeRedeemHookFixture } from '../fixtures/HookFixture'
 import { calculateFee, getLastTimestamp, revertsIfNotRoleHolder, testRoleConstants } from '../utils'
-import { createMarket } from '../../helpers'
+import { createMarket, roleAssigners } from '../../helpers'
 import { CreateMarketParams } from '../../types'
 import {
   PrePOMarketFactory,
@@ -31,7 +31,7 @@ import {
 
 chai.use(smock.matchers)
 
-const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
+const { nowPlusMonths } = utils
 
 describe('=> prePOMarket', () => {
   let collateralToken: TestERC20
@@ -54,24 +54,12 @@ describe('=> prePOMarket', () => {
   const TEST_FINAL_LONG_PAYOUT = TEST_FLOOR_PAYOUT.add(TEST_CEILING_PAYOUT).div(2)
   const MOCK_COLLATERAL_SUPPLY = ethers.utils.parseEther('1000000000')
 
-  async function grantAllRoles(account: SignerWithAddress): Promise<void> {
-    await batchGrantAndAcceptRoles(prePOMarket, treasury, account, [
-      prePOMarket.SET_MINT_HOOK_ROLE(),
-      prePOMarket.SET_REDEEM_HOOK_ROLE(),
-      prePOMarket.SET_FINAL_LONG_PAYOUT_ROLE(),
-      prePOMarket.SET_REDEMPTION_FEE_ROLE(),
-    ])
-  }
-
   beforeEach(async () => {
     ;[deployer, user, treasury, recipient] = await ethers.getSigners()
     collateralToken = await testERC20Fixture('prePO USDC Collateral', 'preUSD', 18)
     await collateralToken.mint(deployer.address, MOCK_COLLATERAL_SUPPLY)
     prePOMarketFactory = await prePOMarketFactoryFixture()
-    await batchGrantAndAcceptRoles(prePOMarketFactory, deployer, deployer, [
-      prePOMarketFactory.CREATE_MARKET_ROLE(),
-      prePOMarketFactory.SET_COLLATERAL_VALIDITY_ROLE(),
-    ])
+    await roleAssigners.assignPrePOMarketFactoryRoles(deployer, deployer, prePOMarketFactory)
     await prePOMarketFactory.setCollateralValidity(collateralToken.address, true)
     defaultParams = {
       caller: deployer,
@@ -210,7 +198,7 @@ describe('=> prePOMarket', () => {
   describe('# setFinalLongPayout', () => {
     beforeEach(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      await grantAllRoles(treasury)
+      await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
     })
 
     it('reverts if not role holder', async () => {
@@ -259,7 +247,7 @@ describe('=> prePOMarket', () => {
   describe('# setMintHook', () => {
     beforeEach(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      await grantAllRoles(treasury)
+      await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
     })
 
     it('reverts if not role holder', async () => {
@@ -308,7 +296,7 @@ describe('=> prePOMarket', () => {
   describe('# setRedeemHook', () => {
     beforeEach(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      await grantAllRoles(treasury)
+      await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
     })
 
     it('reverts if not role holder', async () => {
@@ -357,7 +345,7 @@ describe('=> prePOMarket', () => {
   describe('# setRedemptionFee', () => {
     beforeEach(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      await grantAllRoles(treasury)
+      await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
     })
 
     it('reverts if not role holder', async () => {
@@ -410,7 +398,7 @@ describe('=> prePOMarket', () => {
     let mintHook: FakeContract<MintHook>
     beforeEach(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      await grantAllRoles(treasury)
+      await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
     })
 
     it('prevents minting if market ended', async () => {
@@ -539,7 +527,7 @@ describe('=> prePOMarket', () => {
 
     const setupMarket = async (): Promise<BigNumber> => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      await grantAllRoles(treasury)
+      await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
       redeemHook = await fakeRedeemHookFixture()
       const amountMinted = await mintTestPosition()
       await approveTokensForRedemption(user, amountMinted)

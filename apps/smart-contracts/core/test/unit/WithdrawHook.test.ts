@@ -11,6 +11,7 @@ import { setAccountBalance } from '../utils'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
 import { smockTokenSenderFixture } from '../fixtures/TokenSenderFixture'
+import { roleAssigners } from '../../helpers'
 import {
   Collateral,
   DepositRecord,
@@ -21,7 +22,7 @@ import {
 
 chai.use(smock.matchers)
 
-const { getLastTimestamp, setNextTimestamp, grantAndAcceptRole, batchGrantAndAcceptRoles } = utils
+const { getLastTimestamp, setNextTimestamp } = utils
 
 describe('=> WithdrawHook', () => {
   let withdrawHook: WithdrawHook
@@ -49,23 +50,8 @@ describe('=> WithdrawHook', () => {
     await setAccountBalance(fakeCollateral.address, '0.1')
     mockDepositRecord = await smockDepositRecordFixture()
     fakeTokenSender = await smockTokenSenderFixture(mockTestToken.address)
-    await batchGrantAndAcceptRoles(withdrawHook, deployer, deployer, [
-      withdrawHook.SET_COLLATERAL_ROLE(),
-      withdrawHook.SET_DEPOSIT_RECORD_ROLE(),
-      withdrawHook.SET_WITHDRAWALS_ALLOWED_ROLE(),
-      withdrawHook.SET_GLOBAL_PERIOD_LENGTH_ROLE(),
-      withdrawHook.SET_USER_PERIOD_LENGTH_ROLE(),
-      withdrawHook.SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE(),
-      withdrawHook.SET_USER_WITHDRAW_LIMIT_PER_PERIOD_ROLE(),
-      withdrawHook.SET_TREASURY_ROLE(),
-      withdrawHook.SET_TOKEN_SENDER_ROLE(),
-    ])
-    await grantAndAcceptRole(
-      mockDepositRecord,
-      deployer,
-      deployer,
-      await mockDepositRecord.SET_ALLOWED_HOOK_ROLE()
-    )
+    await roleAssigners.assignWithdrawHookRoles(deployer, deployer, withdrawHook)
+    await roleAssigners.assignDepositRecordRoles(deployer, deployer, mockDepositRecord)
     await mockDepositRecord.connect(deployer).setAllowedHook(user.address, true)
     await mockDepositRecord.connect(deployer).setAllowedHook(withdrawHook.address, true)
   })

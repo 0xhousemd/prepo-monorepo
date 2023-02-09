@@ -9,6 +9,8 @@ import { CreateMarketParams, CreateMarketResult } from '../types'
 import { Collateral, DepositHook, DepositRecord, ERC20, PrePOMarket } from '../types/generated'
 
 export * from './events'
+export * from './roles'
+export * from './uniswap'
 
 export async function createMarket(marketParams: CreateMarketParams): Promise<CreateMarketResult> {
   const tx = await marketParams.factory

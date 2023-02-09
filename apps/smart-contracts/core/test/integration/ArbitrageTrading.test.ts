@@ -14,7 +14,7 @@ import {
 import { create2DeployerFixture } from '../fixtures/Create2DeployerFixtures'
 import { Snapshotter } from '../snapshots'
 import { MockCore } from '../../harnesses/mock'
-import { assignCollateralRoles } from '../../helpers/roles'
+import { roleAssigners } from '../../helpers/roles'
 import {
   attachNonfungiblePositionManager,
   attachSwapRouter,
@@ -57,7 +57,7 @@ import {
   getWeiPricesFromPools,
 } from '../../scripts/ArbitragePools'
 
-const { nowPlusMonths, batchGrantAndAcceptRoles } = utils
+const { nowPlusMonths } = utils
 
 chai.use(smock.matchers)
 const snapshotter = new Snapshotter()
@@ -159,7 +159,7 @@ describe('=> Arbitrage Trading', () => {
       getPrePOAddressForNetwork('UNIV3_SWAP_ROUTER', 'arbitrumOne')
     )
     // Only need to assign deposit fee since test is only using deposit
-    await assignCollateralRoles(deployer, governance, core.collateral)
+    await roleAssigners.assignCollateralRoles(deployer, governance, core.collateral)
     await core.collateral.connect(governance).setDepositFee(10000)
     // Supply governance with Collateral and LongShort tokens
     await core.mintLSFromBaseToken(
@@ -175,11 +175,7 @@ describe('=> Arbitrage Trading', () => {
     )
     // Setup ArbitrageBroker and supply it with trading capital for testing
     arbitrageBroker = await arbitrageBrokerFixture(core.collateral.address, swapRouter.address)
-    await batchGrantAndAcceptRoles(arbitrageBroker, deployer, governance, [
-      arbitrageBroker.BUY_AND_REDEEM_ROLE(),
-      arbitrageBroker.MINT_AND_SELL_ROLE(),
-      arbitrageBroker.SET_MARKET_VALIDITY_ROLE(),
-    ])
+    await roleAssigners.assignArbitrageBrokerRoles(deployer, governance, arbitrageBroker)
     await arbitrageBroker
       .connect(governance)
       .setMarketValidity(core.markets[TEST_NAME_SUFFIX].address, true)
