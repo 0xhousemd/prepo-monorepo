@@ -1,11 +1,10 @@
-import { Box, Button, Flex, Typography } from 'prepo-ui'
+import { Button, Flex, Typography } from 'prepo-ui'
 import { observer } from 'mobx-react-lite'
 import { Trans } from '@lingui/macro'
 import React from 'react'
-import { Position } from './Position'
+import { Position, PositionSkeleton } from './Position'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { Routes } from '../../lib/routes'
-import { RecordSkeleton } from '../portfolio/Record'
 
 const Positions: React.FC = () => {
   const { portfolioStore, web3Store } = useRootStore()
@@ -21,16 +20,7 @@ const Positions: React.FC = () => {
       </Flex>
     )
 
-  if (userPositions === undefined)
-    return (
-      <Box position="relative">
-        <RecordSkeleton />
-        <RecordSkeleton />
-        <RecordSkeleton />
-      </Box>
-    )
-
-  if (userPositions.length === 0)
+  if (userPositions?.length === 0)
     return (
       <Flex p={24} flexDirection="column">
         <Typography color="neutral3" mb={12} variant="text-regular-base">
@@ -44,18 +34,26 @@ const Positions: React.FC = () => {
 
   return (
     <Flex position="relative" flexDirection="column" alignItems="start" p={16} gap={16}>
-      {userPositions.map((position) => (
-        <Position
-          direction={position.direction}
-          iconName={position.market.iconName}
-          marketUrlId={position.market.urlId}
-          name={position.market.name}
-          totalValue={position.totalValue}
-          totalPnl={position.totalPnl}
-          growthPercentage={position.positionGrowthPercentage}
-          key={position.id}
-        />
-      ))}
+      {userPositions ? (
+        userPositions.map((position) => (
+          <Position
+            direction={position.direction}
+            iconName={position.market.iconName}
+            marketUrlId={position.market.urlId}
+            name={position.market.name}
+            totalValue={position.totalValue}
+            totalPnl={position.totalPnl}
+            growthPercentage={position.positionGrowthPercentage}
+            key={position.id}
+          />
+        ))
+      ) : (
+        <>
+          <PositionSkeleton />
+          <PositionSkeleton />
+          <PositionSkeleton />
+        </>
+      )}
     </Flex>
   )
 }

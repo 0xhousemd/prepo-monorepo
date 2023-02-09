@@ -7,6 +7,7 @@ import PositionLabel from './PositionLabel'
 import Percent from '../../components/Percent'
 import { PositionEntity } from '../../stores/entities/Position.entity'
 import { numberFormatter } from '../../utils/numberFormatter'
+import Skeleton from '../../components/Skeleton'
 
 const { toUsd } = numberFormatter
 
@@ -145,6 +146,26 @@ export const Position: React.FC<PositionProps> = ({
             <Icon name="minus" color="primaryLight" width="12px" height="12px" />
           </IconLink>
         </Link>
+      </Flex>
+    </Flex>
+  </Flex>
+)
+
+export const PositionSkeleton: React.FC = () => (
+  <Flex justifyContent="start" gap={8} width="100%">
+    <Skeleton circle height={48} width={48} />
+    <Flex gap={4} flexDirection="column" alignItems="start">
+      <Skeleton height={12} width={80} />
+      <Flex gap={4} alignItems="center">
+        <Skeleton height={12} width={50} />
+        <Skeleton height={12} width={50} />
+      </Flex>
+    </Flex>
+    <Flex flexDirection="column" ml="auto" gap={6}>
+      <Skeleton height={18} width={40} />
+      <Flex gap={8}>
+        <Skeleton height={14} width={14} />
+        <Skeleton height={14} width={14} />
       </Flex>
     </Flex>
   </Flex>
