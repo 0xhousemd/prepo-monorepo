@@ -31,7 +31,6 @@ export class CollateralStore extends Erc20Store {
   depositHash?: string
   depositing = false
   withdrawHash?: string
-  withdrawing = false
   uniswapToken: Token
 
   constructor(root: RootStore) {
@@ -61,7 +60,6 @@ export class CollateralStore extends Erc20Store {
       setWithdrawHash: action.bound,
       withdraw: action.bound,
       withdrawHash: observable,
-      withdrawing: observable,
     })
   }
 
@@ -115,7 +113,6 @@ export class CollateralStore extends Erc20Store {
 
   async withdraw(...params: Parameters<Withdraw>): Promise<{ success: boolean; error?: string }> {
     try {
-      this.withdrawing = true
       this.withdrawHash = undefined
       const { hash, wait } = await this.sendTransaction<Withdraw>('withdraw', params)
       runInAction(() => {
@@ -126,15 +123,10 @@ export class CollateralStore extends Erc20Store {
         success: true,
       }
     } catch (error) {
-      this.root.toastStore.errorToast(`Error calling withdraw`, error)
       return {
         success: false,
         error: (error as Error).message,
       }
-    } finally {
-      runInAction(() => {
-        this.withdrawing = false
-      })
     }
   }
 

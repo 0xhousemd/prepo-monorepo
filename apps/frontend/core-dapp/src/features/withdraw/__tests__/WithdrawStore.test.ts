@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { configure } from 'mobx'
 import { parseUnits } from 'ethers/lib/utils'
-import { utils } from 'ethers'
+import { utils, BigNumber } from 'ethers'
 import { ERC20_UNITS } from '../../../lib/constants'
 
 // This is needed to be able to mock mobx properties on a class
@@ -14,28 +14,38 @@ const PRECT_DECIMALS = 18
 
 describe('WithdrawStore tests', () => {
   let spyPreCTTokenBalance: jest.SpyInstance
-  let spyPreCTTokenBalanceRaw: jest.SpyInstance
+  let spyPreCTBalanceOfSigner: jest.SpyInstance
   let spyPreCTDecimalsNumber: jest.SpyInstance
+  let spyWithdrawalFeesAmountBN: jest.SpyInstance
+  let spySuccessToast: jest.SpyInstance
   beforeAll(() => {
+    spySuccessToast = jest.spyOn(rootStore.toastStore, 'successToast').mockImplementation(jest.fn())
+
     spyPreCTTokenBalance = jest
       .spyOn(rootStore.preCTTokenStore, 'tokenBalanceFormat', 'get')
       .mockReturnValue(PRECT_BALANCE)
 
     const PRECT_BALANCE_BIGNUMBER = parseUnits(`${PRECT_BALANCE}`, PRECT_DECIMALS)
 
-    spyPreCTTokenBalanceRaw = jest
-      .spyOn(rootStore.preCTTokenStore, 'tokenBalanceRaw', 'get')
+    spyPreCTBalanceOfSigner = jest
+      .spyOn(rootStore.preCTTokenStore, 'balanceOfSigner', 'get')
       .mockReturnValue(PRECT_BALANCE_BIGNUMBER)
 
     spyPreCTDecimalsNumber = jest
       .spyOn(rootStore.preCTTokenStore, 'decimalsNumber', 'get')
       .mockReturnValue(PRECT_DECIMALS)
+
+    spyWithdrawalFeesAmountBN = jest
+      .spyOn(rootStore.withdrawStore, 'withdrawalFeesAmountBN', 'get')
+      .mockReturnValue(BigNumber.from(0))
   })
 
   afterAll(() => {
     spyPreCTTokenBalance.mockRestore()
-    spyPreCTTokenBalanceRaw.mockRestore()
+    spyPreCTBalanceOfSigner.mockRestore()
     spyPreCTDecimalsNumber.mockRestore()
+    spySuccessToast.mockRestore()
+    spyWithdrawalFeesAmountBN.mockRestore()
   })
 
   it('should set the amount', () => {
