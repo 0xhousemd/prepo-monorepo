@@ -222,17 +222,48 @@ export async function grantAndAcceptRole(
   await contract.connect(nominee).acceptRole(role)
 }
 
+export async function getRolesAccountDoesNotHave(
+  contract: Contract | SmockContractBase<Contract>,
+  accountAddress: string,
+  roles: string[]
+): Promise<string[]> {
+  const promises: Promise<boolean>[] = []
+  roles.forEach((role) => {
+    promises.push(contract.hasRole(role, accountAddress))
+  })
+  const results = await Promise.all(promises)
+  const rolesAccountDoesNotHave: string[] = []
+  results.forEach((result, index) => {
+    if (!result) {
+      rolesAccountDoesNotHave.push(roles[index])
+    }
+  })
+  return rolesAccountDoesNotHave
+}
+
 export async function batchGrantAndAcceptRoles(
   contract: Contract | SmockContractBase<Contract>,
   admin: SignerWithAddress,
   nominee: SignerWithAddress,
   roles: string[]
 ): Promise<void> {
+  const rolesAccountDoesNotHave = await getRolesAccountDoesNotHave(contract, nominee.address, roles)
   const promises: Promise<void>[] = []
-  roles.forEach((role) => {
+  rolesAccountDoesNotHave.forEach((role) => {
     promises.push(grantAndAcceptRole(contract, admin, nominee, role))
   })
   await Promise.all(promises)
+}
+
+export async function setContractIfNotAlreadySet(
+  signer: SignerWithAddress,
+  parentContract: Contract | SmockContractBase<Contract>,
+  childContractAddress: string,
+  contractGetter: string,
+  contractSetter: string
+): Promise<void> {
+  if ((await parentContract[contractGetter]()) !== childContractAddress)
+    await sendTxAndWait(await parentContract.connect(signer)[contractSetter](childContractAddress))
 }
 
 export const utils = {
@@ -254,4 +285,6 @@ export const utils = {
   generateAddressLessThan,
   grantAndAcceptRole,
   batchGrantAndAcceptRoles,
+  getRolesAccountDoesNotHave,
+  setContractIfNotAlreadySet,
 }

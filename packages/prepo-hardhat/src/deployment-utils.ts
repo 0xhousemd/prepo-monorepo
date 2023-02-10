@@ -40,9 +40,9 @@ export async function deployNonUpgradeableContract(
     skipIfAlreadyDeployed: true,
   })
   if (newlyDeployed) {
-    console.log(`Deployed ${contractName} to`, contractAddress)
+    console.log(`Deployed ${deploymentName} to`, contractAddress)
   } else {
-    console.log(`Existing ${contractName} at`, contractAddress)
+    console.log(`Existing ${deploymentName} at`, contractAddress)
   }
   console.log('')
 }

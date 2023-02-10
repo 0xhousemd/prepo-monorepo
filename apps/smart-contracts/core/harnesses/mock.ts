@@ -3,8 +3,14 @@ import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { MockContract } from '@defi-wonderland/smock'
 import { Base } from './base'
-import { MockCollateralWithHooks, MockMarketWithHooks, PrePOMarketParams } from '../types'
-import { Create2Deployer, DepositRecord, TestERC20, TokenSender } from '../types/generated'
+import {
+  MockExtendedCollateral,
+  MockExtendedDepositRecord,
+  MockExtendedMarket,
+  MockExtendedTokenSender,
+  PrePOMarketParams,
+} from '../types'
+import { Create2Deployer, TestERC20 } from '../types/generated'
 import { smockCollateralFixture } from '../test/fixtures/CollateralFixture'
 import {
   smockAccountListFixture,
@@ -22,11 +28,11 @@ export class MockCore extends Base {
   private static _instance: MockCore
   public baseToken: MockContract<TestERC20>
   public rewardToken: MockContract<TestERC20>
-  public collateral: MockCollateralWithHooks
-  public depositRecord: MockContract<DepositRecord>
-  public tokenSender: MockContract<TokenSender>
+  public collateral: MockExtendedCollateral
+  public depositRecord: MockExtendedDepositRecord
+  public tokenSender: MockExtendedTokenSender
   public markets?: {
-    [suffix: string]: MockMarketWithHooks
+    [suffix: string]: MockExtendedMarket
   }
 
   public static get Instance(): MockCore {

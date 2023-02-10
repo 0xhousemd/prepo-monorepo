@@ -1,39 +1,48 @@
 import { MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
-import { BigNumber } from 'ethers'
+import { BigNumber, BigNumberish } from 'ethers'
 import { POOL_FEE_TIER } from 'prepo-constants'
-import { Create2Address, utils } from 'prepo-hardhat'
-import { mintCollateralFromBaseToken, mintLSFromCollateral, mintLSFromBaseToken } from '../helpers'
+import { Create2Address, sendTxAndWait, utils } from 'prepo-hardhat'
+import {
+  mintCollateralFromBaseToken,
+  mintLSFromCollateral,
+  mintLSFromBaseToken,
+  roleAssigners,
+} from '../helpers'
 import { attachUniV3Pool, getNearestSqrtX96FromWei } from '../helpers/uniswap'
 import {
-  CollateralWithHooks,
-  MockCollateralWithHooks,
-  MarketWithHooks,
-  MockMarketWithHooks,
+  ExtendedCollateral,
+  MockExtendedCollateral,
+  ExtendedDepositRecord,
+  MockExtendedDepositRecord,
+  ExtendedMarket,
+  MockExtendedMarket,
+  ExtendedTokenSender,
+  MockExtendedTokenSender,
 } from '../types'
 import {
+  ArbitrageBroker,
   ERC20,
-  DepositRecord,
-  PrePOMarketFactory,
+  DepositTradeHelper,
   TestERC20,
-  TokenSender,
   UniswapV3Factory,
 } from '../types/generated'
 
-const { generateAddressLessThan } = utils
+const { generateAddressLessThan, setContractIfNotAlreadySet } = utils
 
 export abstract class Base {
   public ethers!: HardhatEthersHelpers
   public accounts!: SignerWithAddress[]
   public baseToken: ERC20 | MockContract<TestERC20>
   public rewardToken: ERC20 | MockContract<TestERC20>
-  public collateral: CollateralWithHooks | MockCollateralWithHooks
-  public depositRecord: DepositRecord | MockContract<DepositRecord>
-  public tokenSender: TokenSender | MockContract<TokenSender>
-  public marketFactory?: PrePOMarketFactory
+  public collateral: ExtendedCollateral | MockExtendedCollateral
+  public depositRecord: ExtendedDepositRecord | MockExtendedDepositRecord
+  public tokenSender: ExtendedTokenSender | MockExtendedTokenSender
+  public arbitrageBroker?: ArbitrageBroker | MockContract<ArbitrageBroker>
+  public depositTradeHelper?: DepositTradeHelper | MockContract<DepositTradeHelper>
   public markets?: {
-    [suffix: string]: MarketWithHooks | MockMarketWithHooks
+    [suffix: string]: ExtendedMarket | MockExtendedMarket
   }
 
   public mintCollateralFromBaseToken(
@@ -124,5 +133,233 @@ export abstract class Base {
     )
     const shortPool = await attachUniV3Pool(this.ethers, shortPoolAddress)
     await shortPool.initialize(getNearestSqrtX96FromWei(approxShortPoolWeiPrice))
+  }
+
+  public async assignRolesForBaseStack(
+    rootAdmin: SignerWithAddress,
+    nominee: SignerWithAddress
+  ): Promise<void> {
+    await roleAssigners.assignCollateralRoles(rootAdmin, nominee, this.collateral)
+    await roleAssigners.assignDepositRecordRoles(rootAdmin, nominee, this.depositRecord)
+    await roleAssigners.assignDepositHookRoles(rootAdmin, nominee, this.collateral.depositHook)
+    await roleAssigners.assignWithdrawHookRoles(rootAdmin, nominee, this.collateral.withdrawHook)
+    await roleAssigners.assignManagerWithdrawHookRoles(
+      rootAdmin,
+      nominee,
+      this.collateral.managerWithdrawHook
+    )
+    await roleAssigners.assignTokenSenderRoles(rootAdmin, nominee, this.tokenSender)
+  }
+
+  public async configureCollateralViaSigner(
+    signer: SignerWithAddress,
+    manager?: string,
+    depositFee?: BigNumberish,
+    withdrawFee?: BigNumberish
+  ): Promise<void> {
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral,
+      this.collateral.depositHook.address,
+      'getDepositHook',
+      'setDepositHook'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral,
+      this.collateral.withdrawHook.address,
+      'getWithdrawHook',
+      'setWithdrawHook'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral,
+      this.collateral.managerWithdrawHook.address,
+      'getManagerWithdrawHook',
+      'setManagerWithdrawHook'
+    )
+    if (manager) await sendTxAndWait(await this.collateral.connect(signer).setManager(manager))
+    if (depositFee !== undefined)
+      await sendTxAndWait(await this.collateral.connect(signer).setDepositFee(depositFee))
+    if (withdrawFee !== undefined)
+      await sendTxAndWait(await this.collateral.connect(signer).setWithdrawFee(withdrawFee))
+  }
+
+  public async configureDepositHookViaSigner(
+    signer: SignerWithAddress,
+    depositsAllowed?: boolean,
+    allowedDepositors?: string[],
+    treasury?: string
+  ): Promise<void> {
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.depositHook,
+      this.collateral.address,
+      'getCollateral',
+      'setCollateral'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.depositHook,
+      this.depositRecord.address,
+      'getDepositRecord',
+      'setDepositRecord'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.depositHook,
+      this.collateral.depositHook.allowlist.address,
+      'getAccountList',
+      'setAccountList'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.depositHook,
+      this.tokenSender.address,
+      'getTokenSender',
+      'setTokenSender'
+    )
+    if (allowedDepositors !== undefined && allowedDepositors.length > 0) {
+      await sendTxAndWait(
+        await this.collateral.depositHook.allowlist
+          .connect(signer)
+          .set(allowedDepositors, new Array(allowedDepositors.length).fill(true))
+      )
+    }
+    if (depositsAllowed !== undefined)
+      await sendTxAndWait(
+        await this.collateral.depositHook.connect(signer).setDepositsAllowed(depositsAllowed)
+      )
+    if (treasury)
+      await sendTxAndWait(await this.collateral.depositHook.connect(signer).setTreasury(treasury))
+  }
+
+  public async configureWithdrawHookViaSigner(
+    signer: SignerWithAddress,
+    withdrawalsAllowed?: boolean,
+    globalPeriodLength?: BigNumberish,
+    userPeriodLength?: BigNumberish,
+    globalWithdrawLimitPerPeriod?: BigNumberish,
+    userWithdrawLimitPerPeriod?: BigNumberish
+  ): Promise<void> {
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.withdrawHook,
+      this.collateral.address,
+      'getCollateral',
+      'setCollateral'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.withdrawHook,
+      this.depositRecord.address,
+      'getDepositRecord',
+      'setDepositRecord'
+    )
+    if (withdrawalsAllowed !== undefined)
+      await sendTxAndWait(await this.collateral.withdrawHook.setWithdrawalsAllowed(true))
+    if (globalPeriodLength !== undefined)
+      await sendTxAndWait(
+        await this.collateral.withdrawHook.connect(signer).setGlobalPeriodLength(globalPeriodLength)
+      )
+    if (userPeriodLength !== undefined)
+      await sendTxAndWait(
+        await this.collateral.withdrawHook.connect(signer).setUserPeriodLength(userPeriodLength)
+      )
+    if (globalWithdrawLimitPerPeriod !== undefined)
+      await sendTxAndWait(
+        await this.collateral.withdrawHook
+          .connect(signer)
+          .setGlobalWithdrawLimitPerPeriod(globalWithdrawLimitPerPeriod)
+      )
+    if (userWithdrawLimitPerPeriod !== undefined)
+      await sendTxAndWait(
+        await this.collateral.withdrawHook
+          .connect(signer)
+          .setUserWithdrawLimitPerPeriod(userWithdrawLimitPerPeriod)
+      )
+  }
+
+  public async configureManagerWithdrawHookViaSigner(
+    signer: SignerWithAddress,
+    minReservePercentage?: BigNumberish
+  ): Promise<void> {
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.managerWithdrawHook,
+      this.collateral.address,
+      'getCollateral',
+      'setCollateral'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.collateral.managerWithdrawHook,
+      this.depositRecord.address,
+      'getDepositRecord',
+      'setDepositRecord'
+    )
+    if (minReservePercentage !== undefined) {
+      await sendTxAndWait(
+        await this.collateral.managerWithdrawHook
+          .connect(signer)
+          .setMinReservePercentage(minReservePercentage)
+      )
+    }
+  }
+
+  public async configureDepositRecordViaSigner(
+    signer: SignerWithAddress,
+    globalNetDepositCap?: BigNumberish,
+    userDepositCap?: BigNumberish
+  ): Promise<void> {
+    // TODO add allowMsgSender list and bypass list
+    if (globalNetDepositCap !== undefined)
+      await sendTxAndWait(
+        await this.depositRecord.connect(signer).setGlobalNetDepositCap(globalNetDepositCap)
+      )
+    if (userDepositCap !== undefined)
+      await sendTxAndWait(
+        await this.depositRecord.connect(signer).setUserDepositCap(userDepositCap)
+      )
+  }
+
+  public async configureTokenSenderViaSigner(
+    signer: SignerWithAddress,
+    fixedPrice?: BigNumberish,
+    priceMultiplier?: BigNumberish,
+    scaledPriceLowerBound?: BigNumberish,
+    allowedMsgSenders?: string[]
+  ): Promise<void> {
+    await setContractIfNotAlreadySet(
+      signer,
+      this.tokenSender,
+      this.tokenSender.fixedPrice.address,
+      'getPrice',
+      'setPrice'
+    )
+    await setContractIfNotAlreadySet(
+      signer,
+      this.tokenSender,
+      this.tokenSender.allowedMsgSenders.address,
+      'getAllowedMsgSenders',
+      'setAllowedMsgSenders'
+    )
+    if (fixedPrice !== undefined)
+      await sendTxAndWait(await this.tokenSender.fixedPrice.connect(signer).set(fixedPrice))
+    if (priceMultiplier !== undefined)
+      await sendTxAndWait(
+        await this.tokenSender.connect(signer).setPriceMultiplier(priceMultiplier)
+      )
+    if (scaledPriceLowerBound !== undefined)
+      await sendTxAndWait(
+        await this.tokenSender.connect(signer).setScaledPriceLowerBound(scaledPriceLowerBound)
+      )
+    if (allowedMsgSenders !== undefined && allowedMsgSenders.length > 0) {
+      await sendTxAndWait(
+        await this.tokenSender.allowedMsgSenders
+          .connect(signer)
+          .set(allowedMsgSenders, new Array(allowedMsgSenders.length).fill(true))
+      )
+    }
   }
 }

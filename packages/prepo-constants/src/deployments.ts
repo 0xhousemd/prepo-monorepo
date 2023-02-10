@@ -73,6 +73,9 @@ export const DEPLOYMENT_NAMES = {
     allowedMsgSenders: {
       name: 'PPOTokenSender-AllowedMsgSenders',
     },
+    fixedPrice: {
+      name: 'PPOTokenSender-FixedPrice',
+    },
   },
   depositTradeHelper: {
     name: 'DepositTradeHelper',
