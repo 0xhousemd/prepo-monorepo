@@ -3,8 +3,13 @@ pragma solidity =0.8.7;
 
 import "./interfaces/IDepositRecord.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
+import "prepo-shared-contracts/contracts/AccountListCaller.sol";
 
-contract DepositRecord is IDepositRecord, SafeAccessControlEnumerable {
+contract DepositRecord is
+  IDepositRecord,
+  SafeAccessControlEnumerable,
+  AccountListCaller
+{
   uint256 private _globalNetDepositCap;
   uint256 private _globalNetDepositAmount;
   uint256 private _userDepositCap;
@@ -16,6 +21,7 @@ contract DepositRecord is IDepositRecord, SafeAccessControlEnumerable {
   bytes32 public constant SET_USER_DEPOSIT_CAP_ROLE =
     keccak256("setUserDepositCap");
   bytes32 public constant SET_ALLOWED_HOOK_ROLE = keccak256("setAllowedHook");
+  bytes32 public constant SET_ACCOUNT_LIST_ROLE = keccak256("setAccountList");
 
   modifier onlyAllowedHooks() {
     require(_allowedHooks[msg.sender], "msg.sender != allowed hook");
@@ -31,10 +37,12 @@ contract DepositRecord is IDepositRecord, SafeAccessControlEnumerable {
       amount + _globalNetDepositAmount <= _globalNetDepositCap,
       "Global deposit cap exceeded"
     );
-    require(
-      amount + _userToDeposits[user] <= _userDepositCap,
-      "User deposit cap exceeded"
-    );
+    if (!_accountList.isIncluded(user)) {
+      require(
+        amount + _userToDeposits[user] <= _userDepositCap,
+        "User deposit cap exceeded"
+      );
+    }
     _globalNetDepositAmount += amount;
     _userToDeposits[user] += amount;
   }
@@ -76,6 +84,14 @@ contract DepositRecord is IDepositRecord, SafeAccessControlEnumerable {
   {
     _allowedHooks[hook] = allowed;
     emit AllowedHooksChange(hook, allowed);
+  }
+
+  function setAccountList(IAccountList accountList)
+    public
+    override
+    onlyRole(SET_ACCOUNT_LIST_ROLE)
+  {
+    super.setAccountList(accountList);
   }
 
   function getGlobalNetDepositCap() external view override returns (uint256) {

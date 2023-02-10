@@ -103,24 +103,16 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
   .addParam('nameSuffix', 'suffix of market token name e.g. preSTRIPE 5000-10000 30-September 2023')
   .addParam('symbolSuffix', 'suffix of market token symbol e.g. preSTRIPE_5000-10000_30SEP23')
   .addParam(
-    'floorPrice',
+    'floorPayout',
     "floor payout in ether units for Long token position e.g. '0.5' = 0.5 ether = 50%"
   )
   .addParam(
-    'ceilingPrice',
+    'ceilingPayout',
     "ceiling payout in ether units for Long token position e.g. '1' = 1 ether = 100%"
   )
-  .addParam(
-    'floorValuation',
-    "floor valuation of asset in millions of $ e.g. '123' = $123M",
-    types.int
-  )
-  .addParam(
-    'ceilingValuation',
-    "ceiling valuation of asset in millions of $ e.g. '123' = $123M",
-    types.int
-  )
-  .addParam('expiryTime', 'market end time as a UNIX timestamp in seconds', types.int)
+  .addParam('floorValuation', "floor valuation of asset in millions of $ e.g. '123' = $123M")
+  .addParam('ceilingValuation', "ceiling valuation of asset in millions of $ e.g. '123' = $123M")
+  .addParam('expiryTime', 'market end time as a UNIX timestamp in seconds')
   .setAction(async (args, hre) => {
     const { ethers, getChainId } = hre
     const currentChain = Number(await getChainId()) as ChainId
@@ -159,11 +151,11 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
       longShortSalts[1].address,
       governanceAddress,
       core.collateral.address,
-      parseEther(args.floorPrice),
-      parseEther(args.ceilingPrice),
-      args.floorValuation,
-      args.ceilingValuation,
-      args.expiryTime
+      parseEther(args.floorPayout),
+      parseEther(args.ceilingPayout),
+      Number(args.floorValuation),
+      Number(args.ceilingValuation),
+      Number(args.expiryTime)
     )
     console.log('Deterministic Market Address: ', deterministicMarketAddress)
     console.log('Preparing Market Periphery Contracts...')
@@ -217,8 +209,8 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
         | shortTokenSalt: ${longShortSalts[1].salt}
         | owner: ${governanceAddress}
         | collateral: ${core.collateral.address}
-        | floorLongPrice: ${args.floorPrice} Collateral
-        | ceilingLongPrice: ${args.ceilingPrice} Collateral
+        | floorLongPrice: ${args.floorPayout} Collateral
+        | ceilingLongPrice: ${args.ceilingPayout} Collateral
         | floorValuation: ${args.floorValuation} million $
         | ceilingValuation: ${args.ceilingValuation} million $
         | expiryTime: ${new Date(args.expiryTime * 1000).toLocaleString('en-US', {
@@ -259,11 +251,11 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
             longShortSalts[1].salt,
             governanceAddress,
             core.collateral.address,
-            parseEther(args.floorPrice).toString(),
-            parseEther(args.ceilingPrice).toString(),
-            args.floorValuation.toString(),
-            args.ceilingValuation.toString(),
-            args.expiryTime.toString(),
+            parseEther(args.floorPayout).toString(),
+            parseEther(args.ceilingPayout).toString(),
+            args.floorValuation,
+            args.ceilingValuation,
+            args.expiryTime,
           ],
         },
         {
