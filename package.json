@@ -72,8 +72,8 @@
         "@nomiclabs/hardhat-ethers": "yarn:hardhat-deploy-ethers@0.3.0-beta.13",
         "@nomiclabs/hardhat-etherscan": "3.1.0",
         "@openzeppelin/hardhat-upgrades": "1.19.0",
-        "defender-admin-client": "1.29.1",
-        "defender-relay-client": "1.27.1",
+        "defender-admin-client": "1.38.0",
+        "defender-relay-client": "1.38.0",
         "hardhat": "2.12.4",
         "hardhat-deploy": "0.11.10"
     },
