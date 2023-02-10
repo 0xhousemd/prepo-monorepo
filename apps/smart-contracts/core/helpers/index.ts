@@ -1,4 +1,5 @@
 import { BigNumber, BigNumberish } from 'ethers'
+import { getCreate2Address, keccak256, solidityKeccak256 } from 'ethers/lib/utils'
 import { FEE_DENOMINATOR, USDC_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
 import { MockContract } from '@defi-wonderland/smock'
 import { formatEther, parseEther, formatUnits } from '@ethersproject/units'
@@ -187,4 +188,43 @@ export async function mintLSFromBaseToken(
   )
   await mintLSFromCollateral(ethers, recipient, collateralMinted, market)
   return collateralMinted
+}
+
+export async function getDeterministicMarketAddress(
+  ethers: HardhatEthersHelpers,
+  prePOMarketFactoryAddress: string,
+  longTokenAddress: string,
+  shortTokenAddress: string,
+  treasury: string,
+  collateralAddress: string,
+  floorPayout: BigNumber,
+  ceilingPayout: BigNumber,
+  floorValuation: number,
+  ceilingValuation: number,
+  expiry: number
+): Promise<string> {
+  solidityKeccak256
+  const marketSalt = solidityKeccak256(
+    ['address', 'address'],
+    [longTokenAddress, shortTokenAddress]
+  )
+  const prePOMarketContractFactory = await ethers.getContractFactory('PrePOMarket')
+  const marketDeployTx = prePOMarketContractFactory.getDeployTransaction(
+    treasury,
+    collateralAddress,
+    longTokenAddress,
+    shortTokenAddress,
+    floorPayout,
+    ceilingPayout,
+    floorValuation,
+    ceilingValuation,
+    expiry
+  )
+  const hashedInitCode = keccak256(marketDeployTx.data)
+  const deterministicAddress = getCreate2Address(
+    prePOMarketFactoryAddress,
+    marketSalt,
+    hashedInitCode
+  )
+  return deterministicAddress
 }
