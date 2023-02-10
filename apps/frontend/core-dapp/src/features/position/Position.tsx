@@ -12,13 +12,14 @@ import Skeleton from '../../components/Skeleton'
 const { toUsd } = numberFormatter
 
 const PositionName = styled.p`
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
   color: ${({ theme }): string => theme.color.secondary};
+  display: -webkit-box;
   font-size: ${({ theme }): string => theme.fontSize.md};
   font-weight: ${({ theme }): number => theme.fontWeight.semiBold};
   margin-bottom: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 `
 const PositionValue = styled.p`
   color: ${({ theme }): string => theme.color.neutral1};
