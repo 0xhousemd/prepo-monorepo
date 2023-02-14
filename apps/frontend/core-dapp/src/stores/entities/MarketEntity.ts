@@ -306,6 +306,12 @@ export class MarketEntity
     return expiryTimestampInSeconds.toNumber() * SEC_IN_MS
   }
 
+  get expired(): boolean | undefined {
+    if (this.expiryTime === undefined) return undefined
+    const { nowInMs } = this.root.timerStore
+    return this.expiryTime <= nowInMs
+  }
+
   get floorLongPrice(): BigNumber | undefined {
     return getContractCall(this.getFloorLongPrice())
   }

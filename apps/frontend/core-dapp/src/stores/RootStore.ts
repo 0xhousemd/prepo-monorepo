@@ -9,6 +9,7 @@ import { CurrenciesStore } from './CurrenciesStore'
 import { storeConfig } from './utils/stores-config'
 import { UniswapRouterStore } from './UniswapRouterStore'
 import { CoreGraphStore } from './graphs/CoreGraphStore'
+import { TimerStore } from './TimerStore'
 import { UniswapV3GraphStore } from './graphs/UniswapV3GraphStore'
 import { SwapStore } from './SwapStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
@@ -44,6 +45,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   uiStore: UiStore
   localStorageStore: LocalStorageStore<LocalStorage>
   tradeStore: TradeStore
+  timerStore: TimerStore
   depositStore: DepositStore
   marketStore: MarketStore
   advancedSettingsStore: AdvancedSettingsStore
@@ -72,6 +74,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
 
     this.swapStore = new SwapStore(this)
     this.localStorageStore = new LocalStorageStore(this, `prepo.${PROJECT_NAME}`, initLocalStorage)
+    this.timerStore = new TimerStore()
     this.uiStore = new UiStore(this)
     this.preCTTokenStore = new CollateralStore(this)
     this.marketStore = new MarketStore(this)

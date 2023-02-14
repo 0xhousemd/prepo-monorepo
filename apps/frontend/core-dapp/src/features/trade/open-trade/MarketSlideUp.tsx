@@ -6,6 +6,7 @@ import SlideUpCard from '../SlideUpCard'
 import { useRootStore } from '../../../context/RootStoreProvider'
 import MarketButton from '../SlideUpButton'
 import SlideUpRow from '../SlideUpRow'
+import PositionLoadingSkeleton from '../close-trade/PositionLoadingSkeleton'
 
 const SelectedMarket = styled(SlideUpRow)`
   border: none;
@@ -56,10 +57,14 @@ const MarketSlideUp: React.FC = () => {
           />
         )}
         {Object.entries(markets)
-          .filter(([id]) => id !== selectedMarket?.urlId)
-          .map(([id, market]) => (
-            <SlideUpRow key={id} market={market} onClick={(): void => handleSelectMarket(id)} />
-          ))}
+          .filter(([id, market]) => id !== selectedMarket?.urlId && market.expired !== true)
+          .map(([id, market]) =>
+            market.expired === undefined ? (
+              <PositionLoadingSkeleton key={id} />
+            ) : (
+              <SlideUpRow key={id} market={market} onClick={(): void => handleSelectMarket(id)} />
+            )
+          )}
       </SlideUpCard>
     </>
   )

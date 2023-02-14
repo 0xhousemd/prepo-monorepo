@@ -93,10 +93,13 @@ export class TradeStore {
   // initial loading states can only be true if user has interacted with input
   get openTradeButtonInitialLoading(): boolean {
     if (this.openTradeAmount === '') return false
+    const loadingMarketExpiry =
+      this.selectedMarket !== undefined && this.selectedMarket.expired === undefined
     return (
       this.needApproval === undefined ||
       this.openTradeAmountBN === undefined ||
-      this.insufficientBalanceForOpenTrade === undefined
+      this.insufficientBalanceForOpenTrade === undefined ||
+      loadingMarketExpiry
     )
   }
 
@@ -454,6 +457,7 @@ export class TradeStore {
         this.openTradeAmountBN.eq(0) ||
         !this.withinBounds ||
         this.insufficientBalanceForOpenTrade ||
+        this.selectedMarket.expired ||
         loadingValuationPrice
     )
   }

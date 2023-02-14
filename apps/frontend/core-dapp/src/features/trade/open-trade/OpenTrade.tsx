@@ -47,7 +47,7 @@ const OpenTrade: React.FC = () => {
       <CurrencyInput
         balance={tokenBalanceFormat}
         isBalanceZero={balanceOfSigner?.eq(0)}
-        disabled={!selectedMarket || openingTrade}
+        disabled={!selectedMarket || openingTrade || selectedMarket.expired}
         currency={{ icon: 'cash', text: 'USD' }}
         onChange={setOpenTradeAmount}
         value={openTradeAmount}
