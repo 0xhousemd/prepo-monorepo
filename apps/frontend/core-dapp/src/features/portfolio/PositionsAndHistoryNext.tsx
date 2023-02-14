@@ -2,10 +2,12 @@ import { t } from '@lingui/macro'
 import { Box, centered, media, spacingIncrement } from 'prepo-ui'
 import { useState } from 'react'
 import styled, { useTheme } from 'styled-components'
+import { observer } from 'mobx-react-lite'
 import FilterButton from '../../components/Filter/FilterButton'
 import Tabs from '../../components/Tabs'
 import History from '../history/History'
 import Positions from '../position/PositionsNext'
+import { useRootStore } from '../../context/RootStoreProvider'
 
 const StyledTabs = styled(Tabs)`
   &&&& {
@@ -76,13 +78,16 @@ const StyledTabs = styled(Tabs)`
 `
 
 const PositionsAndHistory: React.FC = () => {
+  const { web3Store } = useRootStore()
   const [activeTab, setActiveTab] = useState(0)
   const { borderRadius, shadow } = useTheme()
+  const { connected } = web3Store
+
   return (
     <Box borderRadius={borderRadius.lg} boxShadow={shadow.prepo} width="100%">
       <StyledTabs
         disableMore
-        tabBarExtraContent={activeTab === 1 && <FilterButton />}
+        tabBarExtraContent={activeTab === 1 && connected && <FilterButton />}
         size="large"
         onChange={(e): void => setActiveTab(+e)}
         styles={{ activeColor: 'secondary', activeTextWeight: 'semiBold', color: 'neutral2' }}
@@ -102,4 +107,4 @@ const PositionsAndHistory: React.FC = () => {
   )
 }
 
-export default PositionsAndHistory
+export default observer(PositionsAndHistory)
