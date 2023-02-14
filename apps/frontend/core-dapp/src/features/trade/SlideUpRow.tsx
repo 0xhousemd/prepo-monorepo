@@ -106,7 +106,9 @@ const SlideUpRow: React.FC<Props> = ({
         {afterName}
       </NameWrapper>
       {market.estimatedValuation !== undefined ? (
-        <Valuation>${compactNumber(market.estimatedValuation.value)}</Valuation>
+        <Valuation>
+          {compactNumber(market.estimatedValuation.value, { showUsdSign: true })}
+        </Valuation>
       ) : (
         <Skeleton width={60} height={16} />
       )}
@@ -114,7 +116,7 @@ const SlideUpRow: React.FC<Props> = ({
     {position && (
       <Flex alignItems="end" flexDirection="column" paddingRight={4}>
         {position.totalValue !== undefined ? (
-          <Balance>${compactNumber(+position.totalValue)}</Balance>
+          <Balance>{compactNumber(+position.totalValue, { showUsdSign: true })}</Balance>
         ) : (
           <Skeleton width={60} height={20} />
         )}

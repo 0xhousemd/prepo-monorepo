@@ -65,8 +65,10 @@ const replaceGigaToBillion = (value: string): string => value.replace(/G/, 'B')
  * 100k, 100M, 10B
  * @param amount - The amount to format
  * @param numFormatterSettings - The settings object
- * @param numFormatterSettings.significantDigits - The amount of significant digits that the output should have. Ex: 12.3k for 3 significantDigits
- * @param numFormatterSettings.precisionDigits - The amount of precision digits that the output should have. Ex: 12.32k for 2 precisionDigits
+ * @param numFormatterSettings.significantDigits - The amount of significant digits that the output should have. Ex:
+ *   12.3k for 3 significantDigits
+ * @param numFormatterSettings.precisionDigits - The amount of precision digits that the output should have. Ex: 12.32k
+ *   for 2 precisionDigits
  */
 export const numFormatter = (
   num: number | string,
@@ -119,9 +121,18 @@ export function formatUsd(amount: number | string | undefined, decimals = true):
   return usd.split('.')[0]
 }
 
-export function compactNumber(value: number): string {
-  return Intl.NumberFormat(undefined, {
-    notation: 'compact',
+export function compactNumber(value: number, options?: Partial<{ showUsdSign: boolean }>): string {
+  const intlOptions: Intl.NumberFormatOptions = {
     maximumFractionDigits: 2,
-  }).format(value)
+    minimumFractionDigits: 2,
+    notation: 'compact',
+  }
+
+  if (options?.showUsdSign) {
+    intlOptions.currency = 'USD'
+    intlOptions.currencyDisplay = 'narrowSymbol'
+    intlOptions.style = 'currency'
+  }
+
+  return Intl.NumberFormat(undefined, intlOptions).format(value)
 }
