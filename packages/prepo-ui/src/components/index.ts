@@ -11,6 +11,7 @@ import Grid from './Grid'
 import Heading from './Heading'
 import Icon from './Icon'
 import Input from './Input'
+import Simulator from './Simulator'
 import Slider from './Slider'
 import Subtitle from './Subtitle'
 import Switch from './Switch'
@@ -35,6 +36,7 @@ export {
   Icon,
   Input,
   PresetTheme,
+  Simulator,
   Slider,
   Subtitle,
   Switch,

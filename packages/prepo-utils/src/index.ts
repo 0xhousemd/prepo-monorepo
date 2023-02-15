@@ -1,3 +1,4 @@
+import { calculateValuation } from './calculateValuation'
 import { createFallbackProvider } from './createFallbackProvider'
 import { getNetworkByChainId } from './getNetworkByChainId'
 import { getShortAccount } from './getShortAccount'
@@ -15,6 +16,7 @@ import { truncateDecimals } from './truncateDecimals'
 import { validateStringToBN } from './validateStringToBN'
 
 export {
+  calculateValuation,
   getShortAccount,
   getNetworkByChainId,
   createFallbackProvider,
