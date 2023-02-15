@@ -10,6 +10,7 @@ import PositionLabel from '../position/PositionLabel'
 import { getDateTimeFromSeconds, getFullDateShortenMonthFromSeconds } from '../../utils/date-utils'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { PositionName } from '../position/Position'
+import Skeleton from '../../components/Skeleton'
 import { Routes } from '../../lib/routes'
 
 const { toUsd } = numberFormatter
@@ -90,5 +91,19 @@ const HistoryTransaction: React.FC<HistoryTransactionProps> = ({ historyEvent })
     </Flex>
   )
 }
+
+export const HistoryTransactionSkeleton: React.FC = () => (
+  <Flex justifyContent="start" gap={8} width="100%" py={3}>
+    <Skeleton circle height={48} width={48} />
+    <Flex flexDirection="column" alignItems="start" gap={4}>
+      <Skeleton height={22} width={80} />
+      <Skeleton height={14} width={40} />
+    </Flex>
+    <Flex flexDirection="column" alignItems="end" ml="auto" gap={6}>
+      <Skeleton height={22} width={90} />
+      <Skeleton height={14} width={64} />
+    </Flex>
+  </Flex>
+)
 
 export default observer(HistoryTransaction)
