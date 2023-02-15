@@ -3,35 +3,32 @@ pragma solidity =0.8.7;
 
 import "./interfaces/IDepositRecord.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
+import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
 import "prepo-shared-contracts/contracts/AccountListCaller.sol";
 
 contract DepositRecord is
   IDepositRecord,
   SafeAccessControlEnumerable,
+  AllowedMsgSenders,
   AccountListCaller
 {
   uint256 private _globalNetDepositCap;
   uint256 private _globalNetDepositAmount;
   uint256 private _userDepositCap;
   mapping(address => uint256) private _userToDeposits;
-  mapping(address => bool) private _allowedHooks;
 
   bytes32 public constant SET_GLOBAL_NET_DEPOSIT_CAP_ROLE =
     keccak256("setGlobalNetDepositCap");
   bytes32 public constant SET_USER_DEPOSIT_CAP_ROLE =
     keccak256("setUserDepositCap");
-  bytes32 public constant SET_ALLOWED_HOOK_ROLE = keccak256("setAllowedHook");
+  bytes32 public constant SET_ALLOWED_MSG_SENDERS_ROLE =
+    keccak256("setAllowedMsgSenders");
   bytes32 public constant SET_ACCOUNT_LIST_ROLE = keccak256("setAccountList");
-
-  modifier onlyAllowedHooks() {
-    require(_allowedHooks[msg.sender], "msg.sender != allowed hook");
-    _;
-  }
 
   function recordDeposit(address user, uint256 amount)
     external
     override
-    onlyAllowedHooks
+    onlyAllowedMsgSenders
   {
     require(
       amount + _globalNetDepositAmount <= _globalNetDepositCap,
@@ -50,7 +47,7 @@ contract DepositRecord is
   function recordWithdrawal(uint256 amount)
     external
     override
-    onlyAllowedHooks
+    onlyAllowedMsgSenders
   {
     if (_globalNetDepositAmount > amount) {
       _globalNetDepositAmount -= amount;
@@ -77,17 +74,18 @@ contract DepositRecord is
     emit UserDepositCapChange(userDepositCap);
   }
 
-  function setAllowedHook(address hook, bool allowed)
-    external
+  function setAllowedMsgSenders(IAccountList allowedMsgSenders)
+    public
+    virtual
     override
-    onlyRole(SET_ALLOWED_HOOK_ROLE)
+    onlyRole(SET_ALLOWED_MSG_SENDERS_ROLE)
   {
-    _allowedHooks[hook] = allowed;
-    emit AllowedHooksChange(hook, allowed);
+    super.setAllowedMsgSenders(allowedMsgSenders);
   }
 
   function setAccountList(IAccountList accountList)
     public
+    virtual
     override
     onlyRole(SET_ACCOUNT_LIST_ROLE)
   {
@@ -118,9 +116,5 @@ contract DepositRecord is
     returns (uint256)
   {
     return _userToDeposits[account];
-  }
-
-  function isHookAllowed(address hook) external view override returns (bool) {
-    return _allowedHooks[hook];
   }
 }

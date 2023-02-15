@@ -3,9 +3,9 @@ import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { id, parseEther } from 'ethers/lib/utils'
 import { ZERO_ADDRESS } from 'prepo-constants'
-import { utils } from 'prepo-hardhat'
+import { batchGrantAndAcceptRoles, grantAndAcceptRole, utils } from 'prepo-hardhat'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
-import { withdrawHookFixture } from '../fixtures/HookFixture'
+import { fakeAccountListFixture, withdrawHookFixture } from '../fixtures/HookFixture'
 import { smockDepositRecordFixture } from '../fixtures/DepositRecordFixture'
 import { setAccountBalance } from '../utils'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
@@ -13,6 +13,7 @@ import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
 import { smockTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { roleAssigners } from '../../helpers'
 import {
+  AccountList,
   Collateral,
   DepositRecord,
   TestERC20,
@@ -29,6 +30,7 @@ describe('=> WithdrawHook', () => {
   let deployer: SignerWithAddress
   let user: SignerWithAddress
   let treasury: SignerWithAddress
+  let allowList: FakeContract<AccountList>
   let mockTestToken: MockContract<TestERC20>
   let fakeCollateral: FakeContract<Collateral>
   let mockDepositRecord: MockContract<DepositRecord>
@@ -46,14 +48,17 @@ describe('=> WithdrawHook', () => {
     withdrawHook = await withdrawHookFixture()
     mockTestToken = await smockTestERC20Fixture('Test Token', 'TEST', 18)
     fakeCollateral = await fakeCollateralFixture()
+    allowList = await fakeAccountListFixture()
     fakeCollateral.getBaseToken.returns(mockTestToken.address)
     await setAccountBalance(fakeCollateral.address, '0.1')
     mockDepositRecord = await smockDepositRecordFixture()
     fakeTokenSender = await smockTokenSenderFixture(mockTestToken.address)
     await roleAssigners.assignWithdrawHookRoles(deployer, deployer, withdrawHook)
     await roleAssigners.assignDepositRecordRoles(deployer, deployer, mockDepositRecord)
-    await mockDepositRecord.connect(deployer).setAllowedHook(user.address, true)
-    await mockDepositRecord.connect(deployer).setAllowedHook(withdrawHook.address, true)
+    await mockDepositRecord.connect(deployer).setAllowedMsgSenders(allowList.address)
+    await mockDepositRecord.connect(deployer).setAccountList(allowList.address)
+    allowList.isIncluded.whenCalledWith(user.address).returns(true)
+    allowList.isIncluded.whenCalledWith(withdrawHook.address).returns(true)
   })
 
   describe('initial state', () => {

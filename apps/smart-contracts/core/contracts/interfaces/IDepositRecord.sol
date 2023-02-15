@@ -18,13 +18,6 @@ interface IDepositRecord {
   event UserDepositCapChange(uint256 cap);
 
   /**
-   * @dev Emitted via `setAllowedHook()`.
-   * @param hook Hook with changed permissions
-   * @param allowed Whether the hook is allowed
-   */
-  event AllowedHooksChange(address hook, bool allowed);
-
-  /**
    * @dev This function will be called by a hook before the fee
    * is subtracted from the initial `amount` passed in.
    *
@@ -67,15 +60,6 @@ interface IDepositRecord {
   function setUserDepositCap(uint256 userDepositCap) external;
 
   /**
-   * @notice Sets if a contract is allowed to record deposits
-   * and withdrawals.
-   * @dev Only callable by owner().
-   * @param hook The contract address
-   * @param allowed Whether or not the contract will be allowed
-   */
-  function setAllowedHook(address hook, bool allowed) external;
-
-  /**
    * @notice Gets the maximum Base Token amount that is allowed to be
    * deposited (net of withdrawals).
    * @dev Deposits are not allowed if `globalNetDepositAmount` exceeds
@@ -102,12 +86,4 @@ interface IDepositRecord {
     external
     view
     returns (uint256);
-
-  /**
-   * @notice Returns whether the contract is allowed to record deposits and
-   * withdrawals.
-   * @param hook The contract to retrieve allowed status for
-   * @return Whether the contract is allowed
-   */
-  function isHookAllowed(address hook) external view returns (bool);
 }

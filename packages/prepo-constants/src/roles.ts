@@ -11,9 +11,10 @@ export const COLLATERAL_ROLES = [
 ]
 
 export const DEPOSIT_RECORD_ROLES = [
-  id('setAllowedHook'),
   id('setUserDepositCap'),
   id('setGlobalNetDepositCap'),
+  id('setAllowedMsgSenders'),
+  id('setAccountList')
 ]
 
 export const DEPOSIT_HOOK_ROLES = [
@@ -37,7 +38,7 @@ export const WITHDRAW_HOOK_ROLES = [
   id('setGlobalWithdrawLimitPerPeriod'),
   id('setUserWithdrawLimitPerPeriod'),
   id('setTreasury'),
-  id('setTokenSender'),
+  id('setTokenSender')
 ]
 
 export const MANAGER_WITHDRAW_HOOK_ROLES = [
