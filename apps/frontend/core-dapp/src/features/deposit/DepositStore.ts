@@ -105,4 +105,18 @@ export class DepositStore {
     if (!this.root.web3Store.connected) return false
     return this.root.baseTokenStore.needToAllowFor(this.depositAmount, 'preCT')
   }
+
+  get globalNetDepositAmountInUsd(): string | undefined {
+    const depositAmount = this.root.depositRecordStore.globalNetDepositAmount
+    if (!depositAmount) return undefined
+
+    return this.root.baseTokenStore.formatUnits(depositAmount)
+  }
+
+  get globalNetDepositCapInUsd(): string | undefined {
+    const depositAmount = this.root.depositRecordStore.globalNetDepositCap
+    if (!depositAmount) return undefined
+
+    return this.root.baseTokenStore.formatUnits(depositAmount)
+  }
 }

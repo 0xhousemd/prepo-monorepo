@@ -29,7 +29,7 @@ const Message = styled.div`
 
 const DepositPage: React.FC = () => {
   const {
-    depositStore: { depositing, depositAmount, isLoadingBalance, setDepositAmount },
+    depositStore: { depositAmount, depositing, isLoadingBalance, setDepositAmount },
     preCTTokenStore,
     baseTokenStore: { balanceOfSigner, tokenBalanceFormat },
   } = useRootStore()

@@ -10,6 +10,7 @@ export type CoreTokenContractNames =
   | 'PREPO_MARKET'
   | 'PPO'
   | 'PPO_STAKING'
+  | 'DEPOSIT_RECORD'
 
 export type CoreContracts = {
   [key in CoreTokenContractNames]: ExternalContract
@@ -51,6 +52,12 @@ export const PPO_STAKING_ADDRESS: ExternalContract = {
   goerli: 'Not yet deployed',
 }
 
+export const DEPOSIT_RECORD_ADDRESS: ExternalContract = {
+  // A dummy contract for testing purposes only.
+  // The values can be modified by anyone.
+  goerli: '0x1412039d105c41d19f8c77aebdc118a5945aba6a',
+}
+
 export const coreContracts: CoreContracts = {
   MBT: BASE_TOKEN_ADDRESS,
   preCT: COLLATERAL_TOKEN_ADDRESS,
@@ -61,4 +68,5 @@ export const coreContracts: CoreContracts = {
   PREPO_MARKET: PREPO_MARKET_ADDRESS,
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,
+  DEPOSIT_RECORD: DEPOSIT_RECORD_ADDRESS,
 }

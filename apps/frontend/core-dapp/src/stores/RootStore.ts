@@ -12,6 +12,7 @@ import { CoreGraphStore } from './graphs/CoreGraphStore'
 import { TimerStore } from './TimerStore'
 import { UniswapV3GraphStore } from './graphs/UniswapV3GraphStore'
 import { SwapStore } from './SwapStore'
+import { DepositRecordStore } from './DepositRecordStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
 import { AdvancedSettingsStore } from '../components/AdvancedSettingsModal/AdvancedSettingsStore'
@@ -47,6 +48,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   tradeStore: TradeStore
   timerStore: TimerStore
   depositStore: DepositStore
+  depositRecordStore: DepositRecordStore
   marketStore: MarketStore
   advancedSettingsStore: AdvancedSettingsStore
   baseTokenStore: Erc20Store
@@ -80,6 +82,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.marketStore = new MarketStore(this)
     this.portfolioStore = new PortfolioStore(this)
     this.depositStore = new DepositStore(this)
+    this.depositRecordStore = new DepositRecordStore(this)
     this.withdrawStore = new WithdrawStore(this)
     this.tradeStore = new TradeStore(this)
     this.advancedSettingsStore = new AdvancedSettingsStore(this)
