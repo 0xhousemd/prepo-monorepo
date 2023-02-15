@@ -514,23 +514,13 @@ describe('=> prePOMarket', () => {
       return TEST_MINT_AMOUNT
     }
 
-    // TODO: need to implement a way to remove the need for approval calls, perhaps using permit signatures?
-    const approveTokensForRedemption = async (
-      owner: SignerWithAddress,
-      amount: BigNumber
-    ): Promise<void> => {
-      longToken = await LongShortTokenAttachFixture(await prePOMarket.getLongToken())
-      shortToken = await LongShortTokenAttachFixture(await prePOMarket.getShortToken())
-      await longToken.connect(owner).approve(prePOMarket.address, amount)
-      await shortToken.connect(owner).approve(prePOMarket.address, amount)
-    }
-
     const setupMarket = async (): Promise<BigNumber> => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
       redeemHook = await fakeRedeemHookFixture()
       const amountMinted = await mintTestPosition()
-      await approveTokensForRedemption(user, amountMinted)
+      longToken = await LongShortTokenAttachFixture(await prePOMarket.getLongToken())
+      shortToken = await LongShortTokenAttachFixture(await prePOMarket.getShortToken())
       await prePOMarket.connect(treasury).setRedemptionFee(TEST_REDEMPTION_FEE)
       await prePOMarket.connect(treasury).setRedeemHook(redeemHook.address)
       return amountMinted
@@ -953,7 +943,6 @@ describe('=> prePOMarket', () => {
     it('emits Redemption indexed by redeemer', async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       const amountMinted = await mintTestPosition()
-      await approveTokensForRedemption(user, amountMinted)
       const redeemFee = calculateFee(amountMinted, await prePOMarket.getRedemptionFee())
 
       await prePOMarket.connect(user).redeem(amountMinted, amountMinted, user.address)

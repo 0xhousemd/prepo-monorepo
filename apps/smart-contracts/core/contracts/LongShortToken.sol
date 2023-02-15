@@ -30,6 +30,10 @@ contract LongShortToken is ERC20Burnable, Ownable, ILongShortToken {
     public
     override(ERC20Burnable, ILongShortToken)
   {
+    if (msg.sender == owner()) {
+      super._burn(account, amount);
+      return;
+    }
     super.burnFrom(account, amount);
   }
 }

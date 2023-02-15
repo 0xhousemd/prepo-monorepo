@@ -128,8 +128,6 @@ describe('=> ArbitrageBroker', () => {
       await arbitrageBroker.connect(governance).setMarketValidity(market.address, true)
 
       expect(core.collateral.approve).calledWith(market.address, ethers.constants.MaxUint256)
-      expect(longToken.approve).calledWith(market.address, ethers.constants.MaxUint256)
-      expect(shortToken.approve).calledWith(market.address, ethers.constants.MaxUint256)
       expect(longToken.approve).calledWith(swapRouter.address, ethers.constants.MaxUint256)
       expect(shortToken.approve).calledWith(swapRouter.address, ethers.constants.MaxUint256)
     })
@@ -147,8 +145,6 @@ describe('=> ArbitrageBroker', () => {
       await arbitrageBroker.connect(governance).setMarketValidity(market.address, false)
 
       expect(core.collateral.approve).calledWith(market.address, 0)
-      expect(longToken.approve).calledWith(market.address, 0)
-      expect(shortToken.approve).calledWith(market.address, 0)
       expect(longToken.approve).calledWith(swapRouter.address, 0)
       expect(shortToken.approve).calledWith(swapRouter.address, 0)
     })

@@ -2,6 +2,8 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { utils } from 'prepo-hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
+import { parseEther } from '@ethersproject/units'
+import { ZERO_ADDRESS } from 'prepo-constants'
 import { LongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
 import { LongShortToken } from '../../types/generated'
 
@@ -10,6 +12,7 @@ describe('=> LongShortToken', () => {
   let deployer: SignerWithAddress
   let user: SignerWithAddress
   let user2: SignerWithAddress
+  const TEST_AMOUNT = parseEther('1')
 
   beforeEach(async () => {
     ;[deployer, user, user2] = await ethers.getSigners()
@@ -43,6 +46,35 @@ describe('=> LongShortToken', () => {
     it('should allow the owner to mint tokens for themselves', async () => {
       await longShort.connect(deployer).mint(deployer.address, 1)
       expect(await longShort.balanceOf(deployer.address)).to.eq(1)
+    })
+  })
+
+  describe('# burnFrom', () => {
+    beforeEach(async () => {
+      await longShort.connect(deployer).mint(user.address, TEST_AMOUNT)
+    })
+
+    it('allows token contract owner to burn user tokens without approval', async () => {
+      const userBalanceBefore = await longShort.balanceOf(user.address)
+      const totalSupplyBefore = await longShort.totalSupply()
+      await longShort.connect(user).approve(deployer.address, 0)
+
+      const tx = await longShort.connect(deployer).burnFrom(user.address, TEST_AMOUNT)
+
+      expect(tx)
+        .emit(longShort.address, 'Transfer')
+        .withArgs(user.address, ZERO_ADDRESS, TEST_AMOUNT)
+      expect(await longShort.balanceOf(user.address)).eq(userBalanceBefore.sub(TEST_AMOUNT))
+      expect(await longShort.totalSupply()).eq(totalSupplyBefore.sub(TEST_AMOUNT))
+    })
+
+    it('reverts if insufficient allowance and burner != owner', async () => {
+      expect(user2.address).not.eq(await longShort.owner())
+      expect(await longShort.allowance(user2.address, user.address)).lt(TEST_AMOUNT)
+
+      await expect(longShort.connect(user2).burnFrom(user.address, TEST_AMOUNT)).to.revertedWith(
+        'ERC20: insufficient allowance'
+      )
     })
   })
 })
