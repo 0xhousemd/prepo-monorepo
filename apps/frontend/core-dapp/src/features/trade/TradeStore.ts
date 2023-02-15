@@ -473,4 +473,15 @@ export class TradeStore {
 
     return position
   }
+
+  get openTradePrice(): number | undefined {
+    if (this.openTradeAmount === '') return this.selectedPosition?.price
+
+    if (this.openTradeAmountOut === undefined) return undefined
+
+    const { slippage } = this.root.advancedSettingsStore
+    const amountOutAfterSlippage = +this.openTradeAmountOut * (1 - slippage)
+
+    return +this.openTradeAmount / amountOutAfterSlippage
+  }
 }

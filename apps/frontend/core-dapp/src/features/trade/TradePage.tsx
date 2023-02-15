@@ -7,6 +7,7 @@ import useTradePage from './useTradePage'
 import TradePageTab from './TradePageTab'
 import MarketChart from './market-chart'
 import TradeSettings from './TradeSettings'
+import Simulator from '../simulator'
 import Card from '../../components/Card'
 import { isProduction } from '../../utils/isProduction'
 import { useRootStore } from '../../context/RootStoreProvider'
@@ -35,16 +36,17 @@ const TradePage: React.FC = () => {
   useTradePage()
   const { tradeStore } = useRootStore()
   const { action } = tradeStore
-  const hideTabs = isProduction()
+  const isProd = isProduction()
 
   return (
     <Wrapper>
       <TradeCard>
-        {!hideTabs && <TradePageTab />}
+        {!isProd && <TradePageTab />}
         {/** only show close trade flow if open/close tabs are shown */}
-        {!hideTabs && action === 'close' ? <CloseTrade /> : <OpenTrade />}
+        {!isProd && action === 'close' ? <CloseTrade /> : <OpenTrade />}
         <TradeSettings />
       </TradeCard>
+      {!isProd && <Simulator />}
       <MarketChart />
     </Wrapper>
   )
