@@ -5,7 +5,11 @@ export class TimerStore {
   now = new Date()
   constructor() {
     makeAutoObservable(this)
-    this.syncNowEverySec()
+
+    // Don't run on tests because leaving an open interval would prevent tests from exiting.
+    if (process.env.NODE_ENV !== 'test') {
+      this.syncNowEverySec()
+    }
   }
 
   get nowInMs(): number {
