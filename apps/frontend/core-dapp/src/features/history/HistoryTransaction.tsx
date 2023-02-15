@@ -1,19 +1,42 @@
 import React, { useMemo } from 'react'
 import { Flex, Icon, spacingIncrement } from 'prepo-ui'
-import styled from 'styled-components'
+import styled, { Color } from 'styled-components'
 import { observer } from 'mobx-react-lite'
 import Link from 'next/link'
 import { HistoryTransaction as HistoryTransactionEntity } from './history.types'
-import { buttonColors as transactionTypeColors } from './History'
 import { numberFormatter } from '../../utils/numberFormatter'
 import PositionLabel from '../position/PositionLabel'
-import { getDateTimeFromSeconds, getFullDateShortenMonthFromSeconds } from '../../utils/date-utils'
+import { getDateTimeFromSeconds } from '../../utils/date-utils'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { PositionName } from '../position/Position'
 import Skeleton from '../../components/Skeleton'
 import { Routes } from '../../lib/routes'
 
 const { toUsd } = numberFormatter
+
+type ButtonColors = {
+  backgroundColor: keyof Color
+  color: keyof Color
+}
+
+const buttonColors: { [key: string]: ButtonColors } = {
+  Withdrawn: {
+    backgroundColor: 'accentWarning',
+    color: 'warning',
+  },
+  Deposited: {
+    backgroundColor: 'accentWarning',
+    color: 'warning',
+  },
+  Opened: {
+    backgroundColor: 'accentSuccess',
+    color: 'success',
+  },
+  Closed: {
+    backgroundColor: 'accentError',
+    color: 'error',
+  },
+}
 
 const TransactionName = styled(PositionName).attrs({ as: 'a' })`
   :hover {
@@ -28,10 +51,9 @@ const Label = styled.p`
 
 const EventLink = styled.a<{ $event: string }>`
   align-items: center;
-  background: ${({ $event, theme }): string =>
-    theme.color[transactionTypeColors[$event].backgroundColor]};
+  background: ${({ $event, theme }): string => theme.color[buttonColors[$event].backgroundColor]};
   border-radius: ${spacingIncrement(8)};
-  color: ${({ $event, theme }): string => theme.color[transactionTypeColors[$event].color]};
+  color: ${({ $event, theme }): string => theme.color[buttonColors[$event].color]};
   display: flex;
   padding: ${spacingIncrement(2)} ${spacingIncrement(8)};
   white-space: nowrap;

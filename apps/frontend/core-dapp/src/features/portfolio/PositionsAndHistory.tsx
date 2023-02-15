@@ -2,10 +2,12 @@ import { t } from '@lingui/macro'
 import { Box, centered, media, spacingIncrement } from 'prepo-ui'
 import { useState } from 'react'
 import styled, { useTheme } from 'styled-components'
+import { observer } from 'mobx-react-lite'
 import FilterButton from '../../components/Filter/FilterButton'
 import Tabs from '../../components/Tabs'
 import History from '../history/History'
 import Positions from '../position/Positions'
+import { useRootStore } from '../../context/RootStoreProvider'
 
 const StyledTabs = styled(Tabs)`
   &&&& {
@@ -15,10 +17,7 @@ const StyledTabs = styled(Tabs)`
 
     .ant-select-selection-item,
     .ant-tabs-tab-btn {
-      font-size: ${({ theme }): string => theme.fontSize.sm};
-      ${media.desktop`
-        font-size: ${({ theme }): string => theme.fontSize.md};
-      `}
+      font-size: ${({ theme }): string => theme.fontSize.lg};
     }
 
     .ant-select-arrow {
@@ -28,12 +27,16 @@ const StyledTabs = styled(Tabs)`
     }
 
     .ant-tabs-nav {
-      border-bottom: solid 1px ${({ theme }): string => theme.color.accent1};
       flex-direction: column;
       margin-bottom: 0;
       ${media.desktop`
         flex-direction: row;
       `}
+    }
+
+    .ant-tabs-nav-wrap {
+      padding: ${spacingIncrement(16)};
+      padding-bottom: ${spacingIncrement(2)};
     }
 
     .ant-tabs-extra-content {
@@ -51,15 +54,13 @@ const StyledTabs = styled(Tabs)`
     .ant-tabs-tab {
       display: flex;
       flex: 1;
-      padding: ${spacingIncrement(8)} 0;
+      padding: 0 0 ${spacingIncrement(4)};
       width: 100%;
-      ${media.desktop`
-        padding: ${spacingIncrement(12)} ${spacingIncrement(20)};
-      `}
     }
 
     .ant-tabs-nav-list {
       display: grid;
+      gap: ${spacingIncrement(30)};
       grid-template-columns: auto auto;
     }
 
@@ -67,31 +68,29 @@ const StyledTabs = styled(Tabs)`
     .ant-tabs-tab,
     .ant-tabs-tab .ant-tabs-tab-active {
       ${centered}
-      ${media.desktop`
-        width: auto;
-      `}
-      width: 100%;
+    }
+
+    .ant-tabs-ink-bar {
+      border-radius: 1px 1px 0 0;
+      height: ${spacingIncrement(4)};
     }
   }
 `
 
 const PositionsAndHistory: React.FC = () => {
+  const { web3Store } = useRootStore()
   const [activeTab, setActiveTab] = useState(0)
-  const { borderRadius } = useTheme()
+  const { borderRadius, shadow } = useTheme()
+  const { connected } = web3Store
+
   return (
-    <Box
-      border="1px solid"
-      borderColor="neutral8"
-      borderRadius={borderRadius.xs}
-      mt={{ desktop: 32, mobile: 24 }}
-      width="100%"
-    >
+    <Box borderRadius={borderRadius.lg} boxShadow={shadow.prepo} width="100%">
       <StyledTabs
         disableMore
-        tabBarExtraContent={activeTab === 1 && <FilterButton />}
+        tabBarExtraContent={activeTab === 1 && connected && <FilterButton />}
         size="large"
         onChange={(e): void => setActiveTab(+e)}
-        styles={{ activeColor: 'neutral1', color: 'neutral2' }}
+        styles={{ activeColor: 'secondary', activeTextWeight: 'semiBold', color: 'neutral2' }}
         tab={[
           {
             heading: t`Positions`,
@@ -102,9 +101,10 @@ const PositionsAndHistory: React.FC = () => {
             content: <History />,
           },
         ]}
+        animated={false}
       />
     </Box>
   )
 }
 
-export default PositionsAndHistory
+export default observer(PositionsAndHistory)
