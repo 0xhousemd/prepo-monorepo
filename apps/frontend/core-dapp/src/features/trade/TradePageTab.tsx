@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useRouter } from 'next/router'
-import { Button, Icon, spacingIncrement } from 'prepo-ui'
-import styled from 'styled-components'
+
 import { TradeAction } from './TradeStore'
 import { useRootStore } from '../../context/RootStoreProvider'
 import PageTabs from '../../components/PageTabs'
@@ -12,14 +11,15 @@ const tabs: TabProps[] = [
   { value: 'close', heading: 'Close' },
 ]
 
-const SettingsButton = styled(Button)`
-  &&&& {
-    button {
-      color: ${({ theme }): string => theme.color.neutral5};
-      padding: ${spacingIncrement(1)};
-    }
-  }
-`
+// saving these code for when we want to show settings
+// const SettingsButton = styled(Button)`
+//   &&&& {
+//     button {
+//       color: ${({ theme }): string => theme.color.neutral5};
+//       padding: ${spacingIncrement(1)};
+//     }
+//   }
+// `
 
 const TradePageTab: React.FC = () => {
   const router = useRouter()
@@ -37,14 +37,15 @@ const TradePageTab: React.FC = () => {
       activeKey={action === 'close' ? 'close' : 'open'}
       onChange={handleClick}
       tab={tabs}
-      tabBarExtraContent={
-        <SettingsButton
-          icon={<Icon name="settings" height="16" width="16" />}
-          size="xs"
-          type="text"
-          onClick={(): void => tradeStore.setShowSettings(true)}
-        />
-      }
+      // saving these code for when we want to show settings
+      // tabBarExtraContent={
+      //   <SettingsButton
+      //     icon={<Icon name="settings" height="16" width="16" />}
+      //     size="xs"
+      //     type="text"
+      //     onClick={(): void => tradeStore.setShowSettings(true)}
+      //   />
+      // }
     />
   )
 }

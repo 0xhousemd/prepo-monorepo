@@ -1,4 +1,4 @@
-import { Icon, media, spacingIncrement } from 'prepo-ui'
+import { media, spacingIncrement } from 'prepo-ui'
 import styled from 'styled-components'
 import { observer } from 'mobx-react-lite'
 import Chart from './Chart'
@@ -6,7 +6,6 @@ import Timeframes from './Timeframe'
 import Stats from './Stats'
 import Card from '../../../components/Card'
 import { useRootStore } from '../../../context/RootStoreProvider'
-import { isProduction } from '../../../utils/isProduction'
 
 const Wrapper = styled(Card)`
   width: 100%;
@@ -31,18 +30,6 @@ const Wrapper = styled(Card)`
   }
 `
 
-const CloseButton = styled.button`
-  background-color: transparent;
-  border: none;
-  color: ${({ theme }): string => theme.color.neutral3};
-  cursor: pointer;
-  padding: 0;
-
-  :hover {
-    opacity: 0.6;
-  }
-`
-
 const Header = styled.div`
   align-items: center;
   display: flex;
@@ -52,16 +39,12 @@ const Header = styled.div`
 const MarketChart: React.FC = () => {
   const { tradeStore } = useRootStore()
   const { selectedMarket, showChart } = tradeStore
-  const hideChart = isProduction()
-  if (!showChart || hideChart) return null
+  if (!showChart) return null
 
   return (
     <Wrapper>
       <Header>
         <Timeframes market={selectedMarket} />
-        <CloseButton onClick={(): void => tradeStore.setShowChart(false)}>
-          <Icon name="cross" height="16" width="16" />
-        </CloseButton>
       </Header>
       <Chart market={selectedMarket} />
       <Stats market={selectedMarket} />

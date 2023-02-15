@@ -31,7 +31,7 @@ export class TradeStore {
   openingTrade = false
   selectedMarket?: MarketEntity
   slideUpContent?: SlideUpContent = undefined
-  showChart = false
+  showChart = true
   selectedTimeframe: ChartTimeframe = ChartTimeframe.DAY
   showSettings = false
 
