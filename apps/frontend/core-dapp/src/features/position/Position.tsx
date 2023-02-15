@@ -11,7 +11,7 @@ import Skeleton from '../../components/Skeleton'
 
 const { toUsd } = numberFormatter
 
-const PositionName = styled.p`
+export const PositionName = styled.p`
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   color: ${({ theme }): string => theme.color.secondary};

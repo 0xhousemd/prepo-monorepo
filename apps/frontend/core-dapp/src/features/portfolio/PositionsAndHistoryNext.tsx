@@ -5,7 +5,7 @@ import styled, { useTheme } from 'styled-components'
 import { observer } from 'mobx-react-lite'
 import FilterButton from '../../components/Filter/FilterButton'
 import Tabs from '../../components/Tabs'
-import History from '../history/History'
+import History from '../history/HistoryNext'
 import Positions from '../position/PositionsNext'
 import { useRootStore } from '../../context/RootStoreProvider'
 

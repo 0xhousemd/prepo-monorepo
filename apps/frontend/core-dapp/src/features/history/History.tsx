@@ -11,7 +11,7 @@ const DEFAULT_COLORS: RecordButtonColors = {
   color: 'primaryWhite',
 }
 
-const buttonColors: { [key: string]: RecordButtonColors } = {
+export const buttonColors: { [key: string]: RecordButtonColors } = {
   Withdrawn: {
     backgroundColor: 'accentWarning',
     color: 'warning',

@@ -7,7 +7,8 @@ import startOfHour from 'date-fns/startOfHour'
 import { DateRange } from '../types/general.types'
 
 const DATE_FORMAT = 'do LLLL yyyy' // 1st January 2025
-const DATE_FORMAT_SHORTEN_MONTH = 'do LLL yyyy' // 1st Jan 2025
+const DATE_FORMAT_SHORTEN_MONTH = 'd LLL yyyy' // 1 Jan 2025
+const DATE_TIME_FORMAT = 'd LLL HH:MM' // 1 Jan 23:12
 const TIME_FORMAT_12 = 'h:mma'
 const TIME_FORMAT_24 = 'h:MM'
 
@@ -34,6 +35,12 @@ export const getFullDateFromMs = (ms: number): string => format(ms, DATE_FORMAT)
 
 export const getFullDateShortenMonthFromMs = (ms: number): string =>
   format(ms, DATE_FORMAT_SHORTEN_MONTH)
+
+export const getDateTimeFromSeconds = (ms: number): string =>
+  format(ms * SEC_IN_MS, DATE_TIME_FORMAT)
+
+export const getFullDateShortenMonthFromSeconds = (ms: number): string =>
+  getFullDateShortenMonthFromMs(ms * SEC_IN_MS)
 
 export const getFullDateTimeFromSeconds = (seconds: number): string =>
   format(seconds * SEC_IN_MS, `yyyy-MM-dd HH:mm:ss`)

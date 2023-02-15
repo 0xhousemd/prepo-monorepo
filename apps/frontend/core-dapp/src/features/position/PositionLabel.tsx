@@ -9,8 +9,8 @@ type Props = {
 
 const Wrapper = styled.div<Props>`
   color: ${({ theme, positionType }): string => theme.positionType[positionType]};
-  font-size: ${({ theme }): string => theme.fontSize.xs};
-  font-weight: ${({ theme }): number => theme.fontWeight.medium};
+  font-size: ${({ theme }): string => theme.fontSize.sm};
+  font-weight: ${({ theme }): number => theme.fontWeight.regular};
   text-transform: capitalize;
 
   ${({ positionType, theme, withBackground }): FlattenSimpleInterpolation | undefined =>
