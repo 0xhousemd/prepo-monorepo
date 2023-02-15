@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite'
 import { CurrencyInput, spacingIncrement } from 'prepo-ui'
 import styled from 'styled-components'
 import ClosePositionButton from './ClosePositionButton'
+import ClosePositionSummary from './ClosePositionSummary'
 import PositionsSlideUp from './PositionsSlideUp'
 import { useRootStore } from '../../../context/RootStoreProvider'
 
@@ -9,7 +10,6 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${spacingIncrement(16)};
-  min-height: ${spacingIncrement(324)};
   padding: ${spacingIncrement(8)};
   width: 100%;
 `
@@ -32,7 +32,7 @@ const CloseTrade: React.FC = () => {
         value={closePositionValue}
       />
       <ClosePositionButton />
-      <p>TODO: Summary</p>
+      <ClosePositionSummary />
     </Wrapper>
   )
 }

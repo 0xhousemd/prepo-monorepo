@@ -21,6 +21,7 @@ export class TradeStore {
   action: TradeAction = 'open'
   approving = false
   approvingClosePositions = false
+  closePositionAmountOutBN?: BigNumber
   closeTradeHash?: string
   direction: Direction = DEFAULT_DIRECTION
   closePositionValue = ''
@@ -38,6 +39,49 @@ export class TradeStore {
   constructor(public root: RootStore) {
     makeAutoObservable(this, {}, { autoBind: true })
     this.subscribeOpenTradeAmountOut()
+    this.subscribeClosePositionAmountOut()
+  }
+
+  subscribeClosePositionAmountOut(): void {
+    reaction(
+      () => ({
+        selectedPosition: this.selectedPosition,
+        closePositionAmountBN: this.closePositionAmountBN,
+        marketValuation: this.selectedMarket?.estimatedValuation,
+      }),
+      async ({ closePositionAmountBN, selectedPosition }) => {
+        this.closePositionAmountOutBN = undefined
+
+        const { address: preCTAddress } = this.root.preCTTokenStore
+
+        if (
+          closePositionAmountBN === undefined ||
+          !preCTAddress ||
+          !selectedPosition?.token.address ||
+          selectedPosition.pool.poolImmutables?.fee === undefined
+        )
+          return
+
+        const { fee } = selectedPosition.pool.poolImmutables
+
+        const output = await this.root.swapStore.quoteExactInput({
+          amountBN: closePositionAmountBN,
+          fromAddress: selectedPosition.token.address,
+          toAddress: preCTAddress,
+          fee,
+        })
+
+        runInAction(() => {
+          const shouldNotUpdate =
+            output === undefined ||
+            this.closePositionAmountBN === undefined ||
+            !output.cachedInAmount.eq(this.closePositionAmountBN)
+
+          if (shouldNotUpdate) return
+          this.closePositionAmountOutBN = output.output
+        })
+      }
+    )
   }
 
   subscribeOpenTradeAmountOut(): void {
@@ -176,6 +220,11 @@ export class TradeStore {
     this.openTradeHash = hash
   }
 
+  get closePositionAmountOut(): string | undefined {
+    if (this.closePositionAmountOutBN === undefined || !this.selectedPosition) return undefined
+    return this.selectedPosition.token.formatUnits(this.closePositionAmountOutBN)
+  }
+
   get closePositionValueBN(): BigNumber | undefined {
     return this.selectedPosition?.token.parseUnits(this.closePositionValue)
   }
@@ -220,6 +269,7 @@ export class TradeStore {
     )
   }
 
+  // amount of long short token to close in BigNumber
   get closePositionAmountBN(): BigNumber | undefined {
     if (
       !this.selectedPosition ||
@@ -235,11 +285,60 @@ export class TradeStore {
     return this.closePositionValueBN.mul(WEI_DENOMINATOR).div(this.selectedPosition.priceBN)
   }
 
+  // amount of long short token to close in string
   get closePositionAmount(): string | undefined {
     if (this.closePositionAmountBN === undefined || this.selectedPosition === undefined)
       return undefined
 
     return this.selectedPosition.token.formatUnits(this.closePositionAmountBN)
+  }
+
+  get closePositionPriceBN(): BigNumber | undefined {
+    if (
+      this.closePositionAmountOutBN === undefined ||
+      this.closePositionAmountBN === undefined ||
+      this.closePositionAmountBN.eq(0)
+    )
+      return undefined
+
+    return this.closePositionAmountOutBN.mul(WEI_DENOMINATOR).div(this.closePositionAmountBN)
+  }
+
+  get closePositionPrice(): string | undefined {
+    if (this.closePositionPriceBN === undefined || this.selectedPosition === undefined)
+      return undefined
+
+    return this.selectedPosition.token.formatUnits(this.closePositionPriceBN)
+  }
+
+  get closePositionValuation(): number | undefined {
+    if (!this.selectedPosition || this.closePositionPrice === undefined) return undefined
+    const { payoutRange, valuationRange } = this.selectedPosition.market
+    if (payoutRange === undefined || valuationRange === undefined) return undefined
+
+    const longTokenPrice =
+      this.direction === 'long' ? +this.closePositionPrice : 1 - +this.closePositionPrice
+
+    return calculateValuation({
+      longTokenPrice,
+      payoutRange,
+      valuationRange,
+    })
+  }
+
+  // pnl per token = currentPrice - costPerToken
+  get closePositionPnlPerToken(): number | undefined {
+    if (!this.selectedPosition) return 0
+    if (this.closePositionPrice === undefined || this.selectedPosition.costBasis === undefined)
+      return undefined
+
+    return +this.closePositionPrice - this.selectedPosition.costBasis
+  }
+
+  get closePositionPnlAmount(): number | undefined {
+    if (this.closePositionAmount === undefined || this.closePositionPnlPerToken === undefined)
+      return undefined
+    return +this.closePositionAmount * this.closePositionPnlPerToken
   }
 
   get insufficientBalanceForClosePosition(): boolean | undefined {

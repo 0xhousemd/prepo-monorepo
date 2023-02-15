@@ -1,9 +1,11 @@
 import { Flex, Icon, Tooltip } from 'prepo-ui'
 import styled from 'styled-components'
+import Skeleton from './Skeleton'
 
 type Props = {
   label: string
   tooltip?: React.ReactNode
+  loading?: boolean
 }
 
 const LabelText = styled.p`
@@ -18,7 +20,7 @@ const Wrapper = styled(Flex)`
   color: ${({ theme }): string => theme.color.neutral3};
   font-weight: ${({ theme }): number => theme.fontWeight.medium};
 `
-const SummaryRecord: React.FC<Props> = ({ children, label, tooltip }) => (
+const SummaryRecord: React.FC<Props> = ({ children, label, loading, tooltip }) => (
   <Wrapper alignItems="center" justifyContent="space-between" width="100%">
     <Flex gap={4}>
       <LabelText>{label}</LabelText>
@@ -28,7 +30,7 @@ const SummaryRecord: React.FC<Props> = ({ children, label, tooltip }) => (
         </Tooltip>
       )}
     </Flex>
-    <ValueCol>{children}</ValueCol>
+    <ValueCol>{loading ? <Skeleton height="22px" width="64px" /> : children}</ValueCol>
   </Wrapper>
 )
 
