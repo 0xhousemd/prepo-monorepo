@@ -304,11 +304,15 @@ export class TradeStore {
     return this.closePositionAmountOutBN.mul(WEI_DENOMINATOR).div(this.closePositionAmountBN)
   }
 
-  get closePositionPrice(): string | undefined {
+  // this price can be number because it's only used for estimated calculation and never require precise calculation
+  get closePositionPrice(): number | undefined {
+    if (this.closePositionValue === '') return this.selectedPosition?.price
     if (this.closePositionPriceBN === undefined || this.selectedPosition === undefined)
       return undefined
 
-    return this.selectedPosition.token.formatUnits(this.closePositionPriceBN)
+    const price = this.selectedPosition.token.formatUnits(this.closePositionPriceBN)
+    if (price === undefined) return undefined
+    return +price
   }
 
   get closePositionValuation(): number | undefined {
@@ -317,7 +321,7 @@ export class TradeStore {
     if (payoutRange === undefined || valuationRange === undefined) return undefined
 
     const longTokenPrice =
-      this.direction === 'long' ? +this.closePositionPrice : 1 - +this.closePositionPrice
+      this.direction === 'long' ? this.closePositionPrice : 1 - this.closePositionPrice
 
     return calculateValuation({
       longTokenPrice,
@@ -332,13 +336,25 @@ export class TradeStore {
     if (this.closePositionPrice === undefined || this.selectedPosition.costBasis === undefined)
       return undefined
 
-    return +this.closePositionPrice - this.selectedPosition.costBasis
+    return this.closePositionPrice - this.selectedPosition.costBasis
   }
 
   get closePositionPnlAmount(): number | undefined {
-    if (this.closePositionAmount === undefined || this.closePositionPnlPerToken === undefined)
+    if (
+      this.closePositionValueByCostBasis === undefined ||
+      this.closePositionAmountOut === undefined
+    )
       return undefined
-    return +this.closePositionAmount * this.closePositionPnlPerToken
+    // the closePositionAmountOut is the actual USD amount user will receive
+    // hence, subtract the original spent amount on the closing portion, we get the pnl amount
+    return +this.closePositionAmountOut - this.closePositionValueByCostBasis
+  }
+
+  // this is the USD amount user original spent on the closing portion
+  get closePositionValueByCostBasis(): number | undefined {
+    if (this.closePositionAmount === undefined || this.selectedPosition?.costBasis === undefined)
+      return undefined
+    return +this.closePositionAmount * this.selectedPosition.costBasis
   }
 
   get insufficientBalanceForClosePosition(): boolean | undefined {

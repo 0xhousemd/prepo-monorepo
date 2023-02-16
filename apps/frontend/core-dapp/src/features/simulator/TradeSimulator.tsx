@@ -2,6 +2,7 @@ import { Button, Simulator, media, spacingIncrement } from 'prepo-ui'
 import { useState, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import { observer } from 'mobx-react-lite'
+import SimulatorSummary from './SimulatorSummary'
 import Card from '../../components/Card'
 import { useRootStore } from '../../context/RootStoreProvider'
 
@@ -60,7 +61,14 @@ const SimulatorWrapper = styled.div`
 
 const TradeSimulator: React.FC = () => {
   const { tradeStore, web3Store } = useRootStore()
-  const { action, openTradePrice, selectedPosition } = tradeStore
+  const {
+    action,
+    openTradePrice,
+    openTradeAmount,
+    closePositionPrice,
+    closePositionValueByCostBasis,
+    selectedPosition,
+  } = tradeStore
   const { connected } = web3Store
   const [entryPrice, setEntryPrice] = useState<number>()
   const [exitPrice, setExitPrice] = useState<number>()
@@ -89,16 +97,8 @@ const TradeSimulator: React.FC = () => {
     if (action === 'open' || !connected || emptyPosition)
       return selectedPosition?.market.payoutRange?.[1]
 
-    // TODO: sync close price after close position summary PR is merged
-    // (currently using default position price instead of the price that is based on input)
-    return selectedPosition?.price
-  }, [
-    action,
-    connected,
-    emptyPosition,
-    selectedPosition?.market.payoutRange,
-    selectedPosition?.price,
-  ])
+    return closePositionPrice
+  }, [action, closePositionPrice, connected, emptyPosition, selectedPosition?.market.payoutRange])
 
   // reset handles on simulator when:
   // - switch between open <> close
@@ -161,6 +161,13 @@ const TradeSimulator: React.FC = () => {
           onChangeEntry={handleEntryChange}
         />
       </SimulatorWrapper>
+      <SimulatorSummary
+        direction={selectedPosition?.direction ?? 'long'}
+        payoutRange={simulatorData?.payoutRange}
+        entryPrice={entryPrice}
+        exitPrice={exitPrice}
+        tradeSize={action === 'open' ? +openTradeAmount : closePositionValueByCostBasis}
+      />
     </Wrapper>
   )
 }

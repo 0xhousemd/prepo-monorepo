@@ -20,6 +20,7 @@ const ClosePositionSummary: React.FC = () => {
   const {
     closePositionValue,
     closePositionValueBN,
+    closePositionValueByCostBasis,
     selectedPosition,
     closePositionValuation,
     closePositionPnlAmount,
@@ -30,14 +31,15 @@ const ClosePositionSummary: React.FC = () => {
     // this line is only to get pass type check
     // the returned value doesn't matter because
     // SummaryRecord will show loading skeleton when closePositionPnlAmount is undefined
-    if (closePositionPnlAmount === undefined) return ''
+    if (closePositionPnlAmount === undefined || closePositionValueByCostBasis === undefined)
+      return ''
 
-    const pnlPercentage = closePositionPnlAmount / +closePositionValue
+    const pnlPercentage = (closePositionPnlAmount / closePositionValueByCostBasis) * 100
 
     if (pnlPercentage >= 0) return <Profit>+{pnlPercentage.toFixed(2)}%</Profit>
 
     return <Loss>{pnlPercentage.toFixed(2)}%</Loss>
-  }, [closePositionPnlAmount, closePositionValue])
+  }, [closePositionPnlAmount, closePositionValueByCostBasis])
 
   if (!selectedPosition || closePositionValue === '' || closePositionValueBN?.eq(0)) return null
 
