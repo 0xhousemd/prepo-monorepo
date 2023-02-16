@@ -63,10 +63,10 @@ interface IPrePOMarket {
    *
    * `owner()` may mint tokens before PublicMinting is enabled to
    * bootstrap a market with an initial supply.
-   * @param _amount Amount of Collateral to deposit
+   * @param amount Amount of Collateral to deposit
    * @return Long/Short tokens minted
    */
-  function mint(uint256 _amount) external returns (uint256);
+  function mint(uint256 amount) external returns (uint256);
 
   /**
    * @notice Redeem `longAmount` Long and `shortAmount` Short tokens for
@@ -76,13 +76,13 @@ interface IPrePOMarket {
    *
    * After the market has ended, users can redeem any amount of
    * Long/Short tokens for Collateral.
-   * @param _longAmount Amount of Long tokens to redeem
-   * @param _shortAmount Amount of Short tokens to redeem
+   * @param longAmount Amount of Long tokens to redeem
+   * @param shortAmount Amount of Short tokens to redeem
    */
   function redeem(
-    uint256 _longAmount,
-    uint256 _shortAmount,
-    address _recipient
+    uint256 longAmount,
+    uint256 shortAmount,
+    address recipient
   ) external;
 
   function setMintHook(IHook mintHook) external;
@@ -96,17 +96,17 @@ interface IPrePOMarket {
    * has ended when it is set to <= MAX_PAYOUT.
    *
    * Only callable by `owner()`.
-   * @param _finalLongPayout Payout to set Long token redemptions
+   * @param finalLongPayout Payout to set Long token redemptions
    */
-  function setFinalLongPayout(uint256 _finalLongPayout) external;
+  function setFinalLongPayout(uint256 finalLongPayout) external;
 
   /**
    * @notice Sets the fee for redeeming Long/Short tokens, must be a 4
    * decimal place percentage value e.g. 4.9999% = 49999.
    * @dev Only callable by `owner()`.
-   * @param _redemptionFee New redemption fee
+   * @param redemptionFee New redemption fee
    */
-  function setRedemptionFee(uint256 _redemptionFee) external;
+  function setRedemptionFee(uint256 redemptionFee) external;
 
   function getMintHook() external view returns (IHook);
 

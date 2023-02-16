@@ -14,8 +14,8 @@ contract PrePOMarketFactory is
   ReentrancyGuardUpgradeable,
   SafeAccessControlEnumerableUpgradeable
 {
-  mapping(address => bool) private validCollateral;
-  mapping(bytes32 => address) private deployedMarkets;
+  mapping(address => bool) private _validCollateral;
+  mapping(bytes32 => address) private _deployedMarkets;
 
   bytes32 public constant CREATE_MARKET_ROLE = keccak256("createMarket");
   bytes32 public constant SET_COLLATERAL_VALIDITY_ROLE =
@@ -25,106 +25,103 @@ contract PrePOMarketFactory is
     __SafeAccessControlEnumerable_init();
   }
 
-  function isValidCollateral(address _collateral)
+  function isValidCollateral(address collateral)
     external
     view
     override
     returns (bool)
   {
-    return validCollateral[_collateral];
+    return _validCollateral[collateral];
   }
 
-  function getMarket(bytes32 _longShortHash)
+  function getMarket(bytes32 longShortHash)
     external
     view
     override
     returns (IPrePOMarket)
   {
-    return IPrePOMarket(deployedMarkets[_longShortHash]);
+    return IPrePOMarket(_deployedMarkets[longShortHash]);
   }
 
   function createMarket(
-    string memory _tokenNameSuffix,
-    string memory _tokenSymbolSuffix,
+    string memory tokenNameSuffix,
+    string memory tokenSymbolSuffix,
     bytes32 longTokenSalt,
     bytes32 shortTokenSalt,
     address owner,
-    address _collateral,
-    uint256 _floorLongPrice,
-    uint256 _ceilingLongPrice,
-    uint256 _floorValuation,
-    uint256 _ceilingValuation,
-    uint256 _expiryTime
+    address collateral,
+    uint256 floorLongPrice,
+    uint256 ceilingLongPrice,
+    uint256 floorValuation,
+    uint256 ceilingValuation,
+    uint256 expiryTime
   ) external override onlyRole(CREATE_MARKET_ROLE) nonReentrant {
-    require(validCollateral[_collateral], "Invalid collateral");
+    require(_validCollateral[collateral], "Invalid collateral");
 
-    (
-      LongShortToken _longToken,
-      LongShortToken _shortToken
-    ) = _createPairTokens(
-        _tokenNameSuffix,
-        _tokenSymbolSuffix,
-        longTokenSalt,
-        shortTokenSalt
-      );
-    bytes32 _salt = keccak256(abi.encodePacked(_longToken, _shortToken));
-
-    PrePOMarket _newMarket = new PrePOMarket{salt: _salt}(
-      owner,
-      _collateral,
-      ILongShortToken(address(_longToken)),
-      ILongShortToken(address(_shortToken)),
-      _floorLongPrice,
-      _ceilingLongPrice,
-      _floorValuation,
-      _ceilingValuation,
-      _expiryTime
+    (LongShortToken longToken, LongShortToken shortToken) = _createPairTokens(
+      tokenNameSuffix,
+      tokenSymbolSuffix,
+      longTokenSalt,
+      shortTokenSalt
     );
-    deployedMarkets[_salt] = address(_newMarket);
+    bytes32 salt = keccak256(abi.encodePacked(longToken, shortToken));
 
-    _longToken.transferOwnership(address(_newMarket));
-    _shortToken.transferOwnership(address(_newMarket));
-    emit MarketAdded(address(_newMarket), _salt);
+    PrePOMarket newMarket = new PrePOMarket{salt: salt}(
+      owner,
+      collateral,
+      ILongShortToken(address(longToken)),
+      ILongShortToken(address(shortToken)),
+      floorLongPrice,
+      ceilingLongPrice,
+      floorValuation,
+      ceilingValuation,
+      expiryTime
+    );
+    _deployedMarkets[salt] = address(newMarket);
+
+    longToken.transferOwnership(address(newMarket));
+    shortToken.transferOwnership(address(newMarket));
+    emit MarketAdded(address(newMarket), salt);
   }
 
-  function setCollateralValidity(address _collateral, bool _validity)
+  function setCollateralValidity(address collateral, bool validity)
     external
     override
     onlyRole(SET_COLLATERAL_VALIDITY_ROLE)
   {
-    validCollateral[_collateral] = _validity;
-    emit CollateralValidityChanged(_collateral, _validity);
+    _validCollateral[collateral] = validity;
+    emit CollateralValidityChanged(collateral, validity);
   }
 
   function _createPairTokens(
-    string memory _tokenNameSuffix,
-    string memory _tokenSymbolSuffix,
-    bytes32 _longTokenSalt,
-    bytes32 _shortTokenSalt
+    string memory tokenNameSuffix,
+    string memory tokenSymbolSuffix,
+    bytes32 longTokenSalt,
+    bytes32 shortTokenSalt
   )
     internal
-    returns (LongShortToken _newLongToken, LongShortToken _newShortToken)
+    returns (LongShortToken newLongToken, LongShortToken newShortToken)
   {
-    string memory _longTokenName = string(
-      abi.encodePacked("LONG", " ", _tokenNameSuffix)
+    string memory longTokenName = string(
+      abi.encodePacked("LONG", " ", tokenNameSuffix)
     );
-    string memory _shortTokenName = string(
-      abi.encodePacked("SHORT", " ", _tokenNameSuffix)
+    string memory shortTokenName = string(
+      abi.encodePacked("SHORT", " ", tokenNameSuffix)
     );
-    string memory _longTokenSymbol = string(
-      abi.encodePacked("L", "_", _tokenSymbolSuffix)
+    string memory longTokenSymbol = string(
+      abi.encodePacked("L", "_", tokenSymbolSuffix)
     );
-    string memory _shortTokenSymbol = string(
-      abi.encodePacked("S", "_", _tokenSymbolSuffix)
+    string memory shortTokenSymbol = string(
+      abi.encodePacked("S", "_", tokenSymbolSuffix)
     );
-    _newLongToken = new LongShortToken{salt: _longTokenSalt}(
-      _longTokenName,
-      _longTokenSymbol
+    newLongToken = new LongShortToken{salt: longTokenSalt}(
+      longTokenName,
+      longTokenSymbol
     );
-    _newShortToken = new LongShortToken{salt: _shortTokenSalt}(
-      _shortTokenName,
-      _shortTokenSymbol
+    newShortToken = new LongShortToken{salt: shortTokenSalt}(
+      shortTokenName,
+      shortTokenSymbol
     );
-    return (_newLongToken, _newShortToken);
+    return (newLongToken, newShortToken);
   }
 }

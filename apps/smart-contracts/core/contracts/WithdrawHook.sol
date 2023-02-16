@@ -14,7 +14,7 @@ contract WithdrawHook is
   AllowedCollateralCaller,
   SafeAccessControlEnumerable
 {
-  bool public _withdrawalsAllowed;
+  bool private _withdrawalsAllowed;
   uint256 private _globalPeriodLength;
   uint256 private _userPeriodLength;
   uint256 private _globalWithdrawLimitPerPeriod;

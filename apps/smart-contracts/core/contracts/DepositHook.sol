@@ -47,14 +47,14 @@ contract DepositHook is
       require(_satisfiesScoreRequirement(recipient), "Depositor not allowed");
     }
     _depositRecord.recordDeposit(recipient, amountAfterFee);
-    uint256 _fee = amountBeforeFee - amountAfterFee;
-    if (_fee > 0) {
+    uint256 fee = amountBeforeFee - amountAfterFee;
+    if (fee > 0) {
       _collateral.getBaseToken().transferFrom(
         address(_collateral),
         _treasury,
-        _fee
+        fee
       );
-      _tokenSender.send(recipient, _fee);
+      _tokenSender.send(recipient, fee);
     }
   }
 
