@@ -586,6 +586,7 @@ describe('=> Collateral', () => {
 
       expect(managerWithdrawHook.hook).calledWith(
         deployer.address,
+        deployer.address,
         amountToWithdraw,
         amountToWithdraw
       )
@@ -890,6 +891,7 @@ describe('=> Collateral', () => {
       await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
 
       expect(depositHook.hook).calledWith(
+        sender.address,
         recipient.address,
         amountToDeposit,
         amountToDeposit.sub(fee)
@@ -1212,7 +1214,12 @@ describe('=> Collateral', () => {
 
       await collateral.connect(user1).withdraw(recipient.address, amountToWithdraw)
 
-      expect(withdrawHook.hook).calledWith(recipient.address, expectedBT, expectedBT.sub(fee))
+      expect(withdrawHook.hook).calledWith(
+        user1.address,
+        recipient.address,
+        expectedBT,
+        expectedBT.sub(fee)
+      )
     })
 
     it('emits Withdraw', async () => {

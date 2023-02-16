@@ -49,7 +49,8 @@ contract WithdrawHook is
    * accurate value.
    */
   function hook(
-    address user,
+    address funder,
+    address recipient,
     uint256 amountBeforeFee,
     uint256 amountAfterFee
   ) external override onlyCollateral {
@@ -67,14 +68,14 @@ contract WithdrawHook is
     }
     if (_lastUserPeriodReset + _userPeriodLength < block.timestamp) {
       _lastUserPeriodReset = block.timestamp;
-      _userToAmountWithdrawnThisPeriod[user] = amountBeforeFee;
+      _userToAmountWithdrawnThisPeriod[recipient] = amountBeforeFee;
     } else {
       require(
-        _userToAmountWithdrawnThisPeriod[user] + amountBeforeFee <=
+        _userToAmountWithdrawnThisPeriod[recipient] + amountBeforeFee <=
           _userWithdrawLimitPerPeriod,
         "User withdraw limit exceeded"
       );
-      _userToAmountWithdrawnThisPeriod[user] += amountBeforeFee;
+      _userToAmountWithdrawnThisPeriod[recipient] += amountBeforeFee;
     }
     _depositRecord.recordWithdrawal(amountBeforeFee);
     uint256 fee = amountBeforeFee - amountAfterFee;
@@ -84,7 +85,7 @@ contract WithdrawHook is
         _treasury,
         fee
       );
-      _tokenSender.send(user, fee);
+      _tokenSender.send(recipient, fee);
     }
   }
 

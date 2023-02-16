@@ -37,15 +37,16 @@ contract DepositHook is
   bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
 
   function hook(
-    address user,
+    address funder,
+    address recipient,
     uint256 amountBeforeFee,
     uint256 amountAfterFee
   ) external override onlyCollateral {
     require(_depositsAllowed, "Deposits not allowed");
-    if (!_accountList.isIncluded(user)) {
-      require(_satisfiesScoreRequirement(user), "Depositor not allowed");
+    if (!_accountList.isIncluded(recipient)) {
+      require(_satisfiesScoreRequirement(recipient), "Depositor not allowed");
     }
-    _depositRecord.recordDeposit(user, amountAfterFee);
+    _depositRecord.recordDeposit(recipient, amountAfterFee);
     uint256 _fee = amountBeforeFee - amountAfterFee;
     if (_fee > 0) {
       _collateral.getBaseToken().transferFrom(
@@ -53,7 +54,7 @@ contract DepositHook is
         _treasury,
         _fee
       );
-      _tokenSender.send(user, _fee);
+      _tokenSender.send(recipient, _fee);
     }
   }
 

@@ -270,7 +270,9 @@ describe('=> ManagerWithdrawHook', () => {
       expect(IGNORED_ARGUMENT).to.not.eq(amountToWithdraw)
 
       await expect(
-        managerWithdrawHook.connect(user).hook(user.address, IGNORED_ARGUMENT, amountToWithdraw)
+        managerWithdrawHook
+          .connect(user)
+          .hook(user.address, user.address, IGNORED_ARGUMENT, amountToWithdraw)
       ).to.revertedWith('Falls below min reserve')
     })
 
@@ -284,7 +286,9 @@ describe('=> ManagerWithdrawHook', () => {
       expect(await collateral.getReserve()).to.be.eq(requiredReserve.add(amountToWithdraw))
       expect(IGNORED_ARGUMENT).to.not.eq(amountToWithdraw)
 
-      await managerWithdrawHook.connect(user).hook(user.address, IGNORED_ARGUMENT, amountToWithdraw)
+      await managerWithdrawHook
+        .connect(user)
+        .hook(user.address, user.address, IGNORED_ARGUMENT, amountToWithdraw)
     })
 
     it('allows withdrawal down to above reserve minimum', async () => {
@@ -297,7 +301,9 @@ describe('=> ManagerWithdrawHook', () => {
       expect(await collateral.getReserve()).to.be.gt(requiredReserve.add(amountToWithdraw))
       expect(IGNORED_ARGUMENT).to.not.eq(amountToWithdraw)
 
-      await managerWithdrawHook.connect(user).hook(user.address, IGNORED_ARGUMENT, amountToWithdraw)
+      await managerWithdrawHook
+        .connect(user)
+        .hook(user.address, user.address, IGNORED_ARGUMENT, amountToWithdraw)
     })
 
     it('allows withdrawal if reserve = global net deposit amount', async () => {
@@ -305,7 +311,9 @@ describe('=> ManagerWithdrawHook', () => {
       collateral.getReserve.returns(TEST_GLOBAL_DEPOSIT_CAP)
 
       const amountToWithdraw = 1
-      await managerWithdrawHook.connect(user).hook(user.address, IGNORED_ARGUMENT, amountToWithdraw)
+      await managerWithdrawHook
+        .connect(user)
+        .hook(user.address, user.address, IGNORED_ARGUMENT, amountToWithdraw)
     })
 
     it('allows withdrawal if reserve > global net deposit amount', async () => {
@@ -313,7 +321,9 @@ describe('=> ManagerWithdrawHook', () => {
       collateral.getReserve.returns(TEST_GLOBAL_DEPOSIT_CAP.add(1))
 
       const amountToWithdraw = 1
-      await managerWithdrawHook.connect(user).hook(user.address, IGNORED_ARGUMENT, amountToWithdraw)
+      await managerWithdrawHook
+        .connect(user)
+        .hook(user.address, user.address, IGNORED_ARGUMENT, amountToWithdraw)
     })
   })
 })

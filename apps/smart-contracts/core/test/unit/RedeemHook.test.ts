@@ -122,7 +122,7 @@ describe('=> RedeemHook', () => {
       msgSendersAllowlist.isIncluded.returns(false)
       expect(await msgSendersAllowlist.isIncluded(user.address)).to.be.false
 
-      await expect(redeemHook.connect(user).hook(user.address, 1, 1)).revertedWith(
+      await expect(redeemHook.connect(user).hook(user.address, user.address, 1, 1)).revertedWith(
         'msg.sender not allowed'
       )
     })
@@ -131,9 +131,9 @@ describe('=> RedeemHook', () => {
       expect(await msgSendersAllowlist.isIncluded(deployer.address)).to.be.true
       expect(await allowlist.isIncluded(user.address)).to.eq(false)
 
-      await expect(redeemHook.connect(deployer).hook(user.address, 1, 1)).revertedWith(
-        'Redeemer not allowed'
-      )
+      await expect(
+        redeemHook.connect(deployer).hook(user.address, user.address, 1, 1)
+      ).revertedWith('Redeemer not allowed')
     })
 
     describe('fee reimbursement', () => {
@@ -150,25 +150,25 @@ describe('=> RedeemHook', () => {
       })
 
       it('transfers fee to treasury if fee > 0', async () => {
-        await redeemHook.connect(marketSigner).hook(user.address, 2, 1)
+        await redeemHook.connect(marketSigner).hook(user.address, user.address, 2, 1)
 
         expect(collateral.transferFrom).calledWith(market.address, treasury.address, 1)
       })
 
       it('calls tokenSender.send() if fee > 0', async () => {
-        await redeemHook.connect(marketSigner).hook(user.address, 2, 1)
+        await redeemHook.connect(marketSigner).hook(user.address, user.address, 2, 1)
 
         expect(tokenSender.send).calledWith(user.address, 1)
       })
 
       it("doesn't transfer fee to treasury if fee = 0", async () => {
-        await redeemHook.connect(marketSigner).hook(user.address, 1, 1)
+        await redeemHook.connect(marketSigner).hook(user.address, user.address, 1, 1)
 
         expect(collateral.transferFrom).not.called
       })
 
       it("doesn't call tokenSender.send() if fee = 0", async () => {
-        await redeemHook.connect(marketSigner).hook(user.address, 1, 1)
+        await redeemHook.connect(marketSigner).hook(user.address, user.address, 1, 1)
 
         expect(tokenSender.send).not.called
       })

@@ -23,6 +23,7 @@ contract ManagerWithdrawHook is
 
   function hook(
     address,
+    address,
     uint256,
     uint256 amountAfterFee
   ) external view override {

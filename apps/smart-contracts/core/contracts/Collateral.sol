@@ -69,7 +69,7 @@ contract Collateral is
     uint256 amountAfterFee = amount - fee;
     if (address(_depositHook) != address(0)) {
       _baseToken.approve(address(_depositHook), fee);
-      _depositHook.hook(recipient, amount, amountAfterFee);
+      _depositHook.hook(msg.sender, recipient, amount, amountAfterFee);
       _baseToken.approve(address(_depositHook), 0);
     }
     /// Converts amount after fee from base token units to collateral token units.
@@ -97,7 +97,12 @@ contract Collateral is
     uint256 baseTokenAmountAfterFee = baseTokenAmount - fee;
     if (address(_withdrawHook) != address(0)) {
       _baseToken.approve(address(_withdrawHook), fee);
-      _withdrawHook.hook(recipient, baseTokenAmount, baseTokenAmountAfterFee);
+      _withdrawHook.hook(
+        msg.sender,
+        recipient,
+        baseTokenAmount,
+        baseTokenAmountAfterFee
+      );
       _baseToken.approve(address(_withdrawHook), 0);
     }
     _baseToken.transfer(recipient, baseTokenAmountAfterFee);
@@ -111,7 +116,7 @@ contract Collateral is
     nonReentrant
   {
     if (address(_managerWithdrawHook) != address(0)) {
-      _managerWithdrawHook.hook(msg.sender, amount, amount);
+      _managerWithdrawHook.hook(msg.sender, msg.sender, amount, amount);
     }
     _baseToken.transfer(_manager, amount);
   }

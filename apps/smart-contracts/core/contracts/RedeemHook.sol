@@ -16,11 +16,12 @@ contract RedeemHook is
   SafeOwnable
 {
   function hook(
-    address user,
+    address funder,
+    address recipient,
     uint256 amountBeforeFee,
     uint256 amountAfterFee
   ) external virtual override onlyAllowedMsgSenders {
-    require(_accountList.isIncluded(user), "Redeemer not allowed");
+    require(_accountList.isIncluded(funder), "Redeemer not allowed");
     uint256 fee = amountBeforeFee - amountAfterFee;
     if (fee > 0) {
       IPrePOMarket(msg.sender).getCollateral().transferFrom(
@@ -28,7 +29,7 @@ contract RedeemHook is
         _treasury,
         fee
       );
-      _tokenSender.send(user, fee);
+      _tokenSender.send(recipient, fee);
     }
   }
 

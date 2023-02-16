@@ -447,7 +447,12 @@ describe('=> prePOMarket', () => {
 
       await prePOMarket.connect(user).mint(TEST_MINT_AMOUNT)
 
-      expect(mintHook.hook).calledWith(user.address, TEST_MINT_AMOUNT, TEST_MINT_AMOUNT)
+      expect(mintHook.hook).calledWith(
+        user.address,
+        user.address,
+        TEST_MINT_AMOUNT,
+        TEST_MINT_AMOUNT
+      )
     })
 
     it('ignores hook if not set', async () => {
@@ -843,7 +848,12 @@ describe('=> prePOMarket', () => {
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(redeemHook.hook).calledWith(user.address, totalOwed, totalOwed.sub(redeemFee))
+      expect(redeemHook.hook).calledWith(
+        user.address,
+        user.address,
+        totalOwed,
+        totalOwed.sub(redeemFee)
+      )
     })
 
     it('ignores hook if not set', async () => {

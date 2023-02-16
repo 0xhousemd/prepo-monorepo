@@ -109,7 +109,7 @@ contract PrePOMarket is
       "Insufficient collateral"
     );
     if (address(_mintHook) != address(0)) {
-      _mintHook.hook(msg.sender, _amount, _amount);
+      _mintHook.hook(msg.sender, msg.sender, _amount, _amount);
     }
     collateral.transferFrom(msg.sender, address(this), _amount);
     longToken.mint(msg.sender, _amount);
@@ -157,6 +157,7 @@ contract PrePOMarket is
         address(_redeemHook)
       );
       _redeemHook.hook(
+        msg.sender,
         _recipient,
         _collateralAmount,
         _collateralAmount - _expectedFee

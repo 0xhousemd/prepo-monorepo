@@ -181,7 +181,9 @@ describe('=> DepositHook', () => {
       expect(await depositHook.getCollateral()).to.not.eq(user.address)
 
       await expect(
-        depositHook.connect(user).hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        depositHook
+          .connect(user)
+          .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
       ).revertedWith('msg.sender != collateral')
     })
 
@@ -192,7 +194,7 @@ describe('=> DepositHook', () => {
       await expect(
         depositHook
           .connect(collateral.wallet)
-          .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+          .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
       ).revertedWith('Deposits not allowed')
     })
 
@@ -202,7 +204,7 @@ describe('=> DepositHook', () => {
 
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
     })
 
     it('succeeds if account not on allowlist, and required score = 0', async () => {
@@ -213,7 +215,7 @@ describe('=> DepositHook', () => {
 
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
     })
 
     it('reverts if account not on allowlist, required score > 0, and account score < required score', async () => {
@@ -228,7 +230,7 @@ describe('=> DepositHook', () => {
       await expect(
         depositHook
           .connect(collateral.wallet)
-          .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+          .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
       ).revertedWith('Depositor not allowed')
     })
 
@@ -241,7 +243,7 @@ describe('=> DepositHook', () => {
 
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
     })
 
     it('succeeds if account not on allowlist, required score > 0, and account score > required score', async () => {
@@ -253,13 +255,13 @@ describe('=> DepositHook', () => {
 
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
     })
 
     it('calls recordDeposit() if fee = 0', async () => {
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_BEFORE_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_BEFORE_FEE)
 
       expect(depositRecord.recordDeposit).calledWith(user.address, TEST_AMOUNT_BEFORE_FEE)
     })
@@ -267,7 +269,7 @@ describe('=> DepositHook', () => {
     it('calls recordDeposit() if fee > 0', async () => {
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
 
       expect(depositRecord.recordDeposit).calledWith(user.address, TEST_AMOUNT_AFTER_FEE)
     })
@@ -277,7 +279,7 @@ describe('=> DepositHook', () => {
 
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
 
       const fee = TEST_AMOUNT_BEFORE_FEE.sub(TEST_AMOUNT_AFTER_FEE)
       expect(testToken.transferFrom).calledWith(collateral.address, treasury.address, fee)
@@ -288,7 +290,7 @@ describe('=> DepositHook', () => {
 
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
 
       const fee = TEST_AMOUNT_BEFORE_FEE.sub(TEST_AMOUNT_AFTER_FEE)
       expect(tokenSender.send).calledWith(user.address, fee)
@@ -297,7 +299,7 @@ describe('=> DepositHook', () => {
     it("doesn't transfer fee to treasury if fee = 0", async () => {
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_BEFORE_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_BEFORE_FEE)
 
       expect(testToken.transferFrom).not.called
     })
@@ -305,7 +307,7 @@ describe('=> DepositHook', () => {
     it("doesn't call tokenSender.send() if fee = 0", async () => {
       await depositHook
         .connect(collateral.wallet)
-        .hook(user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_BEFORE_FEE)
+        .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_BEFORE_FEE)
 
       expect(tokenSender.send).not.called
     })
