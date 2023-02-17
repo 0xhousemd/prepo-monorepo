@@ -3,15 +3,15 @@ pragma solidity =0.8.7;
 
 import "./interfaces/ICollateral.sol";
 import "./interfaces/IHook.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 
 contract Collateral is
   ICollateral,
   ERC20PermitUpgradeable,
-  SafeAccessControlEnumerableUpgradeable,
-  ReentrancyGuardUpgradeable
+  ReentrancyGuardUpgradeable,
+  SafeAccessControlEnumerableUpgradeable
 {
   IERC20 private immutable _baseToken;
   uint256 private immutable _baseTokenDenominator;

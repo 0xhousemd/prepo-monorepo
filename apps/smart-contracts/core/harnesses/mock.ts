@@ -60,7 +60,7 @@ export class MockCore extends Base {
     this.collateral.withdrawHook = await smockWithdrawHookFixture()
     this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
     this.depositRecord = await smockDepositRecordFixture()
-    this.tokenSender = await smockTokenSenderFixture(this.rewardToken.address)
+    this.tokenSender = await smockTokenSenderFixture(this.rewardToken.address, 18)
     this.markets = {}
     return this
   }

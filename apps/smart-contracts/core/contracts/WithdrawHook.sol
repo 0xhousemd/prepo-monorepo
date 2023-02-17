@@ -4,15 +4,15 @@ pragma solidity =0.8.7;
 import "./interfaces/IWithdrawHook.sol";
 import "./AllowedCollateralCaller.sol";
 import "./DepositRecordCaller.sol";
-import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
+import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
 
 contract WithdrawHook is
   IWithdrawHook,
-  DepositRecordCaller,
-  TokenSenderCaller,
   AllowedCollateralCaller,
-  SafeAccessControlEnumerable
+  DepositRecordCaller,
+  SafeAccessControlEnumerable,
+  TokenSenderCaller
 {
   bool private _withdrawalsAllowed;
   uint256 private _globalPeriodLength;

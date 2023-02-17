@@ -20,7 +20,7 @@ const deployFunction: DeployFunction = async function deployTokenSender(
   await deployNonUpgradeableContract(
     'TokenSender',
     DEPLOYMENT_NAMES.tokenSender.name,
-    [ppoAddress],
+    [ppoAddress, 18],
     hre
   )
 }

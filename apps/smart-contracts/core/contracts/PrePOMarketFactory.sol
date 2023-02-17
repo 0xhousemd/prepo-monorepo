@@ -4,10 +4,10 @@ pragma solidity =0.8.7;
 import "./LongShortToken.sol";
 import "./PrePOMarket.sol";
 import "./interfaces/ILongShortToken.sol";
+import "./interfaces/IPrePOMarketFactory.sol";
+import "prepo-shared-contracts/contracts/SafeAccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "prepo-shared-contracts/contracts/SafeAccessControlEnumerableUpgradeable.sol";
-import "./interfaces/IPrePOMarketFactory.sol";
 
 contract PrePOMarketFactory is
   IPrePOMarketFactory,

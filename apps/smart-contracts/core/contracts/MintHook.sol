@@ -2,12 +2,12 @@
 pragma solidity =0.8.7;
 
 import "./interfaces/IHook.sol";
-import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
 import "prepo-shared-contracts/contracts/AccountListCaller.sol";
-import "prepo-shared-contracts/contracts/interfaces/IAccountList.sol";
+import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
 import "prepo-shared-contracts/contracts/SafeOwnable.sol";
+import "prepo-shared-contracts/contracts/interfaces/IAccountList.sol";
 
-contract MintHook is IHook, AllowedMsgSenders, AccountListCaller, SafeOwnable {
+contract MintHook is IHook, AccountListCaller, AllowedMsgSenders, SafeOwnable {
   function hook(
     address funder,
     address,

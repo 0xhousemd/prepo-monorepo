@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity =0.8.7;
 
-import "./interfaces/ICollateral.sol";
 import "./interfaces/IAllowedCollateralCaller.sol";
+import "./interfaces/ICollateral.sol";
 
 contract AllowedCollateralCaller is IAllowedCollateralCaller {
   ICollateral internal _collateral;

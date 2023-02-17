@@ -10,7 +10,7 @@ import { smockDepositRecordFixture } from '../fixtures/DepositRecordFixture'
 import { setAccountBalance } from '../utils'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
-import { smockTokenSenderFixture } from '../fixtures/TokenSenderFixture'
+import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { roleAssigners } from '../../helpers'
 import {
   AccountList,
@@ -52,7 +52,7 @@ describe('=> WithdrawHook', () => {
     fakeCollateral.getBaseToken.returns(mockTestToken.address)
     await setAccountBalance(fakeCollateral.address, '0.1')
     mockDepositRecord = await smockDepositRecordFixture()
-    fakeTokenSender = await smockTokenSenderFixture(mockTestToken.address)
+    fakeTokenSender = await fakeTokenSenderFixture()
     await roleAssigners.assignWithdrawHookRoles(deployer, deployer, withdrawHook)
     await roleAssigners.assignDepositRecordRoles(deployer, deployer, mockDepositRecord)
     await mockDepositRecord.connect(deployer).setAllowedMsgSenders(allowList.address)

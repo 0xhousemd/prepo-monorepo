@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity =0.8.7;
 
-import "prepo-shared-contracts/contracts/interfaces/ITokenSender.sol";
 import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
-import "prepo-shared-contracts/contracts/WithdrawERC20.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
+import "prepo-shared-contracts/contracts/WithdrawERC20.sol";
+import "prepo-shared-contracts/contracts/interfaces/ITokenSender.sol";
 import "prepo-shared-contracts/contracts/interfaces/IUintValue.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract TokenSender is
   ITokenSender,
   AllowedMsgSenders,
-  WithdrawERC20,
-  SafeAccessControlEnumerable
+  SafeAccessControlEnumerable,
+  WithdrawERC20
 {
   IUintValue private _price;
   uint256 private _priceMultiplier;
@@ -32,9 +31,9 @@ contract TokenSender is
     keccak256("setAllowedMsgSenders");
   bytes32 public constant WITHDRAW_ERC20_ROLE = keccak256("withdrawERC20");
 
-  constructor(IERC20Metadata outputToken) {
+  constructor(IERC20 outputToken, uint256 outputTokenDecimals) {
     _outputToken = outputToken;
-    _outputTokenDecimalsFactor = 10**outputToken.decimals();
+    _outputTokenDecimalsFactor = 10**outputTokenDecimals;
   }
 
   function send(address recipient, uint256 unconvertedAmount)

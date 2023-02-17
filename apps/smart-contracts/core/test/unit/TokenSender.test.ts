@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import chai, { expect } from 'chai'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { id } from 'ethers/lib/utils'
+import { id, parseUnits } from 'ethers/lib/utils'
 import { ZERO_ADDRESS } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import { BigNumber } from 'ethers'
@@ -17,18 +17,19 @@ chai.use(smock.matchers)
 const { grantAndAcceptRole } = utils
 
 describe('=> TokenSender', () => {
-  const MULTIPLIER_DENOMINATOR = 10000
-  const OUTPUT_TOKEN_DECIMALS_FACTOR = ethers.BigNumber.from(10).pow(18)
   let tokenSender: TokenSender
   let deployer: SignerWithAddress
   let user: SignerWithAddress
   let outputToken: FakeContract<TestERC20>
   let priceOracle: FakeContract<TestUintValue>
   let allowlist: FakeContract<AccountList>
+  const MULTIPLIER_DENOMINATOR = 10000
+  const OUTPUT_TOKEN_DECIMALS = 18
+  const OUTPUT_TOKEN_DECIMALS_FACTOR = parseUnits('1', OUTPUT_TOKEN_DECIMALS)
   beforeEach(async () => {
     ;[deployer, user] = await ethers.getSigners()
-    outputToken = await smockTestERC20Fixture('Output Token', 'OUT', 18)
-    tokenSender = await tokenSenderFixture(outputToken.address)
+    outputToken = await smockTestERC20Fixture('Output Token', 'OUT', OUTPUT_TOKEN_DECIMALS)
+    tokenSender = await tokenSenderFixture(outputToken.address, OUTPUT_TOKEN_DECIMALS)
     priceOracle = await fakeTestUintValueFixture()
     allowlist = await fakeAccountListFixture()
     await grantAndAcceptRole(tokenSender, deployer, deployer, await tokenSender.SET_PRICE_ROLE())

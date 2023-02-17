@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity =0.8.7;
 
-import "prepo-shared-contracts/contracts/interfaces/IAccountList.sol";
 import "prepo-shared-contracts/contracts/SafeOwnable.sol";
+import "prepo-shared-contracts/contracts/interfaces/IAccountList.sol";
 
 contract AccountList is IAccountList, SafeOwnable {
   uint256 private _resetIndex;

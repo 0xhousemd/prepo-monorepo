@@ -2,11 +2,10 @@
 pragma solidity =0.8.7;
 
 import "./interfaces/ILongShortToken.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract LongShortToken is ERC20Burnable, Ownable, ILongShortToken {
+contract LongShortToken is ILongShortToken, ERC20Burnable, Ownable {
   constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
   function owner()

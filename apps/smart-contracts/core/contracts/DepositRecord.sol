@@ -2,15 +2,15 @@
 pragma solidity =0.8.7;
 
 import "./interfaces/IDepositRecord.sol";
-import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
-import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
 import "prepo-shared-contracts/contracts/AccountListCaller.sol";
+import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
+import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
 
 contract DepositRecord is
   IDepositRecord,
-  SafeAccessControlEnumerable,
+  AccountListCaller,
   AllowedMsgSenders,
-  AccountListCaller
+  SafeAccessControlEnumerable
 {
   uint256 private _globalNetDepositCap;
   uint256 private _globalNetDepositAmount;

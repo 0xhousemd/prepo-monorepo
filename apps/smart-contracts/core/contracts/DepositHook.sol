@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity =0.8.7;
 
-import "./interfaces/IDepositHook.sol";
 import "./AllowedCollateralCaller.sol";
 import "./DepositRecordCaller.sol";
+import "./interfaces/IDepositHook.sol";
 import "prepo-shared-contracts/contracts/AccountListCaller.sol";
 import "prepo-shared-contracts/contracts/NFTScoreRequirement.sol";
-import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
+import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract DepositHook is
@@ -16,8 +16,8 @@ contract DepositHook is
   AllowedCollateralCaller,
   DepositRecordCaller,
   NFTScoreRequirement,
-  TokenSenderCaller,
-  SafeAccessControlEnumerable
+  SafeAccessControlEnumerable,
+  TokenSenderCaller
 {
   bool private _depositsAllowed;
 

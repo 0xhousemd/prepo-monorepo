@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity =0.8.7;
 
+import "./interfaces/IHook.sol";
 import "./interfaces/ILongShortToken.sol";
 import "./interfaces/IPrePOMarket.sol";
-import "./interfaces/IHook.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract PrePOMarket is
   IPrePOMarket,
