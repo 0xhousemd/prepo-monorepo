@@ -2,6 +2,7 @@ import { BigNumber } from 'ethers'
 import { makeAutoObservable, runInAction } from 'mobx'
 import { validateStringToBN } from 'prepo-utils'
 import { RootStore } from '../../stores/RootStore'
+import { isProduction } from '../../utils/isProduction'
 
 export class DepositStore {
   approving = false
@@ -47,7 +48,11 @@ export class DepositStore {
 
   get depositButtonLoading(): boolean {
     return (
-      this.depositing || this.approving || this.depositButtonInitialLoading || this.isLoadingBalance
+      this.depositing ||
+      this.approving ||
+      this.depositButtonInitialLoading ||
+      this.isLoadingBalance ||
+      this.globalDepositCapExceeded === 'loading'
     )
   }
 
@@ -57,7 +62,9 @@ export class DepositStore {
         this.depositAmountBN?.eq(0) ||
         this.depositButtonInitialLoading ||
         this.depositing ||
-        this.insufficientBalance
+        this.insufficientBalance ||
+        this.globalDepositCapExceeded === 'exceeded-if-deposit' ||
+        this.globalDepositCapExceeded === 'already-exceeded'
     )
   }
 
@@ -106,17 +113,44 @@ export class DepositStore {
     return this.root.baseTokenStore.needToAllowFor(this.depositAmount, 'preCT')
   }
 
-  get globalNetDepositAmountInUsd(): string | undefined {
-    const depositAmount = this.root.depositRecordStore.globalNetDepositAmount
-    if (!depositAmount) return undefined
+  get globalDepositCapExceeded(): 'loading' | 'no' | 'already-exceeded' | 'exceeded-if-deposit' {
+    // TODO: remove this when contract is updated
+    if (process.env.NODE_ENV === 'test' || isProduction()) return 'no'
 
-    return this.root.baseTokenStore.formatUnits(depositAmount)
+    const { globalNetDepositAmount, globalNetDepositCap } = this.root.depositRecordStore
+    const { depositAmountBN } = this
+
+    if (
+      globalNetDepositAmount === undefined ||
+      globalNetDepositCap === undefined ||
+      depositAmountBN === undefined
+    ) {
+      return 'loading'
+    }
+
+    if (globalNetDepositAmount.gte(globalNetDepositCap)) {
+      return 'already-exceeded'
+    }
+
+    if (globalNetDepositAmount.add(depositAmountBN).gt(globalNetDepositCap)) {
+      return 'exceeded-if-deposit'
+    }
+
+    return 'no'
   }
 
   get globalNetDepositCapInUsd(): string | undefined {
-    const depositAmount = this.root.depositRecordStore.globalNetDepositCap
-    if (!depositAmount) return undefined
+    const { globalNetDepositCap } = this.root.depositRecordStore
+    if (!globalNetDepositCap) return undefined
 
-    return this.root.baseTokenStore.formatUnits(depositAmount)
+    return this.root.baseTokenStore.formatUnits(globalNetDepositCap)
+  }
+
+  get globalRemainingDepositAmountInUsd(): string | undefined {
+    const { globalNetDepositAmount, globalNetDepositCap } = this.root.depositRecordStore
+
+    if (!globalNetDepositAmount || !globalNetDepositCap) return undefined
+
+    return this.root.baseTokenStore.formatUnits(globalNetDepositCap.sub(globalNetDepositAmount))
   }
 }

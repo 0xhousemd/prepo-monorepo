@@ -4,6 +4,7 @@ import { Alert, CurrencyInput, Icon, media } from 'prepo-ui'
 import { useEffect } from 'react'
 import DepositButton from './DepositButton'
 import DepositSummary from './DepositSummary'
+import DepositWarning from './DepositWarning'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { PREPO_TESTNET_FORM } from '../../lib/constants'
 import { Routes } from '../../lib/routes'
@@ -53,6 +54,7 @@ const DepositPage: React.FC = () => {
         showBalance
       />
       <DepositButton />
+      <DepositWarning />
       <DepositSummary />
       {preCTTokenStore.balanceOfSigner?.eq(0) && balanceOfSigner?.eq(0) && (
         <AlertWrapper>

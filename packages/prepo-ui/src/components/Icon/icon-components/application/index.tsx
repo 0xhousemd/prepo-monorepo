@@ -66,6 +66,7 @@ import PowerIcon from './PowerIcon'
 import ArrowUpRightIcon from './ArrowUpRightIcon'
 import TradingVolumeIcon from './TradingVolume'
 import TradingLiquidityIcon from './TradingLiquidity'
+import ExclamationCircle from './ExclamationCircle'
 
 export const applicationIcons = {
   'arrow-down': ArrowDownIcon,
@@ -97,6 +98,7 @@ export const applicationIcons = {
   donation: Donation,
   dots: DotsIcon,
   energy: EnergyIcon,
+  'exclamation-circle': ExclamationCircle,
   'exclamation-triangle': ExclamationTriangle,
   eye: EyeIcon,
   'eye-slash': EyeSlashIcon,
