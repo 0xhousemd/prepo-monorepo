@@ -15,22 +15,14 @@ import {
   WithdrawHook,
 } from './generated'
 
-export type ExtendedDepositHook = DepositHook & {
-  allowlist?: AccountList
-}
-
-export type MockExtendedDepositHook = MockContract<DepositHook> & {
-  allowlist?: MockContract<AccountList>
-}
-
 export type ExtendedCollateral = Collateral & {
-  depositHook?: ExtendedDepositHook
+  depositHook?: DepositHook
   withdrawHook?: WithdrawHook
   managerWithdrawHook?: ManagerWithdrawHook
 }
 
 export type MockExtendedCollateral = MockContract<Collateral> & {
-  depositHook?: MockExtendedDepositHook
+  depositHook?: MockContract<DepositHook>
   withdrawHook?: MockContract<WithdrawHook>
   managerWithdrawHook?: MockContract<ManagerWithdrawHook>
 }

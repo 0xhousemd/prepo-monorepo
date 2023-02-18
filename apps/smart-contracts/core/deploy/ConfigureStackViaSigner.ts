@@ -25,17 +25,6 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
    * configuration helper code since deployment code must run
    * within a hardhat-deploy deployment script.
    */
-  if (core.collateral.depositHook.allowlist == null) {
-    await deployNonUpgradeableContract(
-      'AccountList',
-      DEPLOYMENT_NAMES.preUSDC.depositHook.allowlist.name,
-      [],
-      hre
-    )
-    core.collateral.depositHook.allowlist = await ethers.getContract(
-      DEPLOYMENT_NAMES.preUSDC.depositHook.allowlist.name
-    )
-  }
   // TODO add deployment for DepositRecord allowedMsgSenders
   if (core.tokenSender.allowedMsgSenders == null) {
     await deployNonUpgradeableContract(
@@ -63,7 +52,6 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
     },
     depositHook: {
       depositsAllowed: true,
-      allowedDepositors: [signer.address],
       treasury: signer.address,
     },
     withdrawHook: {
@@ -101,7 +89,6 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
   await core.configureDepositHookViaSigner(
     signer,
     deploymentParameters.depositHook.depositsAllowed,
-    deploymentParameters.depositHook.allowedDepositors,
     deploymentParameters.depositHook.treasury
   )
   console.log('Configuring WithdrawHook via Signer...')

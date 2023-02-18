@@ -5,17 +5,13 @@ import "./AllowedCollateralCaller.sol";
 import "./DepositRecordCaller.sol";
 import "./interfaces/IDepositHook.sol";
 import "prepo-shared-contracts/contracts/AccountListCaller.sol";
-import "prepo-shared-contracts/contracts/NFTScoreRequirement.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
 import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract DepositHook is
   IDepositHook,
-  AccountListCaller,
   AllowedCollateralCaller,
   DepositRecordCaller,
-  NFTScoreRequirement,
   SafeAccessControlEnumerable,
   TokenSenderCaller
 {
@@ -26,13 +22,6 @@ contract DepositHook is
     keccak256("setDepositRecord");
   bytes32 public constant SET_DEPOSITS_ALLOWED_ROLE =
     keccak256("setDepositsAllowed");
-  bytes32 public constant SET_ACCOUNT_LIST_ROLE = keccak256("setAccountList");
-  bytes32 public constant SET_REQUIRED_SCORE_ROLE =
-    keccak256("setRequiredScore");
-  bytes32 public constant SET_COLLECTION_SCORES_ROLE =
-    keccak256("setCollectionScores");
-  bytes32 public constant REMOVE_COLLECTIONS_ROLE =
-    keccak256("removeCollections");
   bytes32 public constant SET_TREASURY_ROLE = keccak256("setTreasury");
   bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
 
@@ -43,9 +32,6 @@ contract DepositHook is
     uint256 amountAfterFee
   ) external override onlyCollateral {
     require(_depositsAllowed, "Deposits not allowed");
-    if (!_accountList.isIncluded(recipient)) {
-      require(_satisfiesScoreRequirement(recipient), "Depositor not allowed");
-    }
     _depositRecord.recordDeposit(recipient, amountAfterFee);
     uint256 fee = amountBeforeFee - amountAfterFee;
     if (fee > 0) {
@@ -81,37 +67,6 @@ contract DepositHook is
   {
     _depositsAllowed = depositsAllowed;
     emit DepositsAllowedChange(depositsAllowed);
-  }
-
-  function setAccountList(IAccountList accountList)
-    public
-    override
-    onlyRole(SET_ACCOUNT_LIST_ROLE)
-  {
-    super.setAccountList(accountList);
-  }
-
-  function setRequiredScore(uint256 requiredScore)
-    public
-    override
-    onlyRole(SET_REQUIRED_SCORE_ROLE)
-  {
-    super.setRequiredScore(requiredScore);
-  }
-
-  function setCollectionScores(
-    IERC721[] memory collections,
-    uint256[] memory scores
-  ) public override onlyRole(SET_COLLECTION_SCORES_ROLE) {
-    super.setCollectionScores(collections, scores);
-  }
-
-  function removeCollections(IERC721[] memory collections)
-    public
-    override
-    onlyRole(REMOVE_COLLECTIONS_ROLE)
-  {
-    super.removeCollections(collections);
   }
 
   function setTreasury(address treasury)

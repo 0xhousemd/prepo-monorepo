@@ -36,9 +36,6 @@ export const DEPLOYMENT_NAMES = {
     name: 'preUSDC',
     depositHook: {
       name: 'preUSDC-DepositHook',
-      allowlist: {
-        name: 'preUSDC-DepositHook-Allowlist',
-      },
       depositRecord: {
         name: 'preUSDC-DepositRecord',
       },

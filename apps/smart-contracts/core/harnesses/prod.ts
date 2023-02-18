@@ -49,9 +49,6 @@ export class ProdCore extends Base {
     this.collateral.depositHook = await ethers.getContract(
       DEPLOYMENT_NAMES.preUSDC.depositHook.name
     )
-    this.collateral.depositHook.allowlist = await ethers.getContractOrNull(
-      DEPLOYMENT_NAMES.preUSDC.depositHook.allowlist.name
-    )
     this.collateral.withdrawHook = await ethers.getContract(
       DEPLOYMENT_NAMES.preUSDC.withdrawHook.name
     )

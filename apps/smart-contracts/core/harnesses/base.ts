@@ -188,7 +188,6 @@ export abstract class Base {
   public async configureDepositHookViaSigner(
     signer: SignerWithAddress,
     depositsAllowed?: boolean,
-    allowedDepositors?: string[],
     treasury?: string
   ): Promise<void> {
     await setContractIfNotAlreadySet(
@@ -208,24 +207,10 @@ export abstract class Base {
     await setContractIfNotAlreadySet(
       signer,
       this.collateral.depositHook,
-      this.collateral.depositHook.allowlist.address,
-      'getAccountList',
-      'setAccountList'
-    )
-    await setContractIfNotAlreadySet(
-      signer,
-      this.collateral.depositHook,
       this.tokenSender.address,
       'getTokenSender',
       'setTokenSender'
     )
-    if (allowedDepositors !== undefined && allowedDepositors.length > 0) {
-      await sendTxAndWait(
-        await this.collateral.depositHook.allowlist
-          .connect(signer)
-          .set(allowedDepositors, new Array(allowedDepositors.length).fill(true))
-      )
-    }
     if (depositsAllowed !== undefined)
       await sendTxAndWait(
         await this.collateral.depositHook.connect(signer).setDepositsAllowed(depositsAllowed)

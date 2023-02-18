@@ -14,17 +14,13 @@ export const DEPOSIT_RECORD_ROLES = [
   id('setUserDepositCap'),
   id('setGlobalNetDepositCap'),
   id('setAllowedMsgSenders'),
-  id('setAccountList')
+  id('setAccountList'),
 ]
 
 export const DEPOSIT_HOOK_ROLES = [
   id('setCollateral'),
   id('setDepositRecord'),
   id('setDepositsAllowed'),
-  id('setAccountList'),
-  id('setRequiredScore'),
-  id('setCollectionScores'),
-  id('removeCollections'),
   id('setTreasury'),
   id('setTokenSender'),
 ]
@@ -38,7 +34,7 @@ export const WITHDRAW_HOOK_ROLES = [
   id('setGlobalWithdrawLimitPerPeriod'),
   id('setUserWithdrawLimitPerPeriod'),
   id('setTreasury'),
-  id('setTokenSender')
+  id('setTokenSender'),
 ]
 
 export const MANAGER_WITHDRAW_HOOK_ROLES = [

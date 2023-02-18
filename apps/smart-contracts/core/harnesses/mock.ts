@@ -13,7 +13,6 @@ import {
 import { Create2Deployer, TestERC20 } from '../types/generated'
 import { smockCollateralFixture } from '../test/fixtures/CollateralFixture'
 import {
-  smockAccountListFixture,
   smockDepositHookFixture,
   smockManagerWithdrawHookFixture,
   smockWithdrawHookFixture,
@@ -56,7 +55,6 @@ export class MockCore extends Base {
       6
     )
     this.collateral.depositHook = await smockDepositHookFixture()
-    this.collateral.depositHook.allowlist = await smockAccountListFixture()
     this.collateral.withdrawHook = await smockWithdrawHookFixture()
     this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
     this.depositRecord = await smockDepositRecordFixture()

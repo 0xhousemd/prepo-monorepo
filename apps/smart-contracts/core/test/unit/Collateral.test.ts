@@ -46,7 +46,6 @@ describe('=> Collateral', () => {
   let depositHook: FakeContract<DepositHook>
   let withdrawHook: FakeContract<WithdrawHook>
   let managerWithdrawHook: FakeContract<ManagerWithdrawHook>
-  let allowlist: FakeContract<AccountList>
   let tokenSender: FakeContract<TokenSender>
   let snapshotBeforeAllTests: string
   let snapshotBeforeEachTest: string
@@ -70,14 +69,12 @@ describe('=> Collateral', () => {
     depositHook = await fakeDepositHookFixture()
     withdrawHook = await fakeWithdrawHookFixture()
     managerWithdrawHook = await fakeManagerWithdrawHookFixture()
-    allowlist = await fakeAccountListFixture()
     tokenSender = await fakeTokenSenderFixture()
   }
 
   const setupDepositHook = (): void => {
     depositHook.getCollateral.returns(collateral.address)
     depositHook.depositsAllowed.returns(true)
-    depositHook.getAccountList.returns(allowlist.address)
     depositHook.getTreasury.returns(manager.address)
     depositHook.getTokenSender.returns(tokenSender.address)
   }
