@@ -46,6 +46,7 @@ contract Collateral is
     __SafeAccessControlEnumerable_init();
     __ERC20_init(name, symbol);
     __ERC20Permit_init(name);
+    __ReentrancyGuard_init();
   }
 
   /**

@@ -23,6 +23,7 @@ contract PrePOMarketFactory is
 
   function initialize() public initializer {
     __SafeAccessControlEnumerable_init();
+    __ReentrancyGuard_init();
   }
 
   function isValidCollateral(address collateral)
