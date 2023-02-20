@@ -42,7 +42,7 @@ const InlineTextButton = styled.button`
 
   :hover,
   :focus {
-    color: ${({ theme }): string => theme.color.darkPrimaryLight};
+    color: ${({ theme }): string => theme.color.info};
   }
 
   :active {
