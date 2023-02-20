@@ -25,7 +25,28 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
    * configuration helper code since deployment code must run
    * within a hardhat-deploy deployment script.
    */
-  // TODO add deployment for DepositRecord allowedMsgSenders
+  if (core.depositRecord.allowedMsgSenders == null) {
+    await deployNonUpgradeableContract(
+      'AccountList',
+      DEPLOYMENT_NAMES.preUSDC.depositRecord.allowedMsgSenders.name,
+      [],
+      hre
+    )
+    core.depositRecord.allowedMsgSenders = await ethers.getContract(
+      DEPLOYMENT_NAMES.preUSDC.depositRecord.allowedMsgSenders.name
+    )
+  }
+  if (core.depositRecord.bypasslist == null) {
+    await deployNonUpgradeableContract(
+      'AccountList',
+      DEPLOYMENT_NAMES.preUSDC.depositRecord.bypasslist.name,
+      [],
+      hre
+    )
+    core.depositRecord.bypasslist = await ethers.getContract(
+      DEPLOYMENT_NAMES.preUSDC.depositRecord.bypasslist.name
+    )
+  }
   if (core.tokenSender.allowedMsgSenders == null) {
     await deployNonUpgradeableContract(
       'AccountList',
@@ -67,6 +88,11 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
     depositRecord: {
       globalNetDepositCap: 0,
       userDepositCap: 0,
+      allowedMsgSenders: [
+        core.collateral.depositHook.address,
+        core.collateral.withdrawHook.address,
+      ],
+      bypasslist: [],
     },
     tokenSender: {
       fixedPrice: 0,
@@ -110,7 +136,9 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
     // TODO update this to add allowedMsgSenders and bypass allowlist
     signer,
     deploymentParameters.depositRecord.globalNetDepositCap,
-    deploymentParameters.depositRecord.userDepositCap
+    deploymentParameters.depositRecord.userDepositCap,
+    deploymentParameters.depositRecord.allowedMsgSenders,
+    deploymentParameters.depositRecord.bypasslist
   )
   console.log('Configuring TokenSender via Signer...')
   await core.configureTokenSenderViaSigner(

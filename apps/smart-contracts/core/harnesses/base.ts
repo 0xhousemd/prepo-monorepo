@@ -295,9 +295,10 @@ export abstract class Base {
   public async configureDepositRecordViaSigner(
     signer: SignerWithAddress,
     globalNetDepositCap?: BigNumberish,
-    userDepositCap?: BigNumberish
+    userDepositCap?: BigNumberish,
+    allowedMsgSenders?: string[],
+    bypasslist?: string[]
   ): Promise<void> {
-    // TODO add allowMsgSender list and bypass list
     if (globalNetDepositCap !== undefined)
       await sendTxAndWait(
         await this.depositRecord.connect(signer).setGlobalNetDepositCap(globalNetDepositCap)
@@ -306,6 +307,20 @@ export abstract class Base {
       await sendTxAndWait(
         await this.depositRecord.connect(signer).setUserDepositCap(userDepositCap)
       )
+    if (allowedMsgSenders !== undefined && allowedMsgSenders.length > 0) {
+      await sendTxAndWait(
+        await this.depositRecord.allowedMsgSenders
+          .connect(signer)
+          .set(allowedMsgSenders, new Array(allowedMsgSenders.length).fill(true))
+      )
+    }
+    if (bypasslist !== undefined && bypasslist.length > 0) {
+      await sendTxAndWait(
+        await this.depositRecord.bypasslist
+          .connect(signer)
+          .set(bypasslist, new Array(bypasslist.length).fill(true))
+      )
+    }
   }
 
   public async configureTokenSenderViaSigner(

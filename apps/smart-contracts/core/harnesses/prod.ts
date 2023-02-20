@@ -59,6 +59,9 @@ export class ProdCore extends Base {
     this.depositRecord.allowedMsgSenders = await ethers.getContractOrNull(
       DEPLOYMENT_NAMES.preUSDC.depositRecord.allowedMsgSenders.name
     )
+    this.depositRecord.bypasslist = await ethers.getContractOrNull(
+      DEPLOYMENT_NAMES.preUSDC.depositRecord.bypasslist.name
+    )
     this.tokenSender = await ethers.getContract(DEPLOYMENT_NAMES.tokenSender.name)
     this.tokenSender.allowedMsgSenders = await ethers.getContractOrNull(
       DEPLOYMENT_NAMES.tokenSender.allowedMsgSenders.name

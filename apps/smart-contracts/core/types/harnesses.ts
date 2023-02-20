@@ -45,10 +45,12 @@ export type MockExtendedMarket = MockContract<PrePOMarket> & {
 
 export type ExtendedDepositRecord = DepositRecord & {
   allowedMsgSenders?: AccountList
+  bypasslist?: AccountList
 }
 
 export type MockExtendedDepositRecord = MockContract<DepositRecord> & {
   allowedMsgSenders?: MockContract<AccountList>
+  bypasslist?: MockContract<AccountList>
 }
 
 export type ExtendedTokenSender = TokenSender & {

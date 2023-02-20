@@ -63,6 +63,9 @@ export const DEPLOYMENT_NAMES = {
       allowedMsgSenders: {
         name: 'preUSDC-DepositRecord-AllowedMsgSenders',
       },
+      bypasslist: {
+        name: 'preUSDC-DepositRecord-Bypasslist',
+      },
     },
   },
   tokenSender: {
