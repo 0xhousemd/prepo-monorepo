@@ -198,6 +198,7 @@ contract PrePOMarket is
     override
     onlyRole(SET_FINAL_LONG_PAYOUT_ROLE)
   {
+    require(_finalLongPayout == MAX_PAYOUT + 1, "Final payout already set");
     require(
       finalLongPayout >= _floorLongPayout,
       "Payout cannot be below floor"

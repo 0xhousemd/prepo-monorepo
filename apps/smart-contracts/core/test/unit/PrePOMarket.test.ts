@@ -208,6 +208,15 @@ describe('=> prePOMarket', () => {
       )
     })
 
+    it('reverts if value set more than once', async () => {
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_CEILING_PAYOUT.sub(1))
+      expect(await prePOMarket.getFinalLongPayout()).to.eq(TEST_CEILING_PAYOUT.sub(1))
+
+      const tx = prePOMarket.connect(treasury).setFinalLongPayout(TEST_CEILING_PAYOUT.sub(1))
+
+      await expect(tx).revertedWith('Final payout already set')
+    })
+
     it('should not be settable beyond ceiling', async () => {
       await expect(
         prePOMarket.connect(treasury).setFinalLongPayout(TEST_CEILING_PAYOUT.add(1))
@@ -221,16 +230,6 @@ describe('=> prePOMarket', () => {
     })
 
     it('should be settable to value between payout and ceiling', async () => {
-      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_CEILING_PAYOUT.sub(1))
-
-      expect(await prePOMarket.getFinalLongPayout()).to.eq(TEST_CEILING_PAYOUT.sub(1))
-    })
-
-    it('should correctly set the same value twice', async () => {
-      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_CEILING_PAYOUT.sub(1))
-
-      expect(await prePOMarket.getFinalLongPayout()).to.eq(TEST_CEILING_PAYOUT.sub(1))
-
       await prePOMarket.connect(treasury).setFinalLongPayout(TEST_CEILING_PAYOUT.sub(1))
 
       expect(await prePOMarket.getFinalLongPayout()).to.eq(TEST_CEILING_PAYOUT.sub(1))
