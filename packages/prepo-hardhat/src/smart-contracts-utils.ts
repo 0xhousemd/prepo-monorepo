@@ -1,6 +1,6 @@
 import { BigNumber, providers, Contract, ContractTransaction, Signature } from 'ethers'
 import { parse, stringify } from 'envfile'
-import { ChainId, NETWORKS } from 'prepo-constants'
+import { ChainId, NETWORKS, Network } from 'prepo-constants'
 import {
   BytesLike,
   formatBytes32String,
@@ -10,6 +10,7 @@ import {
   splitSignature,
 } from 'ethers/lib/utils'
 import { AdminClient } from 'defender-admin-client'
+import { ProposalStep } from 'defender-admin-client/lib/models/proposal'
 import { MockContract, SmockContractBase } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { readFileSync, writeFileSync } from 'fs'
@@ -266,6 +267,92 @@ export async function setContractIfNotAlreadySet(
     await sendTxAndWait(await parentContract.connect(signer)[contractSetter](childContractAddress))
 }
 
+export async function getRolesAccountIsNotNominatedFor(
+  contract: Contract | SmockContractBase<Contract>,
+  accountAddress: string,
+  roles: string[]
+): Promise<string[]> {
+  const promises: Promise<boolean>[] = []
+  roles.forEach((role) => {
+    promises.push(contract.isNominated(role, accountAddress))
+  })
+  const results = await Promise.all(promises)
+  const rolesAccountIsNotNominatedFor: string[] = []
+  results.forEach((result, index) => {
+    if (!result) {
+      rolesAccountIsNotNominatedFor.push(roles[index])
+    }
+  })
+  return rolesAccountIsNotNominatedFor
+}
+
+export async function grantRole(
+  contract: Contract | SmockContractBase<Contract>,
+  admin: SignerWithAddress,
+  nomineeAddress: string,
+  role: string
+): Promise<void> {
+  await contract.connect(admin).grantRole(role, nomineeAddress)
+}
+
+export async function batchGrantRoles(
+  contract: Contract | SmockContractBase<Contract>,
+  admin: SignerWithAddress,
+  nomineeAddress: string,
+  roles: string[]
+): Promise<void> {
+  const rolesAccountDoesNotHave = await getRolesAccountDoesNotHave(contract, nomineeAddress, roles)
+  const rolesThatNeedGranting = await getRolesAccountIsNotNominatedFor(
+    contract,
+    nomineeAddress,
+    rolesAccountDoesNotHave
+  )
+  const promises: Promise<void>[] = []
+  rolesThatNeedGranting.forEach((role) => {
+    promises.push(grantRole(contract, admin, nomineeAddress, role))
+  })
+  await Promise.all(promises)
+}
+
+export function getAcceptRoleSteps(
+  network: Network,
+  contract: Contract | SmockContractBase<Contract>,
+  roles: string[]
+): ProposalStep[] {
+  const batchSteps: ProposalStep[] = []
+  roles.forEach((role) => {
+    batchSteps.push({
+      contractId: `${network.defenderName}-${contract.address}`,
+      type: 'custom',
+      targetFunction: {
+        name: 'acceptRole',
+        inputs: [{ type: 'bytes32', name: 'role' }],
+      },
+      functionInputs: [role],
+    })
+  })
+  return batchSteps
+}
+
+export function getAcceptOwnershipSteps(
+  network: Network,
+  contracts: Contract[] | SmockContractBase<Contract>[]
+): ProposalStep[] {
+  const batchSteps: ProposalStep[] = []
+  contracts.forEach((contract) => {
+    batchSteps.push({
+      contractId: `${network.defenderName}-${contract.address}`,
+      type: 'custom',
+      targetFunction: {
+        name: 'acceptOwnership',
+        inputs: [],
+      },
+      functionInputs: [],
+    })
+  })
+  return batchSteps
+}
+
 export const utils = {
   expandToDecimals,
   expandTo6Decimals,
@@ -287,4 +374,9 @@ export const utils = {
   batchGrantAndAcceptRoles,
   getRolesAccountDoesNotHave,
   setContractIfNotAlreadySet,
+  getRolesAccountIsNotNominatedFor,
+  grantRole,
+  batchGrantRoles,
+  getAcceptRoleSteps,
+  getAcceptOwnershipSteps,
 }

@@ -14,6 +14,7 @@ import { generateHardhatConfig, generateHardhatLocalConfig } from 'prepo-hardhat
 import { resolve } from 'path'
 import 'solidity-coverage'
 import './tasks/markets'
+import './tasks/roles'
 
 dotenvConfig({ path: resolve(__dirname, './.env') })
 
