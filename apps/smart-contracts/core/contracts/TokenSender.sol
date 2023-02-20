@@ -41,8 +41,7 @@ contract TokenSender is
     override
     onlyAllowedMsgSenders
   {
-    uint256 scaledPrice = (_price.get() * _priceMultiplier) /
-      MULTIPLIER_DENOMINATOR;
+    uint256 scaledPrice = getScaledPrice();
     if (scaledPrice <= _scaledPriceLowerBound) return;
     uint256 outputAmount = (unconvertedAmount * _outputTokenDecimalsFactor) /
       scaledPrice;
@@ -96,6 +95,10 @@ contract TokenSender is
 
   function getPriceMultiplier() external view override returns (uint256) {
     return _priceMultiplier;
+  }
+
+  function getScaledPrice() public view override returns (uint256) {
+    return (_price.get() * _priceMultiplier) / MULTIPLIER_DENOMINATOR;
   }
 
   function getScaledPriceLowerBound()

@@ -25,5 +25,7 @@ interface ITokenSender {
 
   function getPriceMultiplier() external view returns (uint256);
 
+  function getScaledPrice() external view returns (uint256);
+
   function getScaledPriceLowerBound() external view returns (uint256);
 }
