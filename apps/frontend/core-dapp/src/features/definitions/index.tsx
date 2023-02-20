@@ -70,6 +70,12 @@ export const PayoutRange: React.FC = () => (
   </Paragraph>
 )
 
+export const PPOReward: React.FC = () => (
+  <Paragraph>
+    <Trans>Reimbursement for fees in PPO sent to your wallet.</Trans>
+  </Paragraph>
+)
+
 export const TransactionFee: React.FC = () => <Paragraph>Fee paid to the prePO Treasury</Paragraph>
 
 export const ValuationRange: React.FC = () => (

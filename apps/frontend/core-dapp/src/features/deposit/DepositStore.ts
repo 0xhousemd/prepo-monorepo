@@ -73,7 +73,7 @@ export class DepositStore {
     return this.root.baseTokenStore.parseUnits(this.depositAmount)
   }
 
-  get depositFees(): string | undefined {
+  private get depositFeesBN(): BigNumber | undefined {
     const { preCTTokenStore } = this.root
     const { feeDenominator, mintingFee } = preCTTokenStore
     if (
@@ -82,9 +82,19 @@ export class DepositStore {
       feeDenominator === undefined
     )
       return undefined
-    return this.root.baseTokenStore.formatUnits(
-      this.depositAmountBN.mul(mintingFee).div(feeDenominator).add(1)
+
+    return (
+      this.depositAmountBN
+        // TODO un-hardcode this when we have the fee enabled in our test contracts
+        .mul(isProduction() ? mintingFee : 20000)
+        .div(feeDenominator)
     )
+  }
+
+  get depositFees(): string | undefined {
+    const { depositFeesBN } = this
+    if (!depositFeesBN) return undefined
+    return this.root.baseTokenStore.formatUnits(depositFeesBN)
   }
 
   // perfect accuracy not required since this is estimation
@@ -152,5 +162,18 @@ export class DepositStore {
     if (!globalNetDepositAmount || !globalNetDepositCap) return undefined
 
     return this.root.baseTokenStore.formatUnits(globalNetDepositCap.sub(globalNetDepositAmount))
+  }
+
+  get ppoReward(): string | undefined {
+    const { depositFeesBN } = this
+
+    // If there's no fee, there's no PPO reimbursement
+    if (depositFeesBN === undefined || depositFeesBN.eq(0)) return '0'
+
+    const rewardBN = this.root.tokenSenderStore.calculateReward(depositFeesBN)
+
+    if (rewardBN === undefined) return undefined
+
+    return this.root.preCTTokenStore.formatUnits(rewardBN)
   }
 }

@@ -13,6 +13,7 @@ import { TimerStore } from './TimerStore'
 import { UniswapV3GraphStore } from './graphs/UniswapV3GraphStore'
 import { SwapStore } from './SwapStore'
 import { DepositRecordStore } from './DepositRecordStore'
+import { TokenSenderStore } from './TokenSenderStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
 import { AdvancedSettingsStore } from '../components/AdvancedSettingsModal/AdvancedSettingsStore'
@@ -66,6 +67,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   swapStore: SwapStore
   ppoTokenStore: Erc20Store
   ppoHistoryStore: PpoHistoryStore
+  tokenSenderStore: TokenSenderStore
   unstakeStore: UnstakeStore
 
   constructor() {
@@ -101,6 +103,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.ppoHistoryStore = new PpoHistoryStore(this)
     this.stakeStore = new StakeStore(this)
     this.ppoStakingStore = new PPOStakingStore(this)
+    this.tokenSenderStore = new TokenSenderStore(this)
     this.unstakeStore = new UnstakeStore(this)
   }
 }

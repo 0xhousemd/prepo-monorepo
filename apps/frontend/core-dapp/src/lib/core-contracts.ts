@@ -11,6 +11,7 @@ export type CoreTokenContractNames =
   | 'PPO'
   | 'PPO_STAKING'
   | 'DEPOSIT_RECORD'
+  | 'TOKEN_SENDER'
 
 export type CoreContracts = {
   [key in CoreTokenContractNames]: ExternalContract
@@ -58,6 +59,13 @@ export const DEPOSIT_RECORD_ADDRESS: ExternalContract = {
   goerli: '0x1412039d105c41d19f8c77aebdc118a5945aba6a',
 }
 
+export const TOKEN_SENDER_ADDRESS: ExternalContract = {
+  // TODO: update to actual contract address
+  // A dummy contract for testing purposes only.
+  // The values can be modified by anyone.
+  goerli: '0xE8cCbbBe6dcC8b88484c8bC7e3bCfa1C431092d7',
+}
+
 export const coreContracts: CoreContracts = {
   MBT: BASE_TOKEN_ADDRESS,
   preCT: COLLATERAL_TOKEN_ADDRESS,
@@ -69,4 +77,5 @@ export const coreContracts: CoreContracts = {
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,
   DEPOSIT_RECORD: DEPOSIT_RECORD_ADDRESS,
+  TOKEN_SENDER: TOKEN_SENDER_ADDRESS,
 }
