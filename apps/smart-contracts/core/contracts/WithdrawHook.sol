@@ -18,13 +18,9 @@ contract WithdrawHook is
 {
   bool private _withdrawalsAllowed;
   uint256 private _globalPeriodLength;
-  uint256 private _userPeriodLength;
   uint256 private _globalWithdrawLimitPerPeriod;
-  uint256 private _userWithdrawLimitPerPeriod;
   uint256 private _lastGlobalPeriodReset;
-  uint256 private _lastUserPeriodReset;
   uint256 private _globalAmountWithdrawnThisPeriod;
-  mapping(address => uint256) private _userToAmountWithdrawnThisPeriod;
 
   bytes32 public constant SET_COLLATERAL_ROLE = keccak256("setCollateral");
   bytes32 public constant SET_DEPOSIT_RECORD_ROLE =
@@ -33,12 +29,8 @@ contract WithdrawHook is
     keccak256("setWithdrawalsAllowed");
   bytes32 public constant SET_GLOBAL_PERIOD_LENGTH_ROLE =
     keccak256("setGlobalPeriodLength");
-  bytes32 public constant SET_USER_PERIOD_LENGTH_ROLE =
-    keccak256("setUserPeriodLength");
   bytes32 public constant SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE =
     keccak256("setGlobalWithdrawLimitPerPeriod");
-  bytes32 public constant SET_USER_WITHDRAW_LIMIT_PER_PERIOD_ROLE =
-    keccak256("setUserWithdrawLimitPerPeriod");
   bytes32 public constant SET_TREASURY_ROLE = keccak256("setTreasury");
   bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
 
@@ -67,17 +59,6 @@ contract WithdrawHook is
         "Global withdraw limit exceeded"
       );
       _globalAmountWithdrawnThisPeriod += amountBeforeFee;
-    }
-    if (_lastUserPeriodReset + _userPeriodLength < block.timestamp) {
-      _lastUserPeriodReset = block.timestamp;
-      _userToAmountWithdrawnThisPeriod[recipient] = amountBeforeFee;
-    } else {
-      require(
-        _userToAmountWithdrawnThisPeriod[recipient] + amountBeforeFee <=
-          _userWithdrawLimitPerPeriod,
-        "User withdraw limit exceeded"
-      );
-      _userToAmountWithdrawnThisPeriod[recipient] += amountBeforeFee;
     }
     _depositRecord.recordWithdrawal(amountBeforeFee);
     uint256 fee = amountBeforeFee - amountAfterFee;
@@ -125,29 +106,11 @@ contract WithdrawHook is
     emit GlobalPeriodLengthChange(globalPeriodLength);
   }
 
-  function setUserPeriodLength(uint256 userPeriodLength)
-    external
-    override
-    onlyRole(SET_USER_PERIOD_LENGTH_ROLE)
-  {
-    _userPeriodLength = userPeriodLength;
-    emit UserPeriodLengthChange(userPeriodLength);
-  }
-
   function setGlobalWithdrawLimitPerPeriod(
     uint256 globalWithdrawLimitPerPeriod
   ) external override onlyRole(SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE) {
     _globalWithdrawLimitPerPeriod = globalWithdrawLimitPerPeriod;
     emit GlobalWithdrawLimitPerPeriodChange(globalWithdrawLimitPerPeriod);
-  }
-
-  function setUserWithdrawLimitPerPeriod(uint256 userWithdrawLimitPerPeriod)
-    external
-    override
-    onlyRole(SET_USER_WITHDRAW_LIMIT_PER_PERIOD_ROLE)
-  {
-    _userWithdrawLimitPerPeriod = userWithdrawLimitPerPeriod;
-    emit UserWithdrawLimitPerPeriodChange(userWithdrawLimitPerPeriod);
   }
 
   function setTreasury(address treasury)
@@ -174,10 +137,6 @@ contract WithdrawHook is
     return _globalPeriodLength;
   }
 
-  function getUserPeriodLength() external view override returns (uint256) {
-    return _userPeriodLength;
-  }
-
   function getGlobalWithdrawLimitPerPeriod()
     external
     view
@@ -185,15 +144,6 @@ contract WithdrawHook is
     returns (uint256)
   {
     return _globalWithdrawLimitPerPeriod;
-  }
-
-  function getUserWithdrawLimitPerPeriod()
-    external
-    view
-    override
-    returns (uint256)
-  {
-    return _userWithdrawLimitPerPeriod;
   }
 
   function getLastGlobalPeriodReset()
@@ -205,10 +155,6 @@ contract WithdrawHook is
     return _lastGlobalPeriodReset;
   }
 
-  function getLastUserPeriodReset() external view override returns (uint256) {
-    return _lastUserPeriodReset;
-  }
-
   function getGlobalAmountWithdrawnThisPeriod()
     external
     view
@@ -216,14 +162,5 @@ contract WithdrawHook is
     returns (uint256)
   {
     return _globalAmountWithdrawnThisPeriod;
-  }
-
-  function getAmountWithdrawnThisPeriod(address _user)
-    external
-    view
-    override
-    returns (uint256)
-  {
-    return _userToAmountWithdrawnThisPeriod[_user];
   }
 }
