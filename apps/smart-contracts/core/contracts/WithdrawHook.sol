@@ -6,13 +6,15 @@ import "./AllowedCollateralCaller.sol";
 import "./DepositRecordCaller.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
 import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
+import "prepo-shared-contracts/contracts/TreasuryCaller.sol";
 
 contract WithdrawHook is
   IWithdrawHook,
   AllowedCollateralCaller,
   DepositRecordCaller,
   SafeAccessControlEnumerable,
-  TokenSenderCaller
+  TokenSenderCaller,
+  TreasuryCaller
 {
   bool private _withdrawalsAllowed;
   uint256 private _globalPeriodLength;

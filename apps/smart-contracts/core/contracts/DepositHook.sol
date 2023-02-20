@@ -4,16 +4,17 @@ pragma solidity =0.8.7;
 import "./AllowedCollateralCaller.sol";
 import "./DepositRecordCaller.sol";
 import "./interfaces/IDepositHook.sol";
-import "prepo-shared-contracts/contracts/AccountListCaller.sol";
 import "prepo-shared-contracts/contracts/SafeAccessControlEnumerable.sol";
 import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
+import "prepo-shared-contracts/contracts/TreasuryCaller.sol";
 
 contract DepositHook is
   IDepositHook,
   AllowedCollateralCaller,
   DepositRecordCaller,
   SafeAccessControlEnumerable,
-  TokenSenderCaller
+  TokenSenderCaller,
+  TreasuryCaller
 {
   bool private _depositsAllowed;
 

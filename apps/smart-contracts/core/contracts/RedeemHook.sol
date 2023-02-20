@@ -7,13 +7,15 @@ import "prepo-shared-contracts/contracts/AccountListCaller.sol";
 import "prepo-shared-contracts/contracts/AllowedMsgSenders.sol";
 import "prepo-shared-contracts/contracts/SafeOwnable.sol";
 import "prepo-shared-contracts/contracts/TokenSenderCaller.sol";
+import "prepo-shared-contracts/contracts/TreasuryCaller.sol";
 
 contract RedeemHook is
   IHook,
   AccountListCaller,
   AllowedMsgSenders,
   SafeOwnable,
-  TokenSenderCaller
+  TokenSenderCaller,
+  TreasuryCaller
 {
   function hook(
     address funder,
