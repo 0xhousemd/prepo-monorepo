@@ -4,11 +4,13 @@ import Skeleton from '../../components/Skeleton'
 import SummaryRecord from '../../components/SummaryRecord'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { EstimatedWithdrawalReceivedAmount } from '../definitions'
+import { PPORewardSummaryRecord } from '../../components/PpoRewardSummaryRecord'
 
 const WithdrawSummary: React.FC = () => {
   const { baseTokenStore, withdrawStore } = useRootStore()
   const { symbolString } = baseTokenStore
-  const { withdrawalAmount, receivedAmount, withdrawalFee } = withdrawStore
+  const { withdrawalAmount, receivedAmount, withdrawalFee, withdrawalFeesAmount, ppoReward } =
+    withdrawStore
 
   // empty input or 0 input
   if (withdrawalAmount === '' || +withdrawalAmount === 0) return null
@@ -32,6 +34,8 @@ const WithdrawSummary: React.FC = () => {
           }).format(receivedAmount)} ${symbolString}`
         )}
       </SummaryRecord>
+
+      <PPORewardSummaryRecord fee={withdrawalFeesAmount} ppoReward={ppoReward} />
     </Flex>
   )
 }

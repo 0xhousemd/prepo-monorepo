@@ -174,6 +174,6 @@ export class DepositStore {
 
     if (rewardBN === undefined) return undefined
 
-    return this.root.preCTTokenStore.formatUnits(rewardBN)
+    return this.root.ppoTokenStore.formatUnits(rewardBN)
   }
 }

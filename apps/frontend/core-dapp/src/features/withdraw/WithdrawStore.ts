@@ -80,6 +80,12 @@ export class WithdrawStore {
     return this.withdrawalAmountBN.mul(redemptionFee).div(feeDenominator)
   }
 
+  get withdrawalFeesAmount(): string | undefined {
+    const { withdrawalFeesAmountBN } = this
+    if (withdrawalFeesAmountBN === undefined) return undefined
+    return this.root.preCTTokenStore.formatUnits(withdrawalFeesAmountBN)
+  }
+
   get receivedAmount(): number | undefined {
     if (this.receivedAmountBN === undefined) return undefined
     const amountString = this.root.preCTTokenStore.formatUnits(this.receivedAmountBN)
@@ -106,5 +112,18 @@ export class WithdrawStore {
   get withdrawButtonInitialLoading(): boolean {
     if (this.withdrawalAmount === '') return false
     return Boolean(this.isLoadingBalance || this.insufficientBalance === undefined)
+  }
+
+  get ppoReward(): string | undefined {
+    const { withdrawalFeesAmountBN } = this
+
+    // If there's no fee, there's no PPO reimbursement
+    if (withdrawalFeesAmountBN === undefined || withdrawalFeesAmountBN.eq(0)) return '0'
+
+    const rewardBN = this.root.tokenSenderStore.calculateReward(withdrawalFeesAmountBN)
+
+    if (rewardBN === undefined) return undefined
+
+    return this.root.ppoTokenStore.formatUnits(rewardBN)
   }
 }

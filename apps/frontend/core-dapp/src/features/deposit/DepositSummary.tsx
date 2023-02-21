@@ -1,17 +1,10 @@
 import { Flex } from 'prepo-ui'
 import { observer } from 'mobx-react-lite'
-import styled from 'styled-components'
 import Skeleton from '../../components/Skeleton'
 import SummaryRecord from '../../components/SummaryRecord'
 import { useRootStore } from '../../context/RootStoreProvider'
-import { EstimatedReceivedAmount, PPOReward } from '../definitions'
-import { numberFormatter } from '../../utils/numberFormatter'
-
-const { toUsd } = numberFormatter
-
-const PPORewardAmount = styled.span`
-  color: ${({ theme }): string => theme.color.primaryLight};
-`
+import { EstimatedReceivedAmount } from '../definitions'
+import { PPORewardSummaryRecord } from '../../components/PpoRewardSummaryRecord'
 
 const DepositSummary: React.FC = () => {
   const { depositStore } = useRootStore()
@@ -33,28 +26,7 @@ const DepositSummary: React.FC = () => {
         )}
       </SummaryRecord>
 
-      {/*
-        if reward is undefined, show loading skeleton.
-        if has reward, show reward UI.
-        If no reward, show nothing
-      */}
-      {(ppoReward === undefined || +ppoReward > 0) && (
-        <SummaryRecord
-          label="PPO Reward"
-          loading={ppoReward === undefined || depositFees === undefined}
-          tooltip={<PPOReward />}
-        >
-          <PPORewardAmount>
-            {Intl.NumberFormat(undefined, {
-              maximumFractionDigits: 2,
-              minimumFractionDigits: 1,
-              notation: 'compact',
-              signDisplay: 'exceptZero',
-            }).format(+(ppoReward ?? '0'))}
-          </PPORewardAmount>
-          &nbsp; ({toUsd(depositFees ?? '0')})
-        </SummaryRecord>
-      )}
+      <PPORewardSummaryRecord fee={depositFees} ppoReward={ppoReward} />
     </Flex>
   )
 }

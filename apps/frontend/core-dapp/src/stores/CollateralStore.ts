@@ -11,6 +11,7 @@ import { CollateralAbi, CollateralAbi__factory } from '../../generated/typechain
 import { SupportedContracts } from '../lib/contract.types'
 import { supportedContracts } from '../lib/supported-contracts'
 import { numberFormatter } from '../utils/numberFormatter'
+import { isProduction } from '../utils/isProduction'
 
 const { toUsd } = numberFormatter
 
@@ -149,6 +150,11 @@ export class CollateralStore extends Erc20Store {
   }
 
   get redemptionFee(): BigNumber | undefined {
+    // TODO: remove this production check
+    if (!isProduction()) {
+      return BigNumber.from(20000)
+    }
+
     return getContractCall(this.getRedemptionFee())
   }
 
