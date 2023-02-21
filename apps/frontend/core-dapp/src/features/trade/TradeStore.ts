@@ -10,6 +10,7 @@ import { ChartTimeframe } from '../../types/market.types'
 import { makeQueryString } from '../../utils/makeQueryString'
 import { calculateValuation } from '../../utils/market-utils'
 import { WEI_DENOMINATOR } from '../../lib/constants'
+import { Token } from '../../stores/TokensStore'
 
 export type Direction = 'long' | 'short'
 export type TradeAction = 'open' | 'close'
@@ -30,6 +31,7 @@ export class TradeStore {
   openTradeAmountOutBN?: BigNumber
   openTradeHash?: string
   openingTrade = false
+  paymentTokenOverride?: Token = undefined
   selectedMarket?: MarketEntity
   slideUpContent?: SlideUpContent = undefined
   showChart = true
@@ -166,6 +168,19 @@ export class TradeStore {
     return this.openTradeButtonInitialLoading
   }
 
+  // payment token will default to preCT incase autoselect fails (e.g. has 0 balance in everything)
+  get paymentToken(): Token {
+    return (
+      this.paymentTokenOverride ?? {
+        iconName: 'cash',
+        name: 'Cash Balance',
+        type: 'erc20',
+        shortName: 'USD',
+        erc20: this.root.preCTTokenStore,
+      }
+    )
+  }
+
   setAction(action: TradeAction): string {
     this.action = action
     return this.tradeUrl
@@ -177,6 +192,10 @@ export class TradeStore {
 
   setCloseTradeHash(hash?: string): void {
     this.closeTradeHash = hash
+  }
+
+  setPaymentTokenOverride(token: Token): void {
+    this.paymentTokenOverride = token
   }
 
   setShowChart(showChart: boolean): void {

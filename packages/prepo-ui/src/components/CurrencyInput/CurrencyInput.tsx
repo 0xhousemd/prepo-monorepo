@@ -8,7 +8,7 @@ import Flex from '../Flex'
 import Icon from '../Icon'
 import { IconName } from '../Icon/icon.types'
 
-export type CurrencyType = { icon: IconName; text: string }
+export type CurrencyType = { icon: IconName; text: string; onClick?: () => void }
 
 type Props = {
   balance?: string
@@ -62,26 +62,43 @@ const StyledInput = styled.input<{ disabled?: boolean }>`
     outline: none;
   }
 `
-const FlexText = styled(Flex)<{ disabled?: boolean }>`
+const FlexText = styled(Flex)<{ clickable?: boolean; disabled?: boolean }>`
   color: ${({ theme }): string => theme.color.neutral1};
   font-size: ${({ theme }): string => theme.fontSize.md};
   font-weight: ${({ theme }): number => theme.fontWeight.medium};
   ${({ disabled }): FlattenInterpolation<ThemeProps<DefaultTheme>> =>
     disabled ? removeUserSelect : css``}
+  ${({ clickable, disabled }): FlattenInterpolation<ThemeProps<DefaultTheme>> =>
+    clickable
+      ? css`
+          box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.08);
+          cursor: ${disabled ? 'default' : 'pointer'};
+        `
+      : css``}
 `
 
-const Currency: React.FC<{ disabled?: boolean } & CurrencyType> = ({ disabled, icon, text }) => (
+const Currency: React.FC<{ disabled?: boolean; currency: CurrencyType }> = ({
+  disabled,
+  currency,
+}) => (
   <FlexText
     disabled={disabled}
     borderRadius={16}
+    onClick={currency.onClick}
     p={8}
     pr={12}
     background="neutral13"
-    gap={8}
+    gap={4}
     height={40}
+    clickable={currency.onClick !== undefined}
   >
-    <Icon name={icon} height="24px" width="24px" />
-    {text}
+    <Flex gap={8}>
+      <Flex borderRadius="24px" overflow="hidden">
+        <Icon name={currency.icon} height="24px" width="24px" />
+      </Flex>
+      {currency.text}
+    </Flex>
+    {currency.onClick !== undefined && <Icon name="chevron-down" width="12px" height="12px" />}
   </FlexText>
 )
 
@@ -158,7 +175,7 @@ const CurrencyInput: React.FC<
           value={inputValue}
           onChange={handleInputChange}
         />
-        <Currency disabled={disabled} icon={currency.icon} text={currency.text} />
+        <Currency disabled={disabled} currency={currency} />
       </Flex>
       {showBalance && (
         <Balance alignSelf="flex-end" height={16}>

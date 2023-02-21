@@ -3,6 +3,7 @@ import { RootStore as PRootStore, LocalStorageStore } from 'prepo-stores'
 import { ThemeModes } from 'prepo-ui'
 import { UiStore } from './UiStore'
 import { MarketStore } from './MarketStore'
+import { TokensStore } from './TokensStore'
 import { Erc20Store } from './entities/Erc20.entity'
 import { CollateralStore } from './CollateralStore'
 import { CurrenciesStore } from './CurrenciesStore'
@@ -65,6 +66,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   stakeStore: StakeStore
   ppoStakingStore: PPOStakingStore
   swapStore: SwapStore
+  tokensStore: TokensStore
   ppoTokenStore: Erc20Store
   ppoHistoryStore: PpoHistoryStore
   tokenSenderStore: TokenSenderStore
@@ -81,6 +83,12 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.timerStore = new TimerStore()
     this.uiStore = new UiStore(this)
     this.preCTTokenStore = new CollateralStore(this)
+    this.baseTokenStore = new Erc20Store({
+      root: this,
+      tokenName: 'MBT',
+      symbolOverride: USDC_SYMBOL,
+    })
+    this.tokensStore = new TokensStore(this)
     this.marketStore = new MarketStore(this)
     this.portfolioStore = new PortfolioStore(this)
     this.depositStore = new DepositStore(this)
@@ -88,11 +96,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.withdrawStore = new WithdrawStore(this)
     this.tradeStore = new TradeStore(this)
     this.advancedSettingsStore = new AdvancedSettingsStore(this)
-    this.baseTokenStore = new Erc20Store({
-      root: this,
-      tokenName: 'MBT',
-      symbolOverride: USDC_SYMBOL,
-    })
     this.uniswapRouterStore = new UniswapRouterStore(this)
     this.filterStore = new FilterStore(this)
     this.currenciesStore = new CurrenciesStore(this)

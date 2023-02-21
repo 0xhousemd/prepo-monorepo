@@ -1,7 +1,8 @@
-import { Alert, CurrencyInput, Icon, media, spacingIncrement } from 'prepo-ui'
+import { Alert, Icon, media, spacingIncrement } from 'prepo-ui'
 import styled from 'styled-components'
 import { observer } from 'mobx-react-lite'
 import DirectionRadio from './DirectionRadio'
+import OpenTradeCurrencyInput from './OpenTradeCurrencyInput'
 import MarketSlideUp from './MarketSlideUp'
 import OpenTradeButton from './OpenTradeButton'
 import OpenTradeSummary from './OpenTradeSummary'
@@ -36,24 +37,14 @@ const Message = styled.div`
 
 const OpenTrade: React.FC = () => {
   const { tradeStore, preCTTokenStore } = useRootStore()
-  const { openingTrade, openTradeAmount, openTradeAmountBN, setOpenTradeAmount, selectedMarket } =
-    tradeStore
-  const { balanceOfSigner, tokenBalanceFormat } = preCTTokenStore
+  const { openTradeAmountBN } = tradeStore
+  const { balanceOfSigner } = preCTTokenStore
 
   return (
     <Wrapper>
       <MarketSlideUp />
       <DirectionRadio />
-      <CurrencyInput
-        balance={tokenBalanceFormat}
-        isBalanceZero={balanceOfSigner?.eq(0)}
-        disabled={!selectedMarket || openingTrade || selectedMarket.expired}
-        currency={{ icon: 'cash', text: 'USD' }}
-        onChange={setOpenTradeAmount}
-        value={openTradeAmount}
-        placeholder="0"
-        showBalance
-      />
+      <OpenTradeCurrencyInput />
       <OpenTradeButton />
       <OpenTradeSummary />
       {openTradeAmountBN !== undefined &&

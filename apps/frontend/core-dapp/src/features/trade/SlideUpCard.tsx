@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { Button, Flex, Icon, media, spacingIncrement } from 'prepo-ui'
 
-type Props = {
+export type SlideUpCardProps = {
   title?: React.ReactNode
   onClose?: () => void
   show?: boolean
@@ -75,7 +75,7 @@ const CloseButton = styled(Button)`
   }
 `
 
-const SlideUpCard: React.FC<Props> = ({ children, onClose, show, title }) => {
+const SlideUpCard: React.FC<SlideUpCardProps> = ({ children, onClose, show, title }) => {
   const handleClose = (): void => {
     if (onClose) onClose()
   }
