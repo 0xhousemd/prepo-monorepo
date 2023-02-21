@@ -209,8 +209,8 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
         | shortTokenSalt: ${longShortSalts[1].salt}
         | owner: ${governanceAddress}
         | collateral: ${core.collateral.address}
-        | floorLongPrice: ${args.floorPayout} Collateral
-        | ceilingLongPrice: ${args.ceilingPayout} Collateral
+        | floorLongPayout: ${args.floorPayout} Collateral
+        | ceilingLongPayout: ${args.ceilingPayout} Collateral
         | floorValuation: ${args.floorValuation} million $
         | ceilingValuation: ${args.ceilingValuation} million $
         | expiryTime: ${new Date(args.expiryTime * 1000).toLocaleString('en-US', {
@@ -237,8 +237,8 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
               { type: 'bytes32', name: 'shortTokenSalt' },
               { type: 'address', name: 'owner' },
               { type: 'address', name: '_collateral' },
-              { type: 'uint256', name: '_floorLongPrice' },
-              { type: 'uint256', name: '_ceilingLongPrice' },
+              { type: 'uint256', name: '_floorLongPayout' },
+              { type: 'uint256', name: '_ceilingLongPayout' },
               { type: 'uint256', name: '_floorValuation' },
               { type: 'uint256', name: '_ceilingValuation' },
               { type: 'uint256', name: '_expiryTime' },

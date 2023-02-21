@@ -51,8 +51,8 @@ contract PrePOMarketFactory is
     bytes32 shortTokenSalt,
     address owner,
     address collateral,
-    uint256 floorLongPrice,
-    uint256 ceilingLongPrice,
+    uint256 floorLongPayout,
+    uint256 ceilingLongPayout,
     uint256 floorValuation,
     uint256 ceilingValuation,
     uint256 expiryTime
@@ -72,8 +72,8 @@ contract PrePOMarketFactory is
       collateral,
       ILongShortToken(address(longToken)),
       ILongShortToken(address(shortToken)),
-      floorLongPrice,
-      ceilingLongPrice,
+      floorLongPayout,
+      ceilingLongPayout,
       floorValuation,
       ceilingValuation,
       expiryTime

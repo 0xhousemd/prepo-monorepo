@@ -40,8 +40,8 @@ interface IPrePOMarketFactory {
    * @param shortTokenSalt salt
    * @param collateral The address of the collateral token
    * @param governance The address of the governance contract
-   * @param floorLongPrice The floor price for the Long token
-   * @param ceilingLongPrice The ceiling price for the Long token
+   * @param floorLongPayout The floor payout for the Long token
+   * @param ceilingLongPayout The ceiling payout for the Long token
    * @param floorValuation The floor valuation for the Market
    * @param ceilingValuation The ceiling valuation for the Market
    * @param expiryTime The expiry time for the Market
@@ -53,8 +53,8 @@ interface IPrePOMarketFactory {
     bytes32 shortTokenSalt,
     address collateral,
     address governance,
-    uint256 floorLongPrice,
-    uint256 ceilingLongPrice,
+    uint256 floorLongPayout,
+    uint256 ceilingLongPayout,
     uint256 floorValuation,
     uint256 ceilingValuation,
     uint256 expiryTime
