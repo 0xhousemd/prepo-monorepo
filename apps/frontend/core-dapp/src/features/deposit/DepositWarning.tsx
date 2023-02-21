@@ -52,55 +52,53 @@ const InlineTextButton = styled.button`
 
 const DepositWarning: React.FC = () => {
   const {
-    depositStore: {
-      globalDepositCapExceeded,
-      globalNetDepositCapInUsd,
-      globalRemainingDepositAmountInUsd,
-      setDepositAmount,
-    },
+    depositStore: { depositLimit, setDepositAmount },
   } = useRootStore()
 
-  if (globalDepositCapExceeded === 'already-exceeded' && globalNetDepositCapInUsd !== undefined) {
-    return (
-      <Alert
-        message={
-          <p>
-            Global deposit limit reached (
-            {compactNumber(+globalNetDepositCapInUsd, { showUsdSign: true })})
-          </p>
-        }
-      />
-    )
+  switch (depositLimit.status) {
+    case 'already-exceeded': {
+      const cap = compactNumber(+depositLimit.capUnits, { showUsdSign: true })
+
+      return (
+        <Alert
+          message={
+            <p>
+              {depositLimit.type === 'global-limit' && <>Global deposit limit reached ({cap})</>}
+              {depositLimit.type === 'user-limit' && (
+                <>You&apos;ve reached your {cap} deposit limit</>
+              )}
+            </p>
+          }
+        />
+      )
+    }
+    case 'exceeded-after-transfer': {
+      const formattedRemainingAmount = formatUsd(+depositLimit.remainingUnits)
+
+      return (
+        <Alert
+          message={
+            <p>
+              Deposit limit exceeded. <br />
+              Only{' '}
+              <InlineTextButton
+                onClick={(): void => {
+                  setDepositAmount(depositLimit.remainingUnits)
+                }}
+                title={`Deposit ${formattedRemainingAmount} instead`}
+              >
+                {formattedRemainingAmount}
+              </InlineTextButton>{' '}
+              remaining.
+            </p>
+          }
+        />
+      )
+    }
+    default: {
+      return null
+    }
   }
-
-  if (
-    globalDepositCapExceeded === 'exceeded-if-deposit' &&
-    globalRemainingDepositAmountInUsd !== undefined
-  ) {
-    const formattedRemainingAmount = formatUsd(+globalRemainingDepositAmountInUsd)
-
-    return (
-      <Alert
-        message={
-          <p>
-            Global deposit limit exceeded. <br />
-            Only{' '}
-            <InlineTextButton
-              onClick={(): void => {
-                setDepositAmount(globalRemainingDepositAmountInUsd)
-              }}
-              title={`Deposit ${formattedRemainingAmount} instead`}
-            >
-              {formattedRemainingAmount}
-            </InlineTextButton>{' '}
-            remaining.
-          </p>
-        }
-      />
-    )
-  }
-
-  return null
 }
 
 export default observer(DepositWarning)

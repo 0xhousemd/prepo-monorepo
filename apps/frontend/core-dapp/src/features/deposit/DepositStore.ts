@@ -1,8 +1,30 @@
 import { BigNumber } from 'ethers'
 import { makeAutoObservable, runInAction } from 'mobx'
 import { validateStringToBN } from 'prepo-utils'
+import minBy from 'lodash/minBy'
 import { RootStore } from '../../stores/RootStore'
 import { isProduction } from '../../utils/isProduction'
+import { BalanceLimitInfo, getBalanceLimitInfo } from '../../utils/balance-limits'
+
+export type DepositLimit =
+  | {
+      status: 'loading' | 'web3-not-ready' | 'not-exceeded'
+    }
+  | {
+      amountUnits: string
+      capUnits: string
+      remainingUnits: string
+      status: 'already-exceeded' | 'exceeded-after-transfer'
+      type: 'user-limit' | 'global-limit'
+    }
+
+type ExceededAfterTransfer = BalanceLimitInfo & { status: 'exceeded-after-transfer' }
+
+function isExceededAfterTransfer(
+  limit: BalanceLimitInfo | { status: 'web3-not-ready' }
+): limit is ExceededAfterTransfer {
+  return limit.status === 'exceeded-after-transfer'
+}
 
 export class DepositStore {
   approving = false
@@ -52,7 +74,7 @@ export class DepositStore {
       this.approving ||
       this.depositButtonInitialLoading ||
       this.isLoadingBalance ||
-      this.globalDepositCapExceeded === 'loading'
+      this.depositLimit.status === 'loading'
     )
   }
 
@@ -63,8 +85,8 @@ export class DepositStore {
         this.depositButtonInitialLoading ||
         this.depositing ||
         this.insufficientBalance ||
-        this.globalDepositCapExceeded === 'exceeded-if-deposit' ||
-        this.globalDepositCapExceeded === 'already-exceeded'
+        this.depositLimit.status === 'already-exceeded' ||
+        this.depositLimit.status === 'exceeded-after-transfer'
     )
   }
 
@@ -123,45 +145,86 @@ export class DepositStore {
     return this.root.baseTokenStore.needToAllowFor(this.depositAmount, 'preCT')
   }
 
-  get globalDepositCapExceeded(): 'loading' | 'no' | 'already-exceeded' | 'exceeded-if-deposit' {
+  private get globalDepositLimitInfo(): BalanceLimitInfo {
     // TODO: remove this when contract is updated
-    if (process.env.NODE_ENV === 'test' || isProduction()) return 'no'
+    if (process.env.NODE_ENV === 'test' || isProduction())
+      return {
+        amountUnits: '0',
+        capUnits: '0',
+        remainingUnits: '0',
+        status: 'not-exceeded',
+      }
 
-    const { globalNetDepositAmount, globalNetDepositCap } = this.root.depositRecordStore
-    const { depositAmountBN } = this
-
-    if (
-      globalNetDepositAmount === undefined ||
-      globalNetDepositCap === undefined ||
-      depositAmountBN === undefined
-    ) {
-      return 'loading'
-    }
-
-    if (globalNetDepositAmount.gte(globalNetDepositCap)) {
-      return 'already-exceeded'
-    }
-
-    if (globalNetDepositAmount.add(depositAmountBN).gt(globalNetDepositCap)) {
-      return 'exceeded-if-deposit'
-    }
-
-    return 'no'
+    return getBalanceLimitInfo({
+      additionalAmount: this.depositAmountBN,
+      cap: this.root.depositRecordStore.globalNetDepositCap,
+      currentAmount: this.root.depositRecordStore.globalNetDepositAmount,
+      formatUnits: this.root.baseTokenStore.formatUnits.bind(this.root.baseTokenStore),
+    })
   }
 
-  get globalNetDepositCapInUsd(): string | undefined {
-    const { globalNetDepositCap } = this.root.depositRecordStore
-    if (!globalNetDepositCap) return undefined
+  private get userDepositLimitInfo(): { status: 'web3-not-ready' } | BalanceLimitInfo {
+    if (!this.root.web3Store.connected || !this.root.web3Store.isNetworkSupported) {
+      return { status: 'web3-not-ready' }
+    }
 
-    return this.root.baseTokenStore.formatUnits(globalNetDepositCap)
+    // TODO: remove this when contract is updated
+    if (process.env.NODE_ENV === 'test' || isProduction())
+      return {
+        amountUnits: '0',
+        capUnits: '0',
+        remainingUnits: '0',
+        status: 'not-exceeded',
+      }
+
+    return getBalanceLimitInfo({
+      additionalAmount: this.depositAmountBN,
+      cap: this.root.depositRecordStore.userDepositCap,
+      currentAmount: this.root.depositRecordStore.userDepositAmountOfSigner,
+      formatUnits: this.root.baseTokenStore.formatUnits.bind(this.root.baseTokenStore),
+    })
   }
 
-  get globalRemainingDepositAmountInUsd(): string | undefined {
-    const { globalNetDepositAmount, globalNetDepositCap } = this.root.depositRecordStore
+  get depositLimit(): DepositLimit {
+    const { globalDepositLimitInfo, userDepositLimitInfo } = this
 
-    if (!globalNetDepositAmount || !globalNetDepositCap) return undefined
+    if (globalDepositLimitInfo.status === 'loading' || userDepositLimitInfo.status === 'loading') {
+      return { status: 'loading' }
+    }
 
-    return this.root.baseTokenStore.formatUnits(globalNetDepositCap.sub(globalNetDepositAmount))
+    if (globalDepositLimitInfo.status === 'already-exceeded') {
+      return {
+        ...globalDepositLimitInfo,
+        type: 'global-limit',
+      }
+    }
+
+    if (userDepositLimitInfo.status === 'already-exceeded') {
+      return {
+        ...userDepositLimitInfo,
+        type: 'global-limit',
+      }
+    }
+
+    const lowestLimit = minBy(
+      [globalDepositLimitInfo, userDepositLimitInfo].filter(isExceededAfterTransfer),
+      (limit) => +limit.remainingUnits
+    )
+
+    if (lowestLimit) {
+      return {
+        ...lowestLimit,
+        type: lowestLimit === globalDepositLimitInfo ? 'global-limit' : 'user-limit',
+      }
+    }
+
+    if (userDepositLimitInfo.status === 'web3-not-ready') {
+      return {
+        status: 'web3-not-ready',
+      }
+    }
+
+    return { status: 'not-exceeded' }
   }
 
   get ppoReward(): string | undefined {

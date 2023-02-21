@@ -11,18 +11,18 @@ const DepositButton: React.FC = () => {
     depositDisabled,
     depositButtonLoading,
     insufficientBalance,
-    globalDepositCapExceeded,
+    depositLimit,
     needApproval,
   } = depositStore
   const { connected, isNetworkSupported } = web3Store
 
   const buttonText = useMemo(() => {
     if (depositButtonInitialLoading) return ''
-    if (globalDepositCapExceeded === 'already-exceeded') return 'Deposit Cap Reached'
+    if (depositLimit.status === 'already-exceeded') return 'Deposit Cap Reached'
     if (insufficientBalance) return 'Insufficient Balance'
     if (needApproval) return 'Approve'
     return 'Deposit'
-  }, [depositButtonInitialLoading, globalDepositCapExceeded, insufficientBalance, needApproval])
+  }, [depositButtonInitialLoading, depositLimit.status, insufficientBalance, needApproval])
 
   if (!connected || !isNetworkSupported) return <ConnectButton block />
 

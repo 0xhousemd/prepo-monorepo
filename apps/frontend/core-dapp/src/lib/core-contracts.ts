@@ -56,7 +56,7 @@ export const PPO_STAKING_ADDRESS: ExternalContract = {
 export const DEPOSIT_RECORD_ADDRESS: ExternalContract = {
   // A dummy contract for testing purposes only.
   // The values can be modified by anyone.
-  goerli: '0x1412039d105c41d19f8c77aebdc118a5945aba6a',
+  goerli: '0x92680aa94e19176ac5a2dd20a43573521d6b8949',
 }
 
 export const TOKEN_SENDER_ADDRESS: ExternalContract = {
