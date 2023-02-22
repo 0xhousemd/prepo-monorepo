@@ -260,9 +260,9 @@ describe('=> ManagerWithdrawHook', () => {
       const requiredReserve = TEST_GLOBAL_DEPOSIT_CAP.mul(TEST_MIN_RESERVE_PERCENTAGE).div(
         PERCENT_DENOMINATOR
       )
-      collateral.getReserve.returns(requiredReserve)
+      collateral.getBaseTokenBalance.returns(requiredReserve)
       const amountToWithdraw = 1
-      expect(await collateral.getReserve()).to.be.lt(requiredReserve.add(amountToWithdraw))
+      expect(await collateral.getBaseTokenBalance()).to.be.lt(requiredReserve.add(amountToWithdraw))
       expect(IGNORED_ARGUMENT).to.not.eq(amountToWithdraw)
 
       await expect(
@@ -278,8 +278,8 @@ describe('=> ManagerWithdrawHook', () => {
         PERCENT_DENOMINATOR
       )
       const amountToWithdraw = 1
-      collateral.getReserve.returns(requiredReserve.add(amountToWithdraw))
-      expect(await collateral.getReserve()).to.be.eq(requiredReserve.add(amountToWithdraw))
+      collateral.getBaseTokenBalance.returns(requiredReserve.add(amountToWithdraw))
+      expect(await collateral.getBaseTokenBalance()).to.be.eq(requiredReserve.add(amountToWithdraw))
       expect(IGNORED_ARGUMENT).to.not.eq(amountToWithdraw)
 
       await managerWithdrawHook
@@ -293,8 +293,8 @@ describe('=> ManagerWithdrawHook', () => {
         PERCENT_DENOMINATOR
       )
       const amountToWithdraw = 1
-      collateral.getReserve.returns(requiredReserve.add(amountToWithdraw).add(1))
-      expect(await collateral.getReserve()).to.be.gt(requiredReserve.add(amountToWithdraw))
+      collateral.getBaseTokenBalance.returns(requiredReserve.add(amountToWithdraw).add(1))
+      expect(await collateral.getBaseTokenBalance()).to.be.gt(requiredReserve.add(amountToWithdraw))
       expect(IGNORED_ARGUMENT).to.not.eq(amountToWithdraw)
 
       await managerWithdrawHook
@@ -304,7 +304,7 @@ describe('=> ManagerWithdrawHook', () => {
 
     it('allows withdrawal if reserve = global net deposit amount', async () => {
       depositRecord.getGlobalNetDepositAmount.returns(TEST_GLOBAL_DEPOSIT_CAP)
-      collateral.getReserve.returns(TEST_GLOBAL_DEPOSIT_CAP)
+      collateral.getBaseTokenBalance.returns(TEST_GLOBAL_DEPOSIT_CAP)
 
       const amountToWithdraw = 1
       await managerWithdrawHook
@@ -314,7 +314,7 @@ describe('=> ManagerWithdrawHook', () => {
 
     it('allows withdrawal if reserve > global net deposit amount', async () => {
       depositRecord.getGlobalNetDepositAmount.returns(TEST_GLOBAL_DEPOSIT_CAP)
-      collateral.getReserve.returns(TEST_GLOBAL_DEPOSIT_CAP.add(1))
+      collateral.getBaseTokenBalance.returns(TEST_GLOBAL_DEPOSIT_CAP.add(1))
 
       const amountToWithdraw = 1
       await managerWithdrawHook

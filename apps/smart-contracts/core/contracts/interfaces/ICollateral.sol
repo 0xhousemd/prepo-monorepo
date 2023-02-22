@@ -66,5 +66,5 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
 
   function getManagerWithdrawHook() external view returns (IHook);
 
-  function getReserve() external view returns (uint256);
+  function getBaseTokenBalance() external view returns (uint256);
 }

@@ -28,7 +28,7 @@ contract ManagerWithdrawHook is
     uint256 amountAfterFee
   ) external view override {
     require(
-      _collateral.getReserve() - amountAfterFee >= getMinReserve(),
+      _collateral.getBaseTokenBalance() - amountAfterFee >= getMinReserve(),
       "Falls below min reserve"
     );
   }

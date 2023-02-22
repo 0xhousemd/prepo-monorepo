@@ -523,7 +523,7 @@ describe('=> Collateral', () => {
     })
   })
 
-  describe('# getReserve', () => {
+  describe('# getBaseTokenBalance', () => {
     before(async () => {
       await getSignersAndDeployContracts()
       snapshotBeforeEachTest = await ethers.provider.send('evm_snapshot', [])
@@ -534,7 +534,7 @@ describe('=> Collateral', () => {
       const contractBalance = await baseToken.balanceOf(collateral.address)
       expect(contractBalance).to.be.eq(parseEther('1'))
 
-      expect(await collateral.getReserve()).to.eq(contractBalance)
+      expect(await collateral.getBaseTokenBalance()).to.eq(contractBalance)
     })
   })
 
