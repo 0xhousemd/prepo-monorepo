@@ -19,6 +19,13 @@ contract DepositTradeHelper is IDepositTradeHelper, SafeOwnable {
     collateral.approve(address(swapRouter), type(uint256).max);
   }
 
+  function wrapAndDeposit(address recipient)
+    public
+    payable
+    override
+    returns (uint256)
+  {}
+
   function depositAndTrade(
     uint256 baseTokenAmount,
     Permit calldata baseTokenPermit,
@@ -70,6 +77,16 @@ contract DepositTradeHelper is IDepositTradeHelper, SafeOwnable {
       );
     _swapRouter.exactInputSingle(exactInputSingleParams);
   }
+
+  function wrapAndDepositAndTrade(
+    Permit calldata collateralPermit,
+    OffChainTradeParams calldata tradeParams
+  ) external payable override {}
+
+  function withdrawAndUnwrap(address recipient, uint256 amount)
+    external
+    override
+  {}
 
   function getCollateral() external view override returns (ICollateral) {
     return _collateral;

@@ -20,6 +20,11 @@ interface IDepositTradeHelper {
     uint160 sqrtPriceLimitX96;
   }
 
+  function wrapAndDeposit(address recipient)
+    external
+    payable
+    returns (uint256);
+
   /**
    * @dev `baseTokenAmount` will be taken from msg.sender (assumes that
    * msg.sender has already approved at least `baseTokenAmount` of the
@@ -29,17 +34,24 @@ interface IDepositTradeHelper {
    *
    * The UniswapV3 pool address does not need to be provided since the
    * SwapRouter will automatically identify the pool based on token inputs.
-   * @param _baseTokenAmount Base Token to be used towards position
-   * @param _baseTokenPermit Permit to let contract take user's base token
-   * @param _collateralPermit Permit to let contract take user's collateral
-   * @param _tradeParams Swap parameters determined off-chain
+   * @param baseTokenAmount Base Token to be used towards position
+   * @param baseTokenPermit Permit to let contract take user's base token
+   * @param collateralPermit Permit to let contract take user's collateral
+   * @param tradeParams Swap parameters determined off-chain
    */
   function depositAndTrade(
-    uint256 _baseTokenAmount,
-    Permit calldata _baseTokenPermit,
-    Permit calldata _collateralPermit,
-    OffChainTradeParams calldata _tradeParams
+    uint256 baseTokenAmount,
+    Permit calldata baseTokenPermit,
+    Permit calldata collateralPermit,
+    OffChainTradeParams calldata tradeParams
   ) external;
+
+  function wrapAndDepositAndTrade(
+    Permit calldata collateralPermit,
+    OffChainTradeParams calldata tradeParams
+  ) external payable;
+
+  function withdrawAndUnwrap(address recipient, uint256 amount) external;
 
   function getBaseToken() external view returns (IERC20);
 
