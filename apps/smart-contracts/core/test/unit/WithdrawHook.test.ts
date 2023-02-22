@@ -29,6 +29,7 @@ describe('=> WithdrawHook', () => {
   let withdrawHook: WithdrawHook
   let deployer: SignerWithAddress
   let user: SignerWithAddress
+  let recipient: SignerWithAddress
   let treasury: SignerWithAddress
   let allowList: FakeContract<AccountList>
   let mockTestToken: MockContract<TestERC20>
@@ -42,7 +43,7 @@ describe('=> WithdrawHook', () => {
   const TEST_GLOBAL_WITHDRAW_LIMIT = TEST_AMOUNT_BEFORE_FEE.mul(3)
 
   beforeEach(async () => {
-    ;[deployer, user, treasury] = await ethers.getSigners()
+    ;[deployer, user, treasury, recipient] = await ethers.getSigners()
     withdrawHook = await withdrawHookFixture()
     mockTestToken = await smockTestERC20Fixture('Test Token', 'TEST', 18)
     fakeCollateral = await fakeCollateralFixture()
@@ -140,7 +141,7 @@ describe('=> WithdrawHook', () => {
         expect(mockTestToken.transferFrom).calledWith(fakeCollateral.address, treasury.address, fee)
       })
 
-      it('calls tokenSender.send() if fee > 0', async () => {
+      it('calls tokenSender.send() if fee > 0 and funder = recipient', async () => {
         expect(TEST_AMOUNT_BEFORE_FEE).to.not.eq(TEST_AMOUNT_AFTER_FEE)
 
         await withdrawHook
@@ -149,6 +150,18 @@ describe('=> WithdrawHook', () => {
 
         const fee = TEST_AMOUNT_BEFORE_FEE.sub(TEST_AMOUNT_AFTER_FEE)
         expect(fakeTokenSender.send).calledWith(user.address, fee)
+      })
+
+      it('calls tokenSender.send() if fee > 0 and funder != recipient', async () => {
+        expect(user.address).not.eq(recipient.address)
+        expect(TEST_AMOUNT_BEFORE_FEE).to.not.eq(TEST_AMOUNT_AFTER_FEE)
+
+        await withdrawHook
+          .connect(fakeCollateral.wallet)
+          .hook(user.address, recipient.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+
+        const fee = TEST_AMOUNT_BEFORE_FEE.sub(TEST_AMOUNT_AFTER_FEE)
+        expect(fakeTokenSender.send).calledWith(recipient.address, fee)
       })
 
       it("doesn't transfer fee to treasury if fee = 0", async () => {

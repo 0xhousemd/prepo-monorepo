@@ -16,6 +16,7 @@ chai.use(smock.matchers)
 describe('=> RedeemHook', () => {
   let deployer: SignerWithAddress
   let user: SignerWithAddress
+  let recipient: SignerWithAddress
   let treasury: SignerWithAddress
   let redeemHook: RedeemHook
   let allowlist: FakeContract<AccountList>
@@ -26,7 +27,7 @@ describe('=> RedeemHook', () => {
   let marketSigner: SignerWithAddress
 
   beforeEach(async () => {
-    ;[deployer, user, treasury] = await ethers.getSigners()
+    ;[deployer, user, treasury, recipient] = await ethers.getSigners()
     redeemHook = await redeemHookFixture()
     allowlist = await fakeAccountListFixture()
     msgSendersAllowlist = await fakeAccountListFixture()
@@ -128,7 +129,7 @@ describe('=> RedeemHook', () => {
       expect(await allowlist.isIncluded(user.address)).to.eq(false)
 
       await expect(
-        redeemHook.connect(deployer).hook(user.address, user.address, 1, 1)
+        redeemHook.connect(deployer).hook(user.address, recipient.address, 1, 1)
       ).revertedWith('Redeemer not allowed')
     })
 
@@ -151,10 +152,18 @@ describe('=> RedeemHook', () => {
         expect(collateral.transferFrom).calledWith(market.address, treasury.address, 1)
       })
 
-      it('calls tokenSender.send() if fee > 0', async () => {
+      it('calls tokenSender.send() if fee > 0 and redeemer = recipient', async () => {
         await redeemHook.connect(marketSigner).hook(user.address, user.address, 2, 1)
 
         expect(tokenSender.send).calledWith(user.address, 1)
+      })
+
+      it('calls tokenSender.send() if fee > 0 and redeemer != recipient', async () => {
+        expect(user.address).not.eq(recipient.address)
+
+        await redeemHook.connect(marketSigner).hook(user.address, recipient.address, 2, 1)
+
+        expect(tokenSender.send).calledWith(recipient.address, 1)
       })
 
       it("doesn't transfer fee to treasury if fee = 0", async () => {

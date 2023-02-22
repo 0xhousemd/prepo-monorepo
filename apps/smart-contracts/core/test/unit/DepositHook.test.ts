@@ -28,6 +28,7 @@ const snapshotter = new Snapshotter()
 describe('=> DepositHook', () => {
   let deployer: SignerWithAddress
   let user: SignerWithAddress
+  let recipient: SignerWithAddress
   let treasury: SignerWithAddress
   let depositHook: DepositHook
   let testToken: MockContract<TestERC20>
@@ -40,7 +41,7 @@ describe('=> DepositHook', () => {
 
   snapshotter.setupSnapshotContext('DepositHook')
   before(async () => {
-    ;[deployer, user, treasury] = await ethers.getSigners()
+    ;[deployer, user, treasury, recipient] = await ethers.getSigners()
     testToken = await smockTestERC20Fixture('Test Token', 'TEST', 18)
     tokenSender = await fakeTokenSenderFixture()
     depositRecord = await fakeDepositRecordFixture()
@@ -147,12 +148,22 @@ describe('=> DepositHook', () => {
       expect(depositRecord.recordDeposit).calledWith(user.address, TEST_AMOUNT_BEFORE_FEE)
     })
 
-    it('calls recordDeposit() if fee > 0', async () => {
+    it('calls recordDeposit() if fee > 0 and funder = recipient', async () => {
       await depositHook
         .connect(collateral.wallet)
         .hook(user.address, user.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
 
       expect(depositRecord.recordDeposit).calledWith(user.address, TEST_AMOUNT_AFTER_FEE)
+    })
+
+    it('calls recordDeposit() if fee > 0 and funder != recipient', async () => {
+      expect(user.address).not.eq(recipient.address)
+
+      await depositHook
+        .connect(collateral.wallet)
+        .hook(user.address, recipient.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+
+      expect(depositRecord.recordDeposit).calledWith(recipient.address, TEST_AMOUNT_AFTER_FEE)
     })
 
     it('transfers fee to treasury if fee > 0', async () => {
@@ -166,7 +177,7 @@ describe('=> DepositHook', () => {
       expect(testToken.transferFrom).calledWith(collateral.address, treasury.address, fee)
     })
 
-    it('calls tokenSender.send() if fee > 0', async () => {
+    it('calls tokenSender.send() if fee > 0 and funder = recipient', async () => {
       expect(TEST_AMOUNT_BEFORE_FEE).to.not.eq(TEST_AMOUNT_AFTER_FEE)
 
       await depositHook
@@ -175,6 +186,18 @@ describe('=> DepositHook', () => {
 
       const fee = TEST_AMOUNT_BEFORE_FEE.sub(TEST_AMOUNT_AFTER_FEE)
       expect(tokenSender.send).calledWith(user.address, fee)
+    })
+
+    it('calls tokenSender.send() if fee > 0 and funder != recipient', async () => {
+      expect(user.address).not.eq(recipient.address)
+      expect(TEST_AMOUNT_BEFORE_FEE).to.not.eq(TEST_AMOUNT_AFTER_FEE)
+
+      await depositHook
+        .connect(collateral.wallet)
+        .hook(user.address, recipient.address, TEST_AMOUNT_BEFORE_FEE, TEST_AMOUNT_AFTER_FEE)
+
+      const fee = TEST_AMOUNT_BEFORE_FEE.sub(TEST_AMOUNT_AFTER_FEE)
+      expect(tokenSender.send).calledWith(recipient.address, fee)
     })
 
     it("doesn't transfer fee to treasury if fee = 0", async () => {

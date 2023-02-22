@@ -836,7 +836,7 @@ describe('=> prePOMarket', () => {
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
-    it('calls hook with correct parameters', async () => {
+    it('calls hook with correct parameters and redeemer = recipient', async () => {
       const amountMinted = await setupMarket()
       const longToRedeem = amountMinted
       const shortToRedeem = longToRedeem
@@ -850,6 +850,25 @@ describe('=> prePOMarket', () => {
       expect(redeemHook.hook).calledWith(
         user.address,
         user.address,
+        totalOwed,
+        totalOwed.sub(redeemFee)
+      )
+    })
+
+    it('calls hook with correct parameters if redeemer != recipient', async () => {
+      const amountMinted = await setupMarket()
+      const longToRedeem = amountMinted
+      const shortToRedeem = longToRedeem
+      const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
+      expect(totalOwed).to.be.gt(0)
+      const redeemFee = calculateFee(totalOwed, await prePOMarket.getRedemptionFee())
+      expect(redeemFee).to.be.gt(0)
+
+      await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, recipient.address)
+
+      expect(redeemHook.hook).calledWith(
+        user.address,
+        recipient.address,
         totalOwed,
         totalOwed.sub(redeemFee)
       )
@@ -954,13 +973,13 @@ describe('=> prePOMarket', () => {
       const amountMinted = await mintTestPosition()
       const redeemFee = calculateFee(amountMinted, await prePOMarket.getRedemptionFee())
 
-      await prePOMarket.connect(user).redeem(amountMinted, amountMinted, user.address)
+      await prePOMarket.connect(user).redeem(amountMinted, amountMinted, recipient.address)
 
-      const filter = prePOMarket.filters.Redemption(user.address, user.address)
+      const filter = prePOMarket.filters.Redemption(user.address, recipient.address)
       const events = await prePOMarket.queryFilter(filter)
       const event = events[0].args
       expect(event.redeemer).to.eq(user.address)
-      expect(event.recipient).to.eq(user.address)
+      expect(event.recipient).to.eq(recipient.address)
       expect(event.amountAfterFee).to.eq(amountMinted.sub(redeemFee))
       expect(event.fee).to.eq(redeemFee)
     })
