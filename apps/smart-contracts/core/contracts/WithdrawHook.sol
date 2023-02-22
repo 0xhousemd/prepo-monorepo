@@ -51,15 +51,14 @@ contract WithdrawHook is
     require(_withdrawalsAllowed, "Withdrawals not allowed");
     if (_lastGlobalPeriodReset + _globalPeriodLength < block.timestamp) {
       _lastGlobalPeriodReset = block.timestamp;
-      _globalAmountWithdrawnThisPeriod = amountBeforeFee;
-    } else {
-      require(
-        _globalAmountWithdrawnThisPeriod + amountBeforeFee <=
-          _globalWithdrawLimitPerPeriod,
-        "Global withdraw limit exceeded"
-      );
-      _globalAmountWithdrawnThisPeriod += amountBeforeFee;
+      _globalAmountWithdrawnThisPeriod = 0;
     }
+    require(
+      _globalAmountWithdrawnThisPeriod + amountBeforeFee <=
+        _globalWithdrawLimitPerPeriod,
+      "Global withdraw limit exceeded"
+    );
+    _globalAmountWithdrawnThisPeriod += amountBeforeFee;
     _depositRecord.recordWithdrawal(amountBeforeFee);
     uint256 fee = amountBeforeFee - amountAfterFee;
     if (fee > 0) {

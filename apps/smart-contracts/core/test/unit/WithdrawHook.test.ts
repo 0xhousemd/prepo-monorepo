@@ -39,9 +39,7 @@ describe('=> WithdrawHook', () => {
   const TEST_AMOUNT_BEFORE_FEE = parseEther('1.01')
   const TEST_AMOUNT_AFTER_FEE = parseEther('1')
   const TEST_GLOBAL_PERIOD_LENGTH = 20
-  const TEST_USER_PERIOD_LENGTH = 10
   const TEST_GLOBAL_WITHDRAW_LIMIT = TEST_AMOUNT_BEFORE_FEE.mul(3)
-  const TEST_USER_WITHDRAW_LIMIT = TEST_AMOUNT_BEFORE_FEE.mul(2)
 
   beforeEach(async () => {
     ;[deployer, user, treasury] = await ethers.getSigners()
@@ -305,8 +303,8 @@ describe('=> WithdrawHook', () => {
           .hook(
             deployer.address,
             deployer.address,
-            TEST_USER_WITHDRAW_LIMIT,
-            TEST_USER_WITHDRAW_LIMIT
+            TEST_GLOBAL_WITHDRAW_LIMIT,
+            TEST_GLOBAL_WITHDRAW_LIMIT
           )
         const globalWithdrawnBefore = await withdrawHook.getGlobalAmountWithdrawnThisPeriod()
         const previousResetTimestamp = await getLastTimestamp(ethers.provider)
@@ -330,11 +328,11 @@ describe('=> WithdrawHook', () => {
           .hook(
             deployer.address,
             deployer.address,
-            TEST_USER_WITHDRAW_LIMIT,
-            TEST_USER_WITHDRAW_LIMIT
+            TEST_GLOBAL_WITHDRAW_LIMIT,
+            TEST_GLOBAL_WITHDRAW_LIMIT
           )
         const previousResetTimestamp = await getLastTimestamp(ethers.provider)
-        const amountToReachGlobalLimit = TEST_GLOBAL_WITHDRAW_LIMIT.sub(TEST_USER_WITHDRAW_LIMIT)
+        const amountToReachGlobalLimit = TEST_GLOBAL_WITHDRAW_LIMIT.sub(TEST_GLOBAL_WITHDRAW_LIMIT)
         await withdrawHook
           .connect(fakeCollateral.wallet)
           .hook(user.address, user.address, amountToReachGlobalLimit, amountToReachGlobalLimit)
@@ -350,6 +348,39 @@ describe('=> WithdrawHook', () => {
           withdrawHook.connect(fakeCollateral.wallet).hook(user.address, user.address, 1, 1)
         ).revertedWith('Global withdraw limit exceeded')
       })
+    })
+
+    it('reverts if global cap already exceeded', async () => {
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
+      await withdrawHook
+        .connect(fakeCollateral.wallet)
+        .hook(user.address, user.address, TEST_GLOBAL_WITHDRAW_LIMIT, TEST_GLOBAL_WITHDRAW_LIMIT)
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT.sub(1))
+
+      const tx = withdrawHook.connect(fakeCollateral.wallet).hook(user.address, user.address, 0, 0)
+
+      await expect(tx).revertedWith('Global withdraw limit exceeded')
+    })
+
+    it('reverts if first withdraw for period exceeds global limit', async () => {
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
+
+      const tx = withdrawHook
+        .connect(fakeCollateral.wallet)
+        .hook(
+          user.address,
+          user.address,
+          TEST_GLOBAL_WITHDRAW_LIMIT.add(1),
+          TEST_GLOBAL_WITHDRAW_LIMIT.add(1)
+        )
+
+      await expect(tx).revertedWith('Global withdraw limit exceeded')
     })
   })
 
