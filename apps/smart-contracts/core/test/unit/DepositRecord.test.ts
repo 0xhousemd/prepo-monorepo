@@ -194,13 +194,13 @@ describe('=> DepositRecord', () => {
     it('reverts if uncapped user changes to capped user and user cap already exceeded', async () => {
       await depositRecord.connect(deployer).setUserDepositCap(TEST_AMOUNT_ONE)
       bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_ONE)
-      expect(await depositRecord.getUserDepositCap()).eq(
+      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
+      expect(await depositRecord.getUserDepositCap()).lt(
         await depositRecord.getUserDepositAmount(uncappedUser.address)
       )
       bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(false)
 
-      const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, 1)
+      const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, 0)
 
       await expect(tx).revertedWith('User deposit cap exceeded')
     })
