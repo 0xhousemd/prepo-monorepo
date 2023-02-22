@@ -1,6 +1,4 @@
-import { BigNumber } from 'ethers'
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { MockContract } from '@defi-wonderland/smock'
 import { Base } from './base'
 import {

@@ -21,7 +21,6 @@ describe('=> DepositTradeHelper', () => {
   let core: MockCore
   let swapRouter: FakeContract<SwapRouter>
   let depositTradeHelper: DepositTradeHelper
-  let deployer: SignerWithAddress
   let user: SignerWithAddress
 
   const junkPermit = <IDepositTradeHelper.PermitStruct>{
@@ -40,7 +39,7 @@ describe('=> DepositTradeHelper', () => {
 
   beforeEach(async () => {
     core = await MockCore.Instance.init(ethers)
-    ;[deployer, user] = core.accounts
+    ;[user] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
     depositTradeHelper = await depositTradeHelperFixture(
       core.collateral.address,

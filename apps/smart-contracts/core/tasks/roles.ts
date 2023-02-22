@@ -1,4 +1,4 @@
-// eslint-disable no-console
+/* eslint-disable no-console */
 import { task } from 'hardhat/config'
 import { ChainId, DEPLOYMENT_NAMES, getPrePOAddressForNetwork } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'

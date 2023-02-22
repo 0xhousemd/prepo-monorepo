@@ -7,12 +7,10 @@ import { DepositRecordCaller } from '../../types/generated'
 
 describe('=> AccountListCaller', () => {
   let depositRecordCaller: DepositRecordCaller
-  let deployer: SignerWithAddress
-  let user: SignerWithAddress
   let depositRecord: SignerWithAddress
 
   beforeEach(async () => {
-    ;[deployer, user, depositRecord] = await ethers.getSigners()
+    ;[depositRecord] = await ethers.getSigners()
     depositRecordCaller = await depositRecordCallerFixture()
   })
 

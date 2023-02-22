@@ -10,7 +10,7 @@
         "prec": "yarn typechain && yarn clean && yarn sl",
         "c": "yarn compile",
         "compile": "yarn typechain && npx hardhat compile",
-        "l": "yarn prettier --write './deploy/*.ts' './hardhat.config.ts' './harnesses/*.ts' './helpers/*.ts' './test/**/*.ts' './utils/*.ts'",
+        "l": "yarn prettier --write './deploy/*.ts' './hardhat.config.ts' './harnesses/*.ts' './helpers/*.ts' './test/**/*.ts' './utils/*.ts' && yarn lint",
         "pret": "yarn c && yarn l",
         "t": "npx hardhat test test/unit/*.ts",
         "core:test:ci": "yarn t",

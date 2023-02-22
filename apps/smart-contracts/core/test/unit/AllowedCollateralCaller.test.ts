@@ -8,10 +8,9 @@ import { AllowedCollateralCaller } from '../../types/generated'
 describe('=> AllowedCollateralCaller', () => {
   let allowedCollateralCaller: AllowedCollateralCaller
   let deployer: SignerWithAddress
-  let user: SignerWithAddress
   let collateral: SignerWithAddress
   beforeEach(async () => {
-    ;[deployer, user, collateral] = await ethers.getSigners()
+    ;[deployer, collateral] = await ethers.getSigners()
     allowedCollateralCaller = await allowedCollateralCallerFixture()
   })
 

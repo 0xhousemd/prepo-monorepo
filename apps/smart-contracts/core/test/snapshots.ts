@@ -8,10 +8,12 @@ class Snapshot {
 
   public async snapshot(): Promise<void> {
     this.snapshotId = await ethers.provider.send('evm_snapshot', [])
+    // eslint-disable-next-line no-console
     if (this.debug) console.log(`💾 Snapshot taken - ${this.name} @ ${this.snapshotId}`)
   }
 
   public async reset(): Promise<void> {
+    // eslint-disable-next-line no-console
     if (this.debug) console.log(`⚓ Reset snapshot - ${this.name} @ ${this.snapshotId}`)
     await network.provider.send('evm_revert', [this.snapshotId])
     this.snapshotId = await ethers.provider.send('evm_snapshot', [])

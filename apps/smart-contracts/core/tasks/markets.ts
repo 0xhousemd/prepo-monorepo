@@ -1,7 +1,7 @@
-// eslint-disable no-console
+/* eslint-disable no-console */
 import { parseEther } from '@ethersproject/units'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { task, types } from 'hardhat/config'
+import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ChainId, DEPLOYMENT_NAMES, getPrePOAddressForNetwork } from 'prepo-constants'
 import { deployNonUpgradeableContract, setContractIfNotAlreadySet, utils } from 'prepo-hardhat'

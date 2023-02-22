@@ -1,3 +1,4 @@
+/* eslint-disable func-names */
 import chai, { expect } from 'chai'
 import { ethers, network, upgrades } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
@@ -13,7 +14,6 @@ import {
 } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import {
-  fakeAccountListFixture,
   fakeDepositHookFixture,
   fakeWithdrawHookFixture,
   fakeManagerWithdrawHookFixture,
@@ -23,7 +23,6 @@ import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { roleAssigners } from '../../helpers'
 import {
-  AccountList,
   Collateral,
   DepositHook,
   ManagerWithdrawHook,

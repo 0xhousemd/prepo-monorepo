@@ -1,16 +1,14 @@
-import chai, { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { FakeContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
+import chai, { expect } from 'chai'
 import { id, parseEther } from 'ethers/lib/utils'
-import { Contract } from 'ethers'
-import { MockContract, FakeContract, smock } from '@defi-wonderland/smock'
+import { ethers } from 'hardhat'
 import { PERCENT_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
-import { managerWithdrawHookFixture } from '../fixtures/HookFixture'
-import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
-import { fakeDepositRecordFixture } from '../fixtures/DepositRecordFixture'
+import { Collateral, DepositRecord, ManagerWithdrawHook } from '../../types/generated'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
-import { Collateral, DepositRecord, ManagerWithdrawHook, TestERC20 } from '../../types/generated'
+import { fakeDepositRecordFixture } from '../fixtures/DepositRecordFixture'
+import { managerWithdrawHookFixture } from '../fixtures/HookFixture'
 
 chai.use(smock.matchers)
 
@@ -20,7 +18,6 @@ describe('=> ManagerWithdrawHook', () => {
   let deployer: SignerWithAddress
   let user: SignerWithAddress
   let managerWithdrawHook: ManagerWithdrawHook
-  let baseToken: TestERC20
   let depositRecord: FakeContract<DepositRecord>
   let collateral: FakeContract<Collateral>
   const TEST_GLOBAL_DEPOSIT_CAP = parseEther('50000')
@@ -29,7 +26,6 @@ describe('=> ManagerWithdrawHook', () => {
   const getSignersAndDeployHook = async (): Promise<void> => {
     ;[deployer, user] = await ethers.getSigners()
     depositRecord = await fakeDepositRecordFixture()
-    baseToken = await testERC20Fixture('USD Coin', 'USDC', 6)
     collateral = await fakeCollateralFixture()
     managerWithdrawHook = await managerWithdrawHookFixture()
   }

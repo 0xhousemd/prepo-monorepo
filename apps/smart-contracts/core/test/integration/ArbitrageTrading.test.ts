@@ -4,7 +4,7 @@ import { stub, SinonStub } from 'sinon'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumber } from 'ethers'
-import { getPrePOAddressForNetwork, POOL_FEE_TIER } from 'prepo-constants'
+import { getPrePOAddressForNetwork } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import { parseEther } from '@ethersproject/units'
 import {
@@ -19,11 +19,9 @@ import {
   attachNonfungiblePositionManager,
   attachSwapRouter,
   attachUniV3Factory,
-  attachUniV3Pool,
   mintLiquidityForLongShort,
   getAmountInForExactOutputSingle,
   getAmountOutForExactInputSingle,
-  getNearestSqrtX96FromWei,
   getPoolPriceInWei,
 } from '../../helpers/uniswap'
 import { PrePOMarketParams } from '../../types'
@@ -66,7 +64,6 @@ describe('=> Arbitrage Trading', () => {
   let core: MockCore
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
-  let user: SignerWithAddress
   let defaultMarketParams: PrePOMarketParams
   let create2Deployer: Create2Deployer
   let univ3Factory: UniswapV3Factory

@@ -19,7 +19,6 @@ describe('=> PrePOMarketFactory', () => {
   let prePOMarketFactory: PrePOMarketFactory
   let collateralToken: TestERC20
   let deployer: SignerWithAddress
-  let user: SignerWithAddress
   let treasury: SignerWithAddress
   const TEST_NAME_SUFFIX = 'preSTRIPE 100-200 30-September-2021'
   const TEST_SYMBOL_SUFFIX = 'preSTRIPE_100-200_30SEP21'
@@ -31,7 +30,7 @@ describe('=> PrePOMarketFactory', () => {
   const MOCK_COLLATERAL_SUPPLY = ethers.utils.parseEther('1000000000')
 
   beforeEach(async () => {
-    ;[deployer, user, treasury] = await ethers.getSigners()
+    ;[deployer, treasury] = await ethers.getSigners()
     collateralToken = await testERC20Fixture('prePO USDC Collateral', 'preUSD', 18)
     await collateralToken.mint(deployer.address, MOCK_COLLATERAL_SUPPLY)
     prePOMarketFactory = await prePOMarketFactoryFixture()

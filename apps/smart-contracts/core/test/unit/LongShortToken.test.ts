@@ -1,11 +1,10 @@
+import { parseEther } from '@ethersproject/units'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { utils } from 'prepo-hardhat'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { parseEther } from '@ethersproject/units'
 import { ZERO_ADDRESS } from 'prepo-constants'
-import { LongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
 import { LongShortToken } from '../../types/generated'
+import { LongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
 
 describe('=> LongShortToken', () => {
   let longShort: LongShortToken

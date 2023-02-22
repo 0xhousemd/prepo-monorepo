@@ -5,7 +5,7 @@ import { parseEther } from 'ethers/lib/utils'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { ZERO_ADDRESS } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
-import { depositHookFixture, fakeAccountListFixture } from '../fixtures/HookFixture'
+import { depositHookFixture } from '../fixtures/HookFixture'
 import { setAccountBalance, testRoleConstants } from '../utils'
 import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
@@ -13,7 +13,6 @@ import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
 import { Snapshotter } from '../snapshots'
 import { fakeDepositRecordFixture } from '../fixtures/DepositRecordFixture'
 import {
-  AccountList,
   Collateral,
   DepositHook,
   DepositRecord,

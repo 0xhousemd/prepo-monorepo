@@ -1,5 +1,5 @@
 import { parseEther } from '@ethersproject/units'
-import { BaseContract, BigNumber, Contract, PopulatedTransaction } from 'ethers'
+import { BigNumber, Contract, PopulatedTransaction } from 'ethers'
 import { ethers, network } from 'hardhat'
 import { MerkleTree } from 'merkletreejs'
 import keccak256 from 'keccak256'
