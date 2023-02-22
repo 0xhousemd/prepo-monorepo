@@ -123,23 +123,6 @@ describe('=> DepositRecord', () => {
       )
     })
 
-    it('adds to global and user deposit totals if uncapped user and user cap exceeded', async () => {
-      expect(TEST_AMOUNT_TWO).gt(TEST_AMOUNT_ONE)
-      await depositRecord.setUserDepositCap(TEST_AMOUNT_TWO)
-      bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
-      const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
-      const userDepositsBefore = await depositRecord.getUserDepositAmount(uncappedUser.address)
-
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_ONE)
-
-      expect(await depositRecord.getGlobalNetDepositAmount()).eq(
-        globalDepositAmountBefore.add(TEST_AMOUNT_ONE)
-      )
-      expect(await depositRecord.getUserDepositAmount(uncappedUser.address)).eq(
-        userDepositsBefore.add(TEST_AMOUNT_ONE)
-      )
-    })
-
     it('adds to global and user totals if uncapped user below caps and starting from non-zero value', async () => {
       await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
       await depositRecord.setUserDepositCap(TEST_AMOUNT_ONE)
@@ -167,6 +150,59 @@ describe('=> DepositRecord', () => {
       const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
 
       await expect(tx).revertedWith('Global deposit cap exceeded')
+    })
+
+    it('reverts if amount > global cap', async () => {
+      await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE)
+
+      const tx = depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE.add(1))
+
+      await expect(tx).revertedWith('Global deposit cap exceeded')
+    })
+
+    it('reverts if global cap already exceeded', async () => {
+      await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE)
+      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE.sub(1))
+
+      const tx = depositRecord.connect(user).recordDeposit(user.address, 0)
+
+      await expect(tx).revertedWith('Global deposit cap exceeded')
+    })
+
+    it('reverts if uncapped user and global cap already exceeded', async () => {
+      bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
+      await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE)
+      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE.sub(1))
+
+      const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, 0)
+
+      await expect(tx).revertedWith('Global deposit cap exceeded')
+    })
+
+    it('reverts if user cap already exceeded', async () => {
+      await depositRecord.connect(deployer).setUserDepositCap(TEST_AMOUNT_ONE)
+      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(deployer).setUserDepositCap(TEST_AMOUNT_ONE.sub(1))
+
+      const tx = depositRecord.connect(user).recordDeposit(user.address, 0)
+
+      await expect(tx).revertedWith('User deposit cap exceeded')
+    })
+
+    it('reverts if uncapped user changes to capped user and user cap already exceeded', async () => {
+      await depositRecord.connect(deployer).setUserDepositCap(TEST_AMOUNT_ONE)
+      bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
+      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_ONE)
+      expect(await depositRecord.getUserDepositCap()).eq(
+        await depositRecord.getUserDepositAmount(uncappedUser.address)
+      )
+      bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(false)
+
+      const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, 1)
+
+      await expect(tx).revertedWith('User deposit cap exceeded')
     })
 
     it('should revert if per-account deposit cap is exceeded', async () => {
