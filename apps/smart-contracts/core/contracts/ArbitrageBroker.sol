@@ -65,6 +65,7 @@ contract ArbitrageBroker is IArbitrageBroker, SafeAccessControlEnumerable {
       revert UnprofitableTrade(collateralBefore, collateralAfter);
     }
     profit = collateralAfter - collateralBefore;
+    emit ArbitrageProfit(address(market), false, profit);
   }
 
   function mintAndSell(
@@ -98,6 +99,7 @@ contract ArbitrageBroker is IArbitrageBroker, SafeAccessControlEnumerable {
       revert UnprofitableTrade(collateralBefore, collateralAfter);
     }
     profit = collateralAfter - collateralBefore;
+    emit ArbitrageProfit(address(market), true, profit);
   }
 
   function setMarketValidity(address market, bool validity)
