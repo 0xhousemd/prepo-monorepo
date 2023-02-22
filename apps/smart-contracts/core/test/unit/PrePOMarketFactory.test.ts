@@ -1,15 +1,14 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { utils } from 'prepo-hardhat'
+import { Create2Address, utils } from 'prepo-hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { formatBytes32String } from 'ethers/lib/utils'
 import { DEFAULT_ADMIN_ROLE } from 'prepo-constants'
 import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { LongShortTokenAttachFixture } from '../fixtures/LongShortTokenFixture'
 import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
 import { revertsIfNotRoleHolder, testRoleConstants } from '../utils'
-import { createMarket, roleAssigners } from '../../helpers'
+import { createMarket, roleAssigners, generateLongShortSalts } from '../../helpers'
 import { CreateMarketParams } from '../../types'
 import { PrePOMarketFactory, TestERC20 } from '../../types/generated'
 
@@ -20,6 +19,7 @@ describe('=> PrePOMarketFactory', () => {
   let collateralToken: TestERC20
   let deployer: SignerWithAddress
   let treasury: SignerWithAddress
+  let salts: { longTokenSalt: Create2Address; shortTokenSalt: Create2Address }
   const TEST_NAME_SUFFIX = 'preSTRIPE 100-200 30-September-2021'
   const TEST_SYMBOL_SUFFIX = 'preSTRIPE_100-200_30SEP21'
   const TEST_FLOOR_VAL = ethers.utils.parseEther('100')
@@ -34,6 +34,13 @@ describe('=> PrePOMarketFactory', () => {
     collateralToken = await testERC20Fixture('prePO USDC Collateral', 'preUSD', 18)
     await collateralToken.mint(deployer.address, MOCK_COLLATERAL_SUPPLY)
     prePOMarketFactory = await prePOMarketFactoryFixture()
+    salts = await generateLongShortSalts(
+      prePOMarketFactory.address,
+      collateralToken.address,
+      TEST_NAME_SUFFIX,
+      TEST_SYMBOL_SUFFIX,
+      utils.generateLowerAddress
+    )
     await roleAssigners.assignPrePOMarketFactoryRoles(deployer, deployer, prePOMarketFactory)
   })
 
@@ -101,8 +108,8 @@ describe('=> PrePOMarketFactory', () => {
         factory: prePOMarketFactory,
         tokenNameSuffix: TEST_NAME_SUFFIX,
         tokenSymbolSuffix: TEST_SYMBOL_SUFFIX,
-        longTokenSalt: formatBytes32String('DEFAULT_SALT'),
-        shortTokenSalt: formatBytes32String('DEFAULT_SALT'),
+        longTokenSalt: salts.longTokenSalt.salt,
+        shortTokenSalt: salts.shortTokenSalt.salt,
         collateral: collateralToken.address,
         governance: treasury.address,
         floorLongPayout: TEST_FLOOR_PRICE,
@@ -129,6 +136,42 @@ describe('=> PrePOMarketFactory', () => {
       )
 
       await revertsIfNotRoleHolder(prePOMarketFactory.CREATE_MARKET_ROLE(), createMarketTransaction)
+    })
+
+    it('reverts if long token address > collateral', async () => {
+      const { longTokenSalt } = await generateLongShortSalts(
+        prePOMarketFactory.address,
+        collateralToken.address,
+        TEST_NAME_SUFFIX,
+        TEST_SYMBOL_SUFFIX,
+        utils.generateHigherAddress
+      )
+      defaultParams = {
+        ...defaultParams,
+        longTokenSalt: longTokenSalt.salt,
+      }
+
+      const tx = createMarket(defaultParams)
+
+      await expect(tx).revertedWith('longToken address >= collateral')
+    })
+
+    it('reverts if short token address > collateral', async () => {
+      const { shortTokenSalt } = await generateLongShortSalts(
+        prePOMarketFactory.address,
+        collateralToken.address,
+        TEST_NAME_SUFFIX,
+        TEST_SYMBOL_SUFFIX,
+        utils.generateHigherAddress
+      )
+      defaultParams = {
+        ...defaultParams,
+        shortTokenSalt: shortTokenSalt.salt,
+      }
+
+      const tx = createMarket(defaultParams)
+
+      await expect(tx).revertedWith('shortToken address >= collateral')
     })
 
     it('should not allow invalid collateral', async () => {

@@ -1,10 +1,17 @@
 import { BigNumber, BigNumberish } from 'ethers'
-import { getCreate2Address, keccak256, solidityKeccak256 } from 'ethers/lib/utils'
+import {
+  BytesLike,
+  formatBytes32String,
+  getCreate2Address,
+  keccak256,
+  solidityKeccak256,
+} from 'ethers/lib/utils'
 import { FEE_DENOMINATOR, USDC_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
 import { MockContract } from '@defi-wonderland/smock'
 import { formatEther, parseEther } from '@ethersproject/units'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
+import { Create2Address, utils } from 'prepo-hardhat'
 import { findMarketAddedEvent, findTransferEvent } from './events'
 import { CreateMarketParams, CreateMarketResult } from '../types'
 import { Collateral, DepositHook, DepositRecord, ERC20, PrePOMarket } from '../types/generated'
@@ -227,4 +234,32 @@ export async function getDeterministicMarketAddress(
     hashedInitCode
   )
   return deterministicAddress
+}
+
+export async function generateLongShortSalts(
+  deployer: string,
+  collateral: string,
+  tokenNameSuffix: string,
+  tokenSymbolSuffix: string,
+  generateAddress: (
+    deployer: string,
+    initCode: BytesLike,
+    lowerBoundAddress: string
+  ) => Create2Address
+): Promise<{
+  longTokenSalt: Create2Address
+  shortTokenSalt: Create2Address
+}> {
+  const longShortTokenFactory = await ethers.getContractFactory('LongShortToken')
+  const longTokenDeployTx = longShortTokenFactory.getDeployTransaction(
+    `LONG ${tokenNameSuffix}`,
+    `L_${tokenSymbolSuffix}`
+  )
+  const longTokenSalt = generateAddress(deployer, longTokenDeployTx.data, collateral)
+  const shortTokenDeployTx = longShortTokenFactory.getDeployTransaction(
+    `SHORT ${tokenNameSuffix}`,
+    `S_${tokenSymbolSuffix}`
+  )
+  const shortTokenSalt = generateAddress(deployer, shortTokenDeployTx.data, collateral)
+  return { longTokenSalt, shortTokenSalt }
 }

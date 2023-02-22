@@ -127,7 +127,8 @@ task('create-market', 'create PrePOMarket from PrePOMarketFactory')
     const longShortSalts = await core.generateLongShortSalts(
       core.marketFactory.address,
       args.nameSuffix,
-      args.symbolSuffix
+      args.symbolSuffix,
+      utils.generateLowerAddress
     )
     /**
      * We need to determine the market address ahead of time because this is

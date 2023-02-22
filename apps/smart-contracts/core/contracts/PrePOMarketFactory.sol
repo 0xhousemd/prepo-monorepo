@@ -58,15 +58,21 @@ contract PrePOMarketFactory is
     uint256 expiryTime
   ) external override onlyRole(CREATE_MARKET_ROLE) nonReentrant {
     require(_validCollateral[collateral], "Invalid collateral");
-
     (LongShortToken longToken, LongShortToken shortToken) = _createPairTokens(
       tokenNameSuffix,
       tokenSymbolSuffix,
       longTokenSalt,
       shortTokenSalt
     );
+    require(
+      address(longToken) < collateral,
+      "longToken address >= collateral"
+    );
+    require(
+      address(shortToken) < collateral,
+      "shortToken address >= collateral"
+    );
     bytes32 salt = keccak256(abi.encodePacked(longToken, shortToken));
-
     PrePOMarket newMarket = new PrePOMarket{salt: salt}(
       owner,
       collateral,
@@ -79,7 +85,6 @@ contract PrePOMarketFactory is
       expiryTime
     );
     _deployedMarkets[salt] = address(newMarket);
-
     longToken.transferOwnership(address(newMarket));
     shortToken.transferOwnership(address(newMarket));
     emit MarketAdded(address(newMarket), salt);

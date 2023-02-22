@@ -2,7 +2,6 @@ import chai, { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumber } from 'ethers'
-import { formatBytes32String } from 'ethers/lib/utils'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import {
   DEFAULT_ADMIN_ROLE,
@@ -18,7 +17,7 @@ import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
 import { fakeMintHookFixture, fakeRedeemHookFixture } from '../fixtures/HookFixture'
 import { calculateFee, getLastTimestamp, revertsIfNotRoleHolder, testRoleConstants } from '../utils'
-import { createMarket, roleAssigners } from '../../helpers'
+import { createMarket, generateLongShortSalts, roleAssigners } from '../../helpers'
 import { CreateMarketParams } from '../../types'
 import {
   PrePOMarketFactory,
@@ -61,13 +60,20 @@ describe('=> prePOMarket', () => {
     prePOMarketFactory = await prePOMarketFactoryFixture()
     await roleAssigners.assignPrePOMarketFactoryRoles(deployer, deployer, prePOMarketFactory)
     await prePOMarketFactory.setCollateralValidity(collateralToken.address, true)
+    const { longTokenSalt, shortTokenSalt } = await generateLongShortSalts(
+      prePOMarketFactory.address,
+      collateralToken.address,
+      TEST_NAME_SUFFIX,
+      TEST_SYMBOL_SUFFIX,
+      utils.generateLowerAddress
+    )
     defaultParams = {
       caller: deployer,
       factory: prePOMarketFactory,
       tokenNameSuffix: TEST_NAME_SUFFIX,
       tokenSymbolSuffix: TEST_SYMBOL_SUFFIX,
-      longTokenSalt: formatBytes32String('LONG_SALT'),
-      shortTokenSalt: formatBytes32String('SHORT_SALT'),
+      longTokenSalt: longTokenSalt.salt,
+      shortTokenSalt: shortTokenSalt.salt,
       governance: treasury.address,
       collateral: collateralToken.address,
       floorLongPayout: TEST_FLOOR_PAYOUT,

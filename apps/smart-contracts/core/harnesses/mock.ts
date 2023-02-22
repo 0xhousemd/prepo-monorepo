@@ -1,5 +1,6 @@
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
 import { MockContract } from '@defi-wonderland/smock'
+import { utils } from 'prepo-hardhat'
 import { Base } from './base'
 import {
   MockExtendedCollateral,
@@ -70,7 +71,8 @@ export class MockCore extends Base {
     const tokenSalts = await this.generateLongShortSalts(
       deployerFactory.address,
       tokenNameSuffix,
-      tokenSymbolSuffix
+      tokenSymbolSuffix,
+      utils.generateLowerAddress
     )
     const longToken = await create2LongShortTokenFixture(
       `LONG ${tokenNameSuffix}`,

@@ -1,7 +1,7 @@
 import { MockContract } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
-import { BigNumber, BigNumberish } from 'ethers'
+import { BigNumber, BigNumberish, BytesLike } from 'ethers'
 import { POOL_FEE_TIER } from 'prepo-constants'
 import { Create2Address, sendTxAndWait, utils } from 'prepo-hardhat'
 import {
@@ -29,7 +29,7 @@ import {
   UniswapV3Factory,
 } from '../types/generated'
 
-const { generateAddressLessThan, setContractIfNotAlreadySet } = utils
+const { setContractIfNotAlreadySet } = utils
 
 export abstract class Base {
   public ethers!: HardhatEthersHelpers
@@ -79,14 +79,19 @@ export abstract class Base {
   public async generateLongShortSalts(
     deployer: string,
     tokenNameSuffix: string,
-    tokenSymbolSuffix: string
+    tokenSymbolSuffix: string,
+    generateLowerAddress: (
+      deployer: string,
+      initCode: BytesLike,
+      lowerBoundAddress: string
+    ) => Create2Address
   ): Promise<Create2Address[]> {
     const longShortTokenFactory = await this.ethers.getContractFactory('LongShortToken')
     const longTokenDeployTx = longShortTokenFactory.getDeployTransaction(
       `LONG ${tokenNameSuffix}`,
       `L_${tokenSymbolSuffix}`
     )
-    const longTokenSalt = generateAddressLessThan(
+    const longTokenSalt = generateLowerAddress(
       deployer,
       longTokenDeployTx.data,
       this.collateral.address
@@ -95,7 +100,7 @@ export abstract class Base {
       `SHORT ${tokenNameSuffix}`,
       `S_${tokenSymbolSuffix}`
     )
-    const shortTokenSalt = generateAddressLessThan(
+    const shortTokenSalt = generateLowerAddress(
       deployer,
       shortTokenDeployTx.data,
       this.collateral.address

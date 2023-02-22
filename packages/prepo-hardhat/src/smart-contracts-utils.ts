@@ -11,7 +11,7 @@ import {
 } from 'ethers/lib/utils'
 import { AdminClient } from 'defender-admin-client'
 import { ProposalStep } from 'defender-admin-client/lib/models/proposal'
-import { MockContract, SmockContractBase } from '@defi-wonderland/smock'
+import { SmockContractBase } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { readFileSync, writeFileSync } from 'fs'
 
@@ -184,7 +184,7 @@ export type Create2Address = {
  * @param upperBoundAddress The address to compare against
  * @returns Address and salt below `upperBoundAddress`
  */
-function generateAddressLessThan(
+function generateLowerAddress(
   deployer: string,
   initCode: BytesLike,
   upperBoundAddress: string
@@ -206,7 +206,36 @@ function generateAddressLessThan(
     randomString = (Math.random() + 1).toString(36).substring(7)
     currSalt = formatBytes32String(randomString)
     currAddress = getCreate2Address(deployer, currSalt, hashedInitCode)
-  } while (BigNumber.from(currAddress).gt(upperBoundAddressBN))
+  } while (BigNumber.from(currAddress).gte(upperBoundAddressBN))
+  return {
+    salt: currSalt,
+    address: currAddress,
+  }
+}
+
+function generateHigherAddress(
+  deployer: string,
+  initCode: BytesLike,
+  lowerBoundAddress: string
+): Create2Address {
+  const hashedInitCode = keccak256(initCode)
+  const lowerBoundAddressBN = BigNumber.from(lowerBoundAddress)
+  let randomString: string
+  let currSalt: string
+  let currAddress: string
+  do {
+    /**
+     * Generates a random string using only the built-in Math library.
+     * Takes a random number and converts it to a string, using radix
+     * 36, encompassing 0-9 + 26 letters A-Z. Adds 1 to ensure an empty
+     * string is never generated.
+     * Substring is optional, used here to limit the size/complexity of
+     * the string generated for test purposes.
+     */
+    randomString = (Math.random() + 1).toString(36).substring(7)
+    currSalt = formatBytes32String(randomString)
+    currAddress = getCreate2Address(deployer, currSalt, hashedInitCode)
+  } while (BigNumber.from(currAddress).lte(lowerBoundAddressBN))
   return {
     salt: currSalt,
     address: currAddress,
@@ -369,7 +398,8 @@ export const utils = {
   mineBlocks,
   mineBlock,
   getPermitSignature,
-  generateAddressLessThan,
+  generateLowerAddress,
+  generateHigherAddress,
   grantAndAcceptRole,
   batchGrantAndAcceptRoles,
   getRolesAccountDoesNotHave,
