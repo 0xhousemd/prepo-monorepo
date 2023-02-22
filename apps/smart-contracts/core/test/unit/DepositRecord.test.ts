@@ -15,8 +15,8 @@ const { grantAndAcceptRole } = utils
 describe('=> DepositRecord', () => {
   let depositRecord: DepositRecord
   let deployer: SignerWithAddress
+  let caller: SignerWithAddress
   let user: SignerWithAddress
-  let user2: SignerWithAddress
   let uncappedUser: SignerWithAddress
   let bypassList: FakeContract<AccountList>
   let allowlist: FakeContract<AccountList>
@@ -26,7 +26,7 @@ describe('=> DepositRecord', () => {
   const TEST_AMOUNT_TWO = parseEther('2')
 
   const getSignersAndDeployRecord = async (): Promise<void> => {
-    ;[deployer, user, user2, uncappedUser] = await ethers.getSigners()
+    ;[deployer, caller, user, uncappedUser] = await ethers.getSigners()
     depositRecord = await depositRecordFixture()
     bypassList = await fakeAccountListFixture()
     allowlist = await fakeAccountListFixture()
@@ -70,14 +70,14 @@ describe('=> DepositRecord', () => {
   describe('# recordDeposit', () => {
     beforeEach(async () => {
       await setupDepositRecord()
-      allowlist.isIncluded.whenCalledWith(user.address).returns(true)
+      allowlist.isIncluded.whenCalledWith(caller.address).returns(true)
     })
 
     it('reverts if caller not allowed', async () => {
-      expect(await allowlist.isIncluded(user2.address)).eq(false)
+      expect(await allowlist.isIncluded(user.address)).eq(false)
 
       await expect(
-        depositRecord.connect(user2).recordDeposit(user.address, TEST_AMOUNT_TWO)
+        depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_TWO)
       ).revertedWith('msg.sender not allowed')
     })
 
@@ -85,18 +85,18 @@ describe('=> DepositRecord', () => {
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(0)
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(0)
 
-      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordDeposit(user.address, TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(TEST_AMOUNT_TWO)
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(TEST_AMOUNT_TWO)
     })
 
     it("should correctly add 'amount' to both deposited totals when starting from a non-zero value", async () => {
-      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordDeposit(user.address, TEST_AMOUNT_TWO)
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       const userDepositsBefore = await depositRecord.getUserDepositAmount(user.address)
 
-      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(caller).recordDeposit(user.address, TEST_AMOUNT_ONE)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(
         globalDepositAmountBefore.add(TEST_AMOUNT_ONE)
@@ -113,7 +113,7 @@ describe('=> DepositRecord', () => {
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       const userDepositsBefore = await depositRecord.getUserDepositAmount(uncappedUser.address)
 
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(
         globalDepositAmountBefore.add(TEST_AMOUNT_TWO)
@@ -124,13 +124,13 @@ describe('=> DepositRecord', () => {
     })
 
     it('adds to global and user totals if uncapped user below caps and starting from non-zero value', async () => {
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
       await depositRecord.setUserDepositCap(TEST_AMOUNT_ONE)
       bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       const userDepositsBefore = await depositRecord.getUserDepositAmount(uncappedUser.address)
 
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(
         globalDepositAmountBefore.add(TEST_AMOUNT_TWO)
@@ -145,9 +145,9 @@ describe('=> DepositRecord', () => {
       await depositRecord.connect(deployer).setGlobalNetDepositCap(globalDepositAmountCap)
       expect(await depositRecord.getGlobalNetDepositCap()).eq(globalDepositAmountCap)
       bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
 
-      const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
+      const tx = depositRecord.connect(caller).recordDeposit(uncappedUser.address, TEST_AMOUNT_TWO)
 
       await expect(tx).revertedWith('Global deposit cap exceeded')
     })
@@ -155,17 +155,17 @@ describe('=> DepositRecord', () => {
     it('reverts if amount > global cap', async () => {
       await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE)
 
-      const tx = depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE.add(1))
+      const tx = depositRecord.connect(caller).recordDeposit(user.address, TEST_AMOUNT_ONE.add(1))
 
       await expect(tx).revertedWith('Global deposit cap exceeded')
     })
 
     it('reverts if global cap already exceeded', async () => {
       await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE)
-      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(caller).recordDeposit(user.address, TEST_AMOUNT_ONE)
       await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE.sub(1))
 
-      const tx = depositRecord.connect(user).recordDeposit(user.address, 0)
+      const tx = depositRecord.connect(caller).recordDeposit(user.address, 0)
 
       await expect(tx).revertedWith('Global deposit cap exceeded')
     })
@@ -173,20 +173,20 @@ describe('=> DepositRecord', () => {
     it('reverts if uncapped user and global cap already exceeded', async () => {
       bypassList.isIncluded.whenCalledWith(uncappedUser.address).returns(true)
       await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE)
-      await depositRecord.connect(user).recordDeposit(uncappedUser.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(caller).recordDeposit(uncappedUser.address, TEST_AMOUNT_ONE)
       await depositRecord.connect(deployer).setGlobalNetDepositCap(TEST_AMOUNT_ONE.sub(1))
 
-      const tx = depositRecord.connect(user).recordDeposit(uncappedUser.address, 0)
+      const tx = depositRecord.connect(caller).recordDeposit(uncappedUser.address, 0)
 
       await expect(tx).revertedWith('Global deposit cap exceeded')
     })
 
     it('reverts if user cap already exceeded', async () => {
       await depositRecord.connect(deployer).setUserDepositCap(TEST_AMOUNT_ONE)
-      await depositRecord.connect(user).recordDeposit(user.address, TEST_AMOUNT_ONE)
+      await depositRecord.connect(caller).recordDeposit(user.address, TEST_AMOUNT_ONE)
       await depositRecord.connect(deployer).setUserDepositCap(TEST_AMOUNT_ONE.sub(1))
 
-      const tx = depositRecord.connect(user).recordDeposit(user.address, 0)
+      const tx = depositRecord.connect(caller).recordDeposit(user.address, 0)
 
       await expect(tx).revertedWith('User deposit cap exceeded')
     })
@@ -206,11 +206,11 @@ describe('=> DepositRecord', () => {
     })
 
     it('should revert if per-account deposit cap is exceeded', async () => {
-      await depositRecord.connect(user).recordDeposit(user.address, TEST_USER_DEPOSIT_CAP)
+      await depositRecord.connect(caller).recordDeposit(user.address, TEST_USER_DEPOSIT_CAP)
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(TEST_USER_DEPOSIT_CAP)
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(TEST_USER_DEPOSIT_CAP)
 
-      await expect(depositRecord.connect(user).recordDeposit(user.address, 1)).revertedWith(
+      await expect(depositRecord.connect(caller).recordDeposit(user.address, 1)).revertedWith(
         'User deposit cap exceeded'
       )
     })
@@ -222,7 +222,7 @@ describe('=> DepositRecord', () => {
         const currentAccountAddress = allSigners[i].address
         // eslint-disable-next-line no-await-in-loop
         await depositRecord
-          .connect(user)
+          .connect(caller)
           .recordDeposit(currentAccountAddress, TEST_USER_DEPOSIT_CAP)
         // eslint-disable-next-line no-await-in-loop
         expect(await depositRecord.getUserDepositAmount(currentAccountAddress)).eq(
@@ -232,7 +232,7 @@ describe('=> DepositRecord', () => {
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(TEST_GLOBAL_DEPOSIT_CAP)
       const lastAccountAddress = allSigners[accountsToReachCap].address
 
-      await expect(depositRecord.connect(user).recordDeposit(lastAccountAddress, 1)).revertedWith(
+      await expect(depositRecord.connect(caller).recordDeposit(lastAccountAddress, 1)).revertedWith(
         'Global deposit cap exceeded'
       )
     })
@@ -245,16 +245,16 @@ describe('=> DepositRecord', () => {
   describe('# recordWithdrawal', () => {
     beforeEach(async () => {
       await setupDepositRecord()
-      allowlist.isIncluded.whenCalledWith(user.address).returns(true)
+      allowlist.isIncluded.whenCalledWith(caller.address).returns(true)
       await depositRecord
-        .connect(user)
+        .connect(caller)
         .recordDeposit(user.address, TEST_AMOUNT_ONE.add(TEST_AMOUNT_TWO))
     })
 
     it('reverts if caller not allowed', async () => {
-      expect(await allowlist.isIncluded(user2.address)).eq(false)
+      expect(await allowlist.isIncluded(user.address)).eq(false)
 
-      await expect(depositRecord.connect(user2).recordWithdrawal(TEST_AMOUNT_TWO)).revertedWith(
+      await expect(depositRecord.connect(user).recordWithdrawal(TEST_AMOUNT_TWO)).revertedWith(
         'msg.sender not allowed'
       )
     })
@@ -263,7 +263,7 @@ describe('=> DepositRecord', () => {
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       expect(globalDepositAmountBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordWithdrawal(TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(
         globalDepositAmountBefore.sub(TEST_AMOUNT_TWO)
@@ -274,7 +274,7 @@ describe('=> DepositRecord', () => {
       const userDepositBefore = await depositRecord.getUserDepositAmount(user.address)
       expect(userDepositBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordWithdrawal(TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(userDepositBefore)
     })
@@ -283,7 +283,7 @@ describe('=> DepositRecord', () => {
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       expect(globalDepositAmountBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(0)
+      await depositRecord.connect(caller).recordWithdrawal(0)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(globalDepositAmountBefore)
     })
@@ -292,31 +292,31 @@ describe('=> DepositRecord', () => {
       const userDepositBefore = await depositRecord.getUserDepositAmount(user.address)
       expect(userDepositBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(0)
+      await depositRecord.connect(caller).recordWithdrawal(0)
 
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(userDepositBefore)
     })
 
     it('leaves global deposits unchanged if withdrawal = 0 and global deposits = 0', async () => {
       await depositRecord
-        .connect(user)
+        .connect(caller)
         .recordWithdrawal(await depositRecord.getGlobalNetDepositAmount())
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       expect(globalDepositAmountBefore).eq(0)
 
-      await depositRecord.connect(user).recordWithdrawal(0)
+      await depositRecord.connect(caller).recordWithdrawal(0)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(globalDepositAmountBefore)
     })
 
     it('leaves user deposits unchanged if withdrawal = 0 and user deposit = 0', async () => {
       await depositRecord
-        .connect(user)
+        .connect(caller)
         .recordWithdrawal(await depositRecord.getUserDepositAmount(user.address))
       const userDepositBefore = await depositRecord.getUserDepositAmount(user.address)
       expect(userDepositBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(0)
+      await depositRecord.connect(caller).recordWithdrawal(0)
 
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(userDepositBefore)
     })
@@ -325,7 +325,7 @@ describe('=> DepositRecord', () => {
       const globalDepositAmountBefore = await depositRecord.getGlobalNetDepositAmount()
       expect(globalDepositAmountBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(globalDepositAmountBefore.add(1))
+      await depositRecord.connect(caller).recordWithdrawal(globalDepositAmountBefore.add(1))
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(0)
     })
@@ -334,17 +334,17 @@ describe('=> DepositRecord', () => {
       const userDepositBefore = await depositRecord.getUserDepositAmount(user.address)
       expect(userDepositBefore).gt(0)
 
-      await depositRecord.connect(user).recordWithdrawal(userDepositBefore.add(1))
+      await depositRecord.connect(caller).recordWithdrawal(userDepositBefore.add(1))
 
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(userDepositBefore)
     })
 
     it('subtracts from global deposits if called again', async () => {
-      await depositRecord.connect(user).recordWithdrawal(1)
+      await depositRecord.connect(caller).recordWithdrawal(1)
       const globalDepositAmountBeforeSecondWithdrawal =
         await depositRecord.getGlobalNetDepositAmount()
 
-      await depositRecord.connect(user).recordWithdrawal(TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordWithdrawal(TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getGlobalNetDepositAmount()).eq(
         globalDepositAmountBeforeSecondWithdrawal.sub(TEST_AMOUNT_TWO)
@@ -352,12 +352,12 @@ describe('=> DepositRecord', () => {
     })
 
     it('leaves user deposits unchanged if called again', async () => {
-      await depositRecord.connect(user).recordWithdrawal(1)
+      await depositRecord.connect(caller).recordWithdrawal(1)
       const userDepositBeforeSecondWithdrawal = await depositRecord.getUserDepositAmount(
         user.address
       )
 
-      await depositRecord.connect(user).recordWithdrawal(TEST_AMOUNT_TWO)
+      await depositRecord.connect(caller).recordWithdrawal(TEST_AMOUNT_TWO)
 
       expect(await depositRecord.getUserDepositAmount(user.address)).eq(
         userDepositBeforeSecondWithdrawal

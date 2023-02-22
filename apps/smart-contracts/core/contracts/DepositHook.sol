@@ -27,7 +27,7 @@ contract DepositHook is
   bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
 
   function hook(
-    address funder,
+    address,
     address recipient,
     uint256 amountBeforeFee,
     uint256 amountAfterFee
