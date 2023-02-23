@@ -1,8 +1,8 @@
 import styled from 'styled-components'
 import { observer } from 'mobx-react-lite'
-import { Alert, CurrencyInput, Icon, media } from 'prepo-ui'
-import { useEffect } from 'react'
+import { Alert, Icon, media } from 'prepo-ui'
 import DepositButton from './DepositButton'
+import DepositCurrencyInput from './DepositCurrencyInput'
 import DepositSummary from './DepositSummary'
 import DepositWarning from './DepositWarning'
 import { useRootStore } from '../../context/RootStoreProvider'
@@ -30,29 +30,13 @@ const Message = styled.div`
 
 const DepositPage: React.FC = () => {
   const {
-    depositStore: { depositAmount, depositing, isLoadingBalance, setDepositAmount },
     preCTTokenStore,
-    baseTokenStore: { balanceOfSigner, tokenBalanceFormat },
+    baseTokenStore: { balanceOfSigner },
   } = useRootStore()
-
-  useEffect(() => {
-    if (tokenBalanceFormat) {
-      setDepositAmount(+tokenBalanceFormat > 0 ? tokenBalanceFormat : '')
-    }
-  }, [setDepositAmount, tokenBalanceFormat])
 
   return (
     <PageCard backUrl={Routes.Portfolio} title="Deposit">
-      <CurrencyInput
-        balance={tokenBalanceFormat}
-        disabled={depositing || isLoadingBalance}
-        isBalanceZero={balanceOfSigner?.eq(0)}
-        currency={{ icon: 'usdc', text: 'USDC' }}
-        onChange={setDepositAmount}
-        value={depositAmount}
-        placeholder="0"
-        showBalance
-      />
+      <DepositCurrencyInput />
       <DepositButton />
       <DepositWarning />
       <DepositSummary />

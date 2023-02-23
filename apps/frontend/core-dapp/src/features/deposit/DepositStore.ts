@@ -1,10 +1,11 @@
 import { BigNumber } from 'ethers'
-import { makeAutoObservable, runInAction } from 'mobx'
+import { makeAutoObservable, runInAction, reaction } from 'mobx'
 import { validateStringToBN } from 'prepo-utils'
 import minBy from 'lodash/minBy'
 import { RootStore } from '../../stores/RootStore'
 import { isProduction } from '../../utils/isProduction'
 import { BalanceLimitInfo, getBalanceLimitInfo } from '../../utils/balance-limits'
+import { Token } from '../../stores/TokensStore'
 
 export type DepositLimit =
   | {
@@ -30,13 +31,33 @@ export class DepositStore {
   approving = false
   depositAmount = ''
   depositing = false
+  depositTokenOverride?: Token = undefined
+  showCurrencySlideUp = false
 
   constructor(public root: RootStore) {
     makeAutoObservable(this, {}, { autoBind: true })
+    this.subscribeDepositBalance()
+  }
+
+  subscribeDepositBalance(): void {
+    reaction(
+      () => this.root.tokensStore.getTokenBalance(this.depositToken),
+      (balance) => {
+        if (balance !== undefined) this.depositAmount = balance
+      }
+    )
   }
 
   setDepositAmount(amount: string): void {
     if (validateStringToBN(amount)) this.depositAmount = amount
+  }
+
+  setDepositTokenOverride(token: Token): void {
+    this.depositTokenOverride = token
+  }
+
+  setShowCurrencySlideUp(show: boolean): void {
+    this.showCurrencySlideUp = show
   }
 
   async approve(): Promise<void> {
@@ -143,6 +164,18 @@ export class DepositStore {
   get needApproval(): boolean | undefined {
     if (!this.root.web3Store.connected) return false
     return this.root.baseTokenStore.needToAllowFor(this.depositAmount, 'preCT')
+  }
+
+  get depositToken(): Token {
+    const { defaultDepositToken } = this.root.tokensStore
+    return (
+      this.depositTokenOverride ??
+      defaultDepositToken ?? {
+        iconName: 'eth',
+        name: 'ETH',
+        type: 'native',
+      }
+    )
   }
 
   private get globalDepositLimitInfo(): BalanceLimitInfo {

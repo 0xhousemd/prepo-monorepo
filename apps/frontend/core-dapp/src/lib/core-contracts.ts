@@ -1,7 +1,7 @@
 import { ExternalContract } from './contract.types'
 
 export type CoreTokenContractNames =
-  | 'MBT'
+  | 'WETH'
   | 'preCT'
   | 'PREPO_HELPER'
   | 'SINGLE_STRATEGY_CONTROLLER'
@@ -18,7 +18,8 @@ export type CoreContracts = {
 }
 
 export const BASE_TOKEN_ADDRESS: ExternalContract = {
-  goerli: '0xc0D34e36D829Ac4fbDcb9aE42FcbA14ff6C434d5',
+  goerli: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
+  arbitrumOne: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
 }
 
 export const COLLATERAL_TOKEN_ADDRESS: ExternalContract = {
@@ -67,7 +68,7 @@ export const TOKEN_SENDER_ADDRESS: ExternalContract = {
 }
 
 export const coreContracts: CoreContracts = {
-  MBT: BASE_TOKEN_ADDRESS,
+  WETH: BASE_TOKEN_ADDRESS,
   preCT: COLLATERAL_TOKEN_ADDRESS,
   PREPO_HELPER: PREPO_HELPER_ADDRESS,
   SINGLE_STRATEGY_CONTROLLER: SINGLE_STRATEGY_CONTROLLER_ADDRESS,

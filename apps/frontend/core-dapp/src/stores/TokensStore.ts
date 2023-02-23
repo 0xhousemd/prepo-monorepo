@@ -1,5 +1,3 @@
-// this store handles loading balance of known tokens
-
 import { makeAutoObservable } from 'mobx'
 import { IconName } from 'prepo-ui'
 import { BigNumber } from 'ethers'
@@ -9,7 +7,7 @@ import { Erc20Store } from './entities/Erc20.entity'
 
 type EthToken = {
   type: 'native'
-  iconName: 'ethereum'
+  iconName: 'eth'
   name: string
   shortName?: string
 }
@@ -32,6 +30,7 @@ export type Token = EthToken | Erc20Token
 // - their favourite token will show in the list by default
 export class TokensStore {
   tradeTokens: Token[]
+  depositTokens: Token[]
   constructor(private root: RootStore) {
     this.tradeTokens = [
       {
@@ -45,6 +44,21 @@ export class TokensStore {
         type: 'erc20',
         iconName: 'usdc',
         name: 'USDC',
+        erc20: this.root.baseTokenStore,
+      },
+    ]
+    this.depositTokens = [
+      {
+        type: 'native',
+        iconName: 'eth',
+        name: 'ETH',
+        shortName: 'ETH',
+      },
+      {
+        type: 'erc20',
+        iconName: 'weth',
+        name: 'Wrapped ETH',
+        shortName: 'WETH',
         erc20: this.root.baseTokenStore,
       },
     ]
@@ -76,5 +90,22 @@ export class TokensStore {
       if (aBalance === undefined || bBalance === undefined) return 0
       return +bBalance - +aBalance
     })
+  }
+
+  get sortedDepositTokens(): Token[] {
+    return this.depositTokens.slice().sort((a, b) => {
+      const aBalance = this.getTokenBalance(a)
+      const bBalance = this.getTokenBalance(b)
+      if (aBalance === undefined || bBalance === undefined) return 0
+      return +bBalance - +aBalance
+    })
+  }
+
+  get defaultDepositToken(): Token | undefined {
+    const loadingIndex = this.sortedDepositTokens.findIndex(
+      (token) => this.getTokenBalance(token) === undefined
+    )
+    if (loadingIndex >= 0) return undefined
+    return this.sortedDepositTokens[0]
   }
 }

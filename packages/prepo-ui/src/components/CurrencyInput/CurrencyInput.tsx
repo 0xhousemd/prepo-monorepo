@@ -182,7 +182,7 @@ const CurrencyInput: React.FC<
           {balance !== undefined && !balanceNotVisible && (
             <>
               {`Balance: ${displayDecimals(balance)}`}
-              {inputValue !== balance && !isBalanceZero && (
+              {value !== balance && !isBalanceZero && (
                 <MaxButton disabled={disabled} onClick={handleMax}>
                   MAX
                 </MaxButton>

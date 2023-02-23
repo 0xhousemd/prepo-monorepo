@@ -87,8 +87,8 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.preCTTokenStore = new CollateralStore(this)
     this.baseTokenStore = new Erc20Store({
       root: this,
-      tokenName: 'MBT',
-      symbolOverride: USDC_SYMBOL,
+      tokenName: 'WETH',
+      symbolOverride: 'WETH',
     })
     this.tokensStore = new TokensStore(this)
     this.marketStore = new MarketStore(this)
