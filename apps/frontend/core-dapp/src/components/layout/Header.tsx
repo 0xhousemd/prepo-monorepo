@@ -21,11 +21,11 @@ const Wrapper = styled.div`
     display: flex;
     height: min-content;
     justify-content: space-between;
-    padding: ${spacingIncrement(16)};
+    padding: ${spacingIncrement(32)} ${spacingIncrement(16)} ${spacingIncrement(16)};
     position: relative;
     ${media.desktop`
       padding: ${spacingIncrement(32)};
-  `};
+    `};
   }
 `
 
