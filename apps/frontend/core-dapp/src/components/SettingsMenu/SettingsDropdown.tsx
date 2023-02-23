@@ -5,6 +5,7 @@ import SettingsCard from './SettingsCard'
 import { useRootStore } from '../../context/RootStoreProvider'
 import Identicon from '../../features/connect/Identicon'
 import { getShortAccount } from '../../utils/account-utils'
+import { isProduction } from '../../utils/isProduction'
 
 const SettingsDropdown: React.FC = () => {
   const { portfolioStore, uiStore, web3Store } = useRootStore()
@@ -36,7 +37,7 @@ const SettingsDropdown: React.FC = () => {
           <SettingsCard portfolioValue={portfolioValue} onClose={(): void => setVisible(false)} />
         }
       >
-        {address ? (
+        {address && !isProduction() ? (
           <Flex gap={8}>
             <Identicon
               account={address}

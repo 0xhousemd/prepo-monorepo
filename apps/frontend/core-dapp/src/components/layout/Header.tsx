@@ -2,11 +2,10 @@ import { Layout } from 'antd'
 import styled from 'styled-components'
 import { coreDappTheme, Flex, media, spacingIncrement } from 'prepo-ui'
 import Navigation from '../Navigation'
-import TestnetBanner from '../../features/testnet-onboarding/TestnetBanner'
-import DynamicBanner from '../../features/testnet-onboarding/DynamicBanner'
 import SettingsMenu from '../SettingsMenu'
 import PrePOLogo from '../PrePOLogo'
 import ConnectButton from '../../features/connect/ConnectButton'
+import { isProduction } from '../../utils/isProduction'
 
 const { Z_INDEX } = coreDappTheme
 
@@ -31,22 +30,18 @@ const Wrapper = styled.div`
 `
 
 const Header: React.FC = () => (
-  <>
-    <TestnetBanner />
-    <DynamicBanner />
-    <Wrapper>
-      <AHeader>
-        <Flex justifyContent="flex-start" gap={8}>
-          <PrePOLogo />
-          <Navigation />
-        </Flex>
-        <Flex gap={8}>
-          <ConnectButton size="sm" hideWhenConnected />
-          <SettingsMenu />
-        </Flex>
-      </AHeader>
-    </Wrapper>
-  </>
+  <Wrapper>
+    <AHeader>
+      <Flex justifyContent="flex-start" gap={8}>
+        <PrePOLogo />
+        {!isProduction() && <Navigation />}
+      </Flex>
+      <Flex gap={8}>
+        {!isProduction() && <ConnectButton size="sm" hideWhenConnected />}
+        <SettingsMenu />
+      </Flex>
+    </AHeader>
+  </Wrapper>
 )
 
 export default Header

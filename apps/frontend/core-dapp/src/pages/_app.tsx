@@ -16,6 +16,8 @@ import 'react-loading-skeleton/dist/skeleton.css'
 import { LightWeightChartProvider } from '../components/charts'
 import '../styles/default.css'
 import config from '../lib/config'
+import { isProduction } from '../utils/isProduction'
+import ComingSoonPage from '../features/coming-soon/ComingSoonPage'
 
 // mobx config
 configure({
@@ -48,7 +50,7 @@ const App = ({ Component, pageProps }: AppProps): React.ReactElement => {
           <AppBootstrap>
             <Layout>
               {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-              <Component {...pageProps} />
+              {isProduction() ? <ComingSoonPage /> : <Component {...pageProps} />}
             </Layout>
           </AppBootstrap>
         </LightWeightChartProvider>

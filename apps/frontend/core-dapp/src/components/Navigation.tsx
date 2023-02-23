@@ -31,9 +31,6 @@ const Wrapper = styled(Flex)`
   line-height: 1;
   padding: ${spacingIncrement(2)};
   transform: translateX(-50%);
-  ${media.desktop`
-    transform: translateX(0);
-  `}
   ${media.largeDesktop`
     transform: translateX(-50%);
   `}
@@ -76,7 +73,7 @@ export const NavigationItem: React.FC<PathProps> = ({ path, iconName, name }) =>
 
 const Navigation: React.FC = () => (
   <Wrapper
-    position={{ phone: 'fixed', desktop: 'static', largeDesktop: 'absolute' }}
+    position={{ phone: 'fixed', largeDesktop: 'absolute' }}
     bottom={{ phone: 40, desktop: 'auto' }}
     left={{ phone: '50%', largeDesktop: '50%' }}
   >

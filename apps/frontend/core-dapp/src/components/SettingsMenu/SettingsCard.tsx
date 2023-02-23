@@ -6,6 +6,7 @@ import SettingsMenuItem from './SettingsMenuItem'
 import SocialFooter from './SocialFooter'
 import WalletInfo from './WalletInfo'
 import { useRootStore } from '../../context/RootStoreProvider'
+import { isProduction } from '../../utils/isProduction'
 
 const externalLinks = [{ link: 'https://docs.prepo.io/', name: 'Documentation' }]
 
@@ -45,8 +46,12 @@ const SettingsCard: React.FC<{ onClose: () => void; portfolioValue?: string }> =
   return (
     <MenuWrapper>
       <Flex gap={8} flexDirection="column" alignItems="stretch">
-        <WalletInfo onClose={onClose} />
-        <NetworkStatus />
+        {!isProduction() && (
+          <>
+            <WalletInfo onClose={onClose} />
+            <NetworkStatus />
+          </>
+        )}
         <SettingsMenuItem
           iconName={isDarkTheme ? 'light-theme' : 'dark-theme'}
           onClick={toggleTheme}
