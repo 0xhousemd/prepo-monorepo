@@ -2,7 +2,7 @@ import chai, { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { Contract, BigNumberish } from 'ethers'
+import { BigNumberish } from 'ethers'
 import { parseEther } from '@ethersproject/units'
 import { id } from 'ethers/lib/utils'
 import { utils } from 'prepo-hardhat'
@@ -14,7 +14,13 @@ import { fakePrePOMarketFixture } from '../fixtures/PrePOMarketFixture'
 import { fakeSwapRouterFixture } from '../fixtures/UniswapFixtures'
 import { MockCore } from '../../harnesses/mock'
 import { roleAssigners } from '../../helpers'
-import { ArbitrageBroker, IArbitrageBroker, LongShortToken } from '../../types/generated'
+import {
+  ArbitrageBroker,
+  IArbitrageBroker,
+  LongShortToken,
+  PrePOMarket,
+  SwapRouter,
+} from '../../types/generated'
 import { PromiseOrValue } from '../../types/generated/common'
 
 chai.use(smock.matchers)
@@ -25,8 +31,8 @@ describe('=> ArbitrageBroker', () => {
   let core: MockCore
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
-  let swapRouter: FakeContract<Contract>
-  let market: FakeContract<Contract>
+  let swapRouter: FakeContract<SwapRouter>
+  let market: FakeContract<PrePOMarket>
   let longToken: FakeContract<LongShortToken>
   let shortToken: FakeContract<LongShortToken>
   let arbitrageBroker: ArbitrageBroker

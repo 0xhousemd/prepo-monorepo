@@ -1,10 +1,15 @@
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import chai, { expect } from 'chai'
-import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
 import { ZERO_ADDRESS } from 'prepo-constants'
-import { AccountList, Collateral, RedeemHook, TokenSender } from '../../types/generated'
+import {
+  AccountList,
+  Collateral,
+  PrePOMarket,
+  RedeemHook,
+  TokenSender,
+} from '../../types/generated'
 import { fakeCollateralFixture } from '../fixtures/CollateralFixture'
 import { fakeAccountListFixture, redeemHookFixture } from '../fixtures/HookFixture'
 import { fakePrePOMarketFixture } from '../fixtures/PrePOMarketFixture'
@@ -23,7 +28,7 @@ describe('=> RedeemHook', () => {
   let msgSendersAllowlist: FakeContract<AccountList>
   let tokenSender: FakeContract<TokenSender>
   let collateral: FakeContract<Collateral>
-  let market: FakeContract<Contract>
+  let market: FakeContract<PrePOMarket>
   let marketSigner: SignerWithAddress
 
   beforeEach(async () => {

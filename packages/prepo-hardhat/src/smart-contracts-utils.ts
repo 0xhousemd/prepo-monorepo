@@ -382,6 +382,57 @@ export function getAcceptOwnershipSteps(
   return batchSteps
 }
 
+export function getRevokeRoleSteps(
+  network: Network,
+  roleHolderAddress: string,
+  contract: Contract | SmockContractBase<Contract>,
+  roles: string[]
+): ProposalStep[] {
+  const batchSteps: ProposalStep[] = []
+  roles.forEach((role) => {
+    batchSteps.push({
+      contractId: `${network.defenderName}-${contract.address}`,
+      type: 'custom',
+      targetFunction: {
+        name: 'revokeRole',
+        inputs: [
+          { type: 'bytes32', name: 'role' },
+          { type: 'address', name: 'account' },
+        ],
+      },
+      functionInputs: [role, roleHolderAddress],
+    })
+  })
+  return batchSteps
+}
+
+/**
+ * Typed only to accept Contract, not SmockContractBase<Contract> for now,
+ * since the returned array cannot be assembled unless the type is guaranteed,
+ * requiring duplication of code for each type.
+ *
+ * We aren't currently needing a function like this for testing, so going to
+ * shelve finding a more elegant solution for now.
+ */
+export async function getContractsAccountIsNotRoleHolderOf(
+  contracts: Contract[],
+  accountAddress: string,
+  role: string
+): Promise<Contract[]> {
+  const promises: Promise<boolean>[] = []
+  contracts.forEach((contract) => {
+    promises.push(contract.hasRole(role, accountAddress))
+  })
+  const results = await Promise.all(promises)
+  const contractsAccountIsNotRoleHolderOf: Contract[] = []
+  results.forEach((result, index) => {
+    if (!result) {
+      contractsAccountIsNotRoleHolderOf.push(contracts[index])
+    }
+  })
+  return contractsAccountIsNotRoleHolderOf
+}
+
 export const utils = {
   expandToDecimals,
   expandTo6Decimals,
@@ -409,4 +460,6 @@ export const utils = {
   batchGrantRoles,
   getAcceptRoleSteps,
   getAcceptOwnershipSteps,
+  getRevokeRoleSteps,
+  getContractsAccountIsNotRoleHolderOf,
 }

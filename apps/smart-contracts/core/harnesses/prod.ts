@@ -1,4 +1,10 @@
-import { DEPLOYMENT_NAMES, getPrePOAddressForNetwork, Network } from 'prepo-constants'
+import { Contract } from 'ethers'
+import {
+  DEPLOYMENT_NAMES,
+  getPrePOAddressForNetwork,
+  Network,
+  DEFAULT_ADMIN_ROLE,
+} from 'prepo-constants'
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { sendTxAndWait, utils } from 'prepo-hardhat'
@@ -14,7 +20,7 @@ import {
 import { ArbitrageBroker, DepositTradeHelper, ERC20, PrePOMarketFactory } from '../types/generated'
 import { roleAssigners, roleGranters, roleProposalStepGetters } from '../helpers'
 
-const { getAcceptOwnershipSteps } = utils
+const { getAcceptOwnershipSteps, getContractsAccountIsNotRoleHolderOf } = utils
 
 export class ProdCore extends Base {
   private static _instance: ProdCore
@@ -167,5 +173,70 @@ export class ProdCore extends Base {
       this.tokenSender.fixedPrice,
       this.depositTradeHelper,
     ])
+  }
+
+  public async getProdStackContractsAccountIsNotDefaultAdminFor(
+    accountAddress: string
+  ): Promise<Contract[]> {
+    const contractsAccountIsNotDefaultAdminFor = await getContractsAccountIsNotRoleHolderOf(
+      [
+        this.collateral,
+        this.depositRecord,
+        this.collateral.depositHook,
+        this.collateral.withdrawHook,
+        this.collateral.managerWithdrawHook,
+        this.tokenSender,
+        this.marketFactory,
+        this.arbitrageBroker,
+      ],
+      accountAddress,
+      DEFAULT_ADMIN_ROLE
+    )
+    return contractsAccountIsNotDefaultAdminFor
+  }
+
+  public getRevokeRoleStepsForProdStack(
+    network: Network,
+    roleHolderAddress: string
+  ): ProposalStep[] {
+    return roleProposalStepGetters
+      .getCollateralRevokeRoleSteps(network, roleHolderAddress, this.collateral)
+      .concat(
+        roleProposalStepGetters.getDepositRecordRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.depositRecord
+        ),
+        roleProposalStepGetters.getDepositHookRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.collateral.depositHook
+        ),
+        roleProposalStepGetters.getWithdrawHookRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.collateral.withdrawHook
+        ),
+        roleProposalStepGetters.getManagerWithdrawHookRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.collateral.managerWithdrawHook
+        ),
+        roleProposalStepGetters.getTokenSenderRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.tokenSender
+        ),
+        roleProposalStepGetters.getPrePOMarketFactoryRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.marketFactory
+        ),
+        roleProposalStepGetters.getArbitrageBrokerRevokeRoleSteps(
+          network,
+          roleHolderAddress,
+          this.arbitrageBroker
+        )
+      )
   }
 }

@@ -1,17 +1,11 @@
 import { BigNumber, BigNumberish } from 'ethers'
-import {
-  BytesLike,
-  formatBytes32String,
-  getCreate2Address,
-  keccak256,
-  solidityKeccak256,
-} from 'ethers/lib/utils'
+import { BytesLike, getCreate2Address, keccak256, solidityKeccak256 } from 'ethers/lib/utils'
 import { FEE_DENOMINATOR, USDC_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
 import { MockContract } from '@defi-wonderland/smock'
 import { formatEther, parseEther } from '@ethersproject/units'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
-import { Create2Address, utils } from 'prepo-hardhat'
+import { Create2Address } from 'prepo-hardhat'
 import { findMarketAddedEvent, findTransferEvent } from './events'
 import { CreateMarketParams, CreateMarketResult } from '../types'
 import { Collateral, DepositHook, DepositRecord, ERC20, PrePOMarket } from '../types/generated'

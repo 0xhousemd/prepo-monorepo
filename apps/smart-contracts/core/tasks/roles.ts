@@ -129,3 +129,99 @@ task(
     steps: acceptRoleSteps.concat(acceptOwnershipSteps),
   })
 })
+
+task('revoke-roles-from-deployer', 'Revokes all roles from the deployer').setAction(
+  async (args, hre) => {
+    const { ethers, getChainId } = hre
+    const currentChain = Number(await getChainId()) as ChainId
+    const currentNetwork = getNetworkByChainId(currentChain)
+    const core = await ProdCore.Instance.init(ethers, currentNetwork)
+    const signer = (await ethers.getSigners())[0]
+    const governanceAddress = getPrePOAddressForNetwork(
+      'GOVERNANCE',
+      currentNetwork.name,
+      process.env.GOVERNANCE
+    )
+    console.log(signer.address)
+    const contractsGovernanceIsNotDefaultAdminFor =
+      await core.getProdStackContractsAccountIsNotDefaultAdminFor(governanceAddress)
+    if (contractsGovernanceIsNotDefaultAdminFor.length > 0) {
+      const contractAddresses: string[] = []
+      contractsGovernanceIsNotDefaultAdminFor.forEach((contract) => {
+        contractAddresses.push(contract.address)
+      })
+      throw new Error(
+        `Governance is not the default admin for the following contracts: ${contractAddresses}`
+      )
+    }
+    const defenderClient = await getDefenderAdminClient(currentChain)
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const defenderNetworkName = currentNetwork.defenderName as any
+    const revokeRoleSteps = core.getRevokeRoleStepsForProdStack(currentNetwork, signer.address)
+    console.log(
+      `Submitting proposal for governance to revoke ${revokeRoleSteps.length} roles from ${signer.address}`
+    )
+    await defenderClient.createProposal({
+      contract: [
+        {
+          address: core.collateral.address,
+          name: DEPLOYMENT_NAMES.preUSDC.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('Collateral').abi.toString(),
+        },
+        {
+          address: core.depositRecord.address,
+          name: DEPLOYMENT_NAMES.preUSDC.depositRecord.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('DepositRecord').abi.toString(),
+        },
+        {
+          address: core.collateral.depositHook.address,
+          name: DEPLOYMENT_NAMES.preUSDC.depositHook.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('DepositHook').abi.toString(),
+        },
+        {
+          address: core.collateral.withdrawHook.address,
+          name: DEPLOYMENT_NAMES.preUSDC.withdrawHook.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('WithdrawHook').abi.toString(),
+        },
+        {
+          address: core.collateral.managerWithdrawHook.address,
+          name: DEPLOYMENT_NAMES.preUSDC.managerWithdrawHook.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('ManagerWithdrawHook').abi.toString(),
+        },
+        {
+          address: core.tokenSender.address,
+          name: DEPLOYMENT_NAMES.tokenSender.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('TokenSender').abi.toString(),
+        },
+        {
+          address: core.marketFactory.address,
+          name: DEPLOYMENT_NAMES.prePOMarketFactory.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('PrePOMarketFactory').abi.toString(),
+        },
+        {
+          address: core.arbitrageBroker.address,
+          name: DEPLOYMENT_NAMES.arbitrageBroker.name,
+          network: defenderNetworkName,
+          abi: hre.artifacts.readArtifactSync('ArbitrageBroker').abi.toString(),
+        },
+      ],
+      title: `Revoke Roles From Deployer`,
+      description: `
+          Governance will revoke ${revokeRoleSteps.length} roles from the deployer.
+        `,
+      type: 'batch',
+      via: governanceAddress,
+      viaType: 'Gnosis Safe',
+      // metadata is a required field, but can be blank
+      metadata: {},
+      steps: revokeRoleSteps,
+    })
+  }
+)

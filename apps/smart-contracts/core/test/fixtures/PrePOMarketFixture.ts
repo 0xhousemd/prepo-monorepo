@@ -50,6 +50,6 @@ export async function prePOMarketAttachFixture(
   return factory.attach(marketAddress) as PrePOMarket
 }
 
-export function fakePrePOMarketFixture(): Promise<FakeContract> {
-  return smock.fake('PrePOMarket')
+export function fakePrePOMarketFixture(): Promise<FakeContract<PrePOMarket>> {
+  return smock.fake<PrePOMarket>('PrePOMarket')
 }
