@@ -5,6 +5,7 @@ import Navigation from '../Navigation'
 import SettingsMenu from '../SettingsMenu'
 import PrePOLogo from '../PrePOLogo'
 import ConnectButton from '../../features/connect/ConnectButton'
+import { Routes } from '../../lib/routes'
 import { isProduction } from '../../utils/isProduction'
 
 const { Z_INDEX } = coreDappTheme
@@ -33,7 +34,7 @@ const Header: React.FC = () => (
   <Wrapper>
     <AHeader>
       <Flex justifyContent="flex-start" gap={8}>
-        <PrePOLogo />
+        <PrePOLogo href={Routes.Trade} />
         {!isProduction() && <Navigation />}
       </Flex>
       <Flex gap={8}>

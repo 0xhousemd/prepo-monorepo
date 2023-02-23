@@ -36,8 +36,7 @@ const WithdrawWarning: React.FC = () => {
           message={
             <Flex flexDirection="column" gap={8} alignItems="start">
               <p>
-                Withdrawal limit exceeded. <br />
-                (
+                Withdrawal limit exceeded. <br />(
                 <InlineTextButton
                   onClick={(): void => {
                     setWithdrawalAmount(withdrawLimit.remainingUnits)
