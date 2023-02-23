@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
 import { SkeletonTheme } from 'react-loading-skeleton'
-import { CustomThemeProvider, PresetTheme, ThemeModes } from 'prepo-ui'
+import { CustomThemeProvider, PresetTheme } from 'prepo-ui'
 import GlobalStyle, { AntdGlobalStyle } from './GlobalStyle'
 import { useRootStore } from '../context/RootStoreProvider'
 
@@ -21,15 +21,6 @@ const AppBootstrap: React.FC = ({ children }) => {
   useEffect(() => {
     uiStore.setMaxScreenHeight(window.innerHeight)
   }, [uiStore])
-
-  useEffect(() => {
-    if (uiStore.selectedTheme === undefined) {
-      const theme = window.matchMedia('(prefers-color-scheme: light)').matches
-        ? ThemeModes.Light
-        : ThemeModes.Dark
-      uiStore.setTheme(theme)
-    }
-  }, [uiStore.selectedTheme, uiStore])
 
   return (
     <SkeletonTheme>

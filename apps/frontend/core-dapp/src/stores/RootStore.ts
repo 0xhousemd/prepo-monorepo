@@ -15,6 +15,7 @@ import { UniswapV3GraphStore } from './graphs/UniswapV3GraphStore'
 import { SwapStore } from './SwapStore'
 import { DepositRecordStore } from './DepositRecordStore'
 import { TokenSenderStore } from './TokenSenderStore'
+import { MediaQueryStore } from './MediaQueryStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
 import { AdvancedSettingsStore } from '../components/AdvancedSettingsModal/AdvancedSettingsStore'
@@ -32,14 +33,14 @@ import { PPOStakingStore } from '../features/ppo/stake/PPOStakingStore'
 
 type LocalStorage = {
   isPortfolioVisible: boolean
-  selectedTheme: ThemeModes | undefined
+  forcedTheme: ThemeModes | undefined
   selectedWallet: string | undefined
   language: Language
 }
 
 const initLocalStorage: LocalStorage = {
   isPortfolioVisible: true,
-  selectedTheme: undefined,
+  forcedTheme: undefined,
   selectedWallet: undefined,
   language: 'en',
 }
@@ -71,6 +72,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   ppoHistoryStore: PpoHistoryStore
   tokenSenderStore: TokenSenderStore
   unstakeStore: UnstakeStore
+  mediaQueryStore: MediaQueryStore
 
   constructor() {
     super({
@@ -108,5 +110,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.ppoStakingStore = new PPOStakingStore(this)
     this.tokenSenderStore = new TokenSenderStore(this)
     this.unstakeStore = new UnstakeStore(this)
+    this.mediaQueryStore = new MediaQueryStore()
   }
 }

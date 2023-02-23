@@ -20,8 +20,10 @@ export class UiStore {
     makeAutoObservable(this)
   }
 
-  get selectedTheme(): ThemeModes | undefined {
-    return this.root.localStorageStore.storage.selectedTheme
+  get selectedTheme(): ThemeModes {
+    return (
+      this.root.localStorageStore.storage.forcedTheme ?? this.root.mediaQueryStore.systemThemeMode
+    )
   }
 
   get selectedLanguage(): Language | undefined {
@@ -33,7 +35,11 @@ export class UiStore {
   }
 
   setTheme = (selectedTheme: ThemeModes): void => {
-    this.root.localStorageStore.storage.selectedTheme = selectedTheme
+    if (selectedTheme === this.root.mediaQueryStore.systemThemeMode) {
+      this.root.localStorageStore.storage.forcedTheme = undefined
+    } else {
+      this.root.localStorageStore.storage.forcedTheme = selectedTheme
+    }
   }
 
   setLanguage = (lang: Language): void => {

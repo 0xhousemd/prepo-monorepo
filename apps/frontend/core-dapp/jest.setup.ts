@@ -1,8 +1,17 @@
 import { BigNumber } from 'ethers'
 import { configure } from 'mobx'
+import { ThemeModes } from 'prepo-ui/src/themes/themes.types'
 import { initializeStore } from './src/context/initializeStore'
 
 jest.mock('./src/stores/MarketStore')
+jest.mock('./src/stores/MediaQueryStore', () => ({
+  MediaQueryStore: class {
+    // eslint-disable-next-line class-methods-use-this
+    get systemThemeMode(): ThemeModes {
+      return ThemeModes.Light
+    }
+  },
+}))
 
 // This is needed to be able to mock mobx @computed properties on a class
 configure({ safeDescriptors: false })
