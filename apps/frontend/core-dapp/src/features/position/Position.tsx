@@ -33,6 +33,18 @@ const StyledPositionLabel = styled(PositionLabel).attrs({ withBackground: true }
   font-size: ${({ theme }): string => theme.fontSize.sm};
   font-weight: ${({ theme }): number => theme.fontWeight.regular};
 `
+
+export const MarketIcon = styled(Icon).attrs({
+  // Override the Icon component's inline style (display: flex)
+  style: {},
+})`
+  display: none;
+
+  @media (min-width: ${spacingIncrement(340)}) {
+    display: flex;
+  }
+`
+
 const IconLink = styled.a`
   align-items: center;
   background: ${({ theme }): string => theme.color.accentPurple};
@@ -66,7 +78,7 @@ export const Position: React.FC<PositionProps> = ({
   totalValue,
 }) => (
   <Flex justifyContent="start" gap={8} width="100%">
-    <Icon name={iconName} height={spacingIncrement(48)} width={spacingIncrement(48)} />
+    <MarketIcon name={iconName} height={spacingIncrement(48)} width={spacingIncrement(48)} />
     <Flex flexDirection="column" alignItems="start">
       <PositionName>{name}</PositionName>
       <Flex gap={4} alignItems="center">

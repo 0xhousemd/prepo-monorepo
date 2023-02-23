@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Flex, Icon, spacingIncrement } from 'prepo-ui'
+import { Flex, spacingIncrement } from 'prepo-ui'
 import styled, { Color } from 'styled-components'
 import { observer } from 'mobx-react-lite'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import { numberFormatter } from '../../utils/numberFormatter'
 import PositionLabel from '../position/PositionLabel'
 import { getDateTimeFromSeconds } from '../../utils/date-utils'
 import { useRootStore } from '../../context/RootStoreProvider'
-import { PositionName } from '../position/Position'
+import { PositionName, MarketIcon as TransactionIcon } from '../position/Position'
 import Skeleton from '../../components/Skeleton'
 import { Routes } from '../../lib/routes'
 
@@ -91,7 +91,7 @@ const HistoryTransaction: React.FC<HistoryTransactionProps> = ({ historyEvent })
 
   return (
     <Flex justifyContent="start" gap={8} width="100%">
-      <Icon name={iconName} height={spacingIncrement(48)} width={spacingIncrement(48)} />
+      <TransactionIcon name={iconName} height={spacingIncrement(48)} width={spacingIncrement(48)} />
       <Flex flexDirection="column" alignItems="start">
         <Flex gap={4}>
           <Link href={nameRedirectUrl} passHref>
