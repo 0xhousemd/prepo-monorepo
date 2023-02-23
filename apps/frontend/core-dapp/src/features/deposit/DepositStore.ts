@@ -192,7 +192,7 @@ export class DepositStore {
       additionalAmount: this.depositAmountBN,
       cap: this.root.depositRecordStore.globalNetDepositCap,
       currentAmount: this.root.depositRecordStore.globalNetDepositAmount,
-      formatUnits: this.root.baseTokenStore.formatUnits.bind(this.root.baseTokenStore),
+      formatUnits: this.root.preCTTokenStore.formatUnits.bind(this.root.baseTokenStore),
     })
   }
 
@@ -214,7 +214,7 @@ export class DepositStore {
       additionalAmount: this.depositAmountBN,
       cap: this.root.depositRecordStore.userDepositCap,
       currentAmount: this.root.depositRecordStore.userDepositAmountOfSigner,
-      formatUnits: this.root.baseTokenStore.formatUnits.bind(this.root.baseTokenStore),
+      formatUnits: this.root.preCTTokenStore.formatUnits.bind(this.root.baseTokenStore),
     })
   }
 

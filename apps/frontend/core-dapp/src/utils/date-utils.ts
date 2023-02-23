@@ -1,9 +1,10 @@
-import { MIN_IN_MS, SEC_IN_MS } from 'prepo-constants'
+import { MIN_IN_MS, SEC_IN_MS, HOUR_IN_MS } from 'prepo-constants'
 import endOfHour from 'date-fns/endOfHour'
 import endOfDay from 'date-fns/endOfDay'
 import format from 'date-fns/format'
 import startOfDay from 'date-fns/startOfDay'
 import startOfHour from 'date-fns/startOfHour'
+import { DateTimeInMs, DurationInMs } from './date-types'
 import { DateRange } from '../types/general.types'
 
 const DATE_FORMAT = 'do LLLL yyyy' // 1st January 2025
@@ -78,3 +79,22 @@ export const getHoursFromDateRange = ({ endTimeInMs, startTimeInMs }: DateRange)
 
 export const getDaysFromDateRange = (dateRange: DateRange): number =>
   Math.ceil(getHoursFromDateRange(dateRange) / 24)
+
+export const addDuration = (dateTime: DateTimeInMs, duration: DurationInMs): DateTimeInMs =>
+  (dateTime + duration) as DateTimeInMs
+
+export const formatDuration = (durationInMs: DurationInMs): string => {
+  if (durationInMs <= 0) {
+    return '0s'
+  }
+
+  const hours = Math.floor(durationInMs / HOUR_IN_MS)
+  const minutes = Math.floor((durationInMs / MIN_IN_MS) % 60)
+  const seconds = Math.floor((durationInMs / SEC_IN_MS) % 60)
+
+  const hoursString = hours > 0 ? `${hours}h` : ''
+  const minutesString = hours > 0 || minutes > 0 ? `${minutes}m` : ''
+  const secondsString = `${seconds}s`
+
+  return `${hoursString} ${minutesString} ${secondsString}`.trim()
+}

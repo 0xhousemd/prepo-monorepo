@@ -1,7 +1,24 @@
 import { BigNumber } from 'ethers'
 import { makeAutoObservable, runInAction } from 'mobx'
 import { validateStringToBN } from 'prepo-utils'
+import { differenceInMilliseconds } from 'date-fns'
 import { RootStore } from '../../stores/RootStore'
+import { getBalanceLimitInfo } from '../../utils/balance-limits'
+import { addDuration } from '../../utils/date-utils'
+import { DurationInMs } from '../../utils/date-types'
+
+export type WithdrawLimit =
+  | {
+      status: 'loading' | 'not-exceeded'
+    }
+  | {
+      amountUnits: string
+      capUnits: string
+      remainingUnits: string
+      // If undefined, withdrawal period was reset already
+      resetsIn: DurationInMs | undefined
+      status: 'already-exceeded' | 'exceeded-after-transfer'
+    }
 
 export class WithdrawStore {
   withdrawing = false
@@ -63,7 +80,9 @@ export class WithdrawStore {
       this.withdrawalAmountBN.lte(0) ||
       this.insufficientBalance === undefined ||
       this.insufficientBalance ||
-      this.withdrawUILoading
+      this.withdrawUILoading ||
+      this.withdrawLimit.status === 'already-exceeded' ||
+      this.withdrawLimit.status === 'exceeded-after-transfer'
     )
   }
 
@@ -100,7 +119,11 @@ export class WithdrawStore {
   }
 
   get withdrawUILoading(): boolean {
-    return this.withdrawing || this.withdrawButtonInitialLoading
+    return (
+      this.withdrawing ||
+      this.withdrawButtonInitialLoading ||
+      this.withdrawLimit.status === 'loading'
+    )
   }
 
   get withdrawalFee(): number | undefined {
@@ -125,5 +148,48 @@ export class WithdrawStore {
     if (rewardBN === undefined) return undefined
 
     return this.root.ppoTokenStore.formatUnits(rewardBN)
+  }
+
+  get withdrawLimit(): WithdrawLimit {
+    const {
+      globalAmountWithdrawnThisPeriod,
+      globalPeriodLength,
+      globalWithdrawLimitPerPeriod,
+      lastGlobalPeriodReset,
+    } = this.root.withdrawHookStore
+    const { nowInMs } = this.root.timerStore
+
+    if (globalPeriodLength === undefined || lastGlobalPeriodReset === undefined) {
+      return {
+        status: 'loading',
+      }
+    }
+
+    const periodAlreadyReset =
+      differenceInMilliseconds(nowInMs, lastGlobalPeriodReset) > globalPeriodLength
+
+    const limitInfo = getBalanceLimitInfo({
+      additionalAmount: this.withdrawalAmountBN,
+      cap: globalWithdrawLimitPerPeriod,
+      // If the reset window has passed, disregard the value of globalAmountWithdrawnThisPeriod.
+      // The amount withdrawn is effectively zero.
+      // When someone withdraws, globalAmountWithdrawnThisPeriod will update and thus the withdraw limit will be recomputed
+      currentAmount: periodAlreadyReset ? BigNumber.from(0) : globalAmountWithdrawnThisPeriod,
+      formatUnits: this.root.preCTTokenStore.formatUnits.bind(this.root.preCTTokenStore),
+    })
+
+    if (limitInfo.status === 'already-exceeded' || limitInfo.status === 'exceeded-after-transfer') {
+      const nextGlobalPeriodReset = addDuration(lastGlobalPeriodReset, globalPeriodLength)
+      const timeToReset = differenceInMilliseconds(nextGlobalPeriodReset, nowInMs) as DurationInMs
+
+      return {
+        ...limitInfo,
+        resetsIn: periodAlreadyReset ? undefined : timeToReset,
+      }
+    }
+
+    return {
+      status: limitInfo.status,
+    }
   }
 }

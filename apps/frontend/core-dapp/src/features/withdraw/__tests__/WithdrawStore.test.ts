@@ -3,6 +3,7 @@ import { configure } from 'mobx'
 import { parseUnits } from 'ethers/lib/utils'
 import { utils, BigNumber } from 'ethers'
 import { ERC20_UNITS } from '../../../lib/constants'
+import { DateTimeInMs, DurationInMs } from '../../../utils/date-types'
 
 // This is needed to be able to mock mobx properties on a class
 configure({ safeDescriptors: false })
@@ -18,6 +19,10 @@ describe('WithdrawStore tests', () => {
   let spyPreCTDecimalsNumber: jest.SpyInstance
   let spyWithdrawalFeesAmountBN: jest.SpyInstance
   let spySuccessToast: jest.SpyInstance
+  let spyGlobalAmountWithdrawnThisPeriod: jest.SpyInstance
+  let spyGlobalPeriodLength: jest.SpyInstance
+  let spyGlobalWithdrawLimitPerPeriod: jest.SpyInstance
+  let spyLastGlobalPeriodReset: jest.SpyInstance
   beforeAll(() => {
     spySuccessToast = jest.spyOn(rootStore.toastStore, 'successToast').mockImplementation(jest.fn())
 
@@ -38,6 +43,22 @@ describe('WithdrawStore tests', () => {
     spyWithdrawalFeesAmountBN = jest
       .spyOn(rootStore.withdrawStore, 'withdrawalFeesAmountBN', 'get')
       .mockReturnValue(BigNumber.from(0))
+
+    spyGlobalAmountWithdrawnThisPeriod = jest
+      .spyOn(rootStore.withdrawHookStore, 'globalAmountWithdrawnThisPeriod', 'get')
+      .mockReturnValue(BigNumber.from(0))
+
+    spyGlobalPeriodLength = jest
+      .spyOn(rootStore.withdrawHookStore, 'globalPeriodLength', 'get')
+      .mockReturnValue((24 * 60 * 60) as DurationInMs)
+
+    spyGlobalWithdrawLimitPerPeriod = jest
+      .spyOn(rootStore.withdrawHookStore, 'globalWithdrawLimitPerPeriod', 'get')
+      .mockReturnValue(BigNumber.from(10).pow(18).mul(100))
+
+    spyLastGlobalPeriodReset = jest
+      .spyOn(rootStore.withdrawHookStore, 'lastGlobalPeriodReset', 'get')
+      .mockReturnValue(0 as DateTimeInMs)
   })
 
   afterAll(() => {
@@ -46,6 +67,10 @@ describe('WithdrawStore tests', () => {
     spyPreCTDecimalsNumber.mockRestore()
     spySuccessToast.mockRestore()
     spyWithdrawalFeesAmountBN.mockRestore()
+    spyGlobalAmountWithdrawnThisPeriod.mockRestore()
+    spyGlobalPeriodLength.mockRestore()
+    spyGlobalWithdrawLimitPerPeriod.mockRestore()
+    spyLastGlobalPeriodReset.mockRestore()
   })
 
   it('should set the amount', () => {

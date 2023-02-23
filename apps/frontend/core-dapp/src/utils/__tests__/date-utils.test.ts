@@ -1,4 +1,5 @@
-import { getFullDateFromMs, getFullStringFromMs } from '../date-utils'
+import { formatDuration, getFullDateFromMs, getFullStringFromMs } from '../date-utils'
+import { DurationInMs } from '../date-types'
 
 const validUTCMorningTimestamp = 1635143228000
 const validUTCNightTimestamp = 1633198815000
@@ -21,5 +22,23 @@ describe('getFullStringFromMs tests', () => {
   it('should return time string in PM given valid night timestamp', () => {
     const date = getFullStringFromMs(validUTCNightTimestamp)
     expect(date).toBe(expectedValidUTCNight)
+  })
+})
+
+describe('formatDuration tests', () => {
+  it('should format duration in milliseconds with hours, minutes, and seconds', () => {
+    expect(formatDuration(123456789 as DurationInMs)).toBe('34h 17m 36s')
+    expect(formatDuration(3600000 as DurationInMs)).toBe('1h 0m 0s')
+    expect(formatDuration(900000 as DurationInMs)).toBe('15m 0s')
+    expect(formatDuration(60000 as DurationInMs)).toBe('1m 0s')
+    expect(formatDuration(1000 as DurationInMs)).toBe('1s')
+  })
+
+  it('should consider zero durations as zero', function () {
+    expect(formatDuration(0 as DurationInMs)).toBe('0s')
+  })
+
+  it('should consider negative durations as zero', function () {
+    expect(formatDuration(-1000 as DurationInMs)).toBe('0s')
   })
 })

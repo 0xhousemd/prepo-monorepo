@@ -16,6 +16,7 @@ import { SwapStore } from './SwapStore'
 import { DepositRecordStore } from './DepositRecordStore'
 import { TokenSenderStore } from './TokenSenderStore'
 import { MediaQueryStore } from './MediaQueryStore'
+import { WithdrawHookStore } from './WithdrawHookStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
 import { AdvancedSettingsStore } from '../components/AdvancedSettingsModal/AdvancedSettingsStore'
@@ -62,6 +63,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   coreGraphStore: CoreGraphStore
   uniswapV3GraphStore: UniswapV3GraphStore
   withdrawStore: WithdrawStore
+  withdrawHookStore: WithdrawHookStore
   currenciesStore: CurrenciesStore
   delegateStore: DelegateStore
   stakeStore: StakeStore
@@ -96,6 +98,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.depositStore = new DepositStore(this)
     this.depositRecordStore = new DepositRecordStore(this)
     this.withdrawStore = new WithdrawStore(this)
+    this.withdrawHookStore = new WithdrawHookStore(this)
     this.tradeStore = new TradeStore(this)
     this.advancedSettingsStore = new AdvancedSettingsStore(this)
     this.uniswapRouterStore = new UniswapRouterStore(this)

@@ -4,7 +4,7 @@ import { Alert as BaseAlert, Icon, spacingIncrement } from 'prepo-ui'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { compactNumber, formatUsd } from '../../utils/number-utils'
 
-const Alert = styled(BaseAlert).attrs({
+export const Alert = styled(BaseAlert).attrs({
   color: 'neutral1',
   icon: (
     <Icon
@@ -33,7 +33,7 @@ const Alert = styled(BaseAlert).attrs({
   }
 `
 
-const InlineTextButton = styled.button`
+export const InlineTextButton = styled.button`
   all: unset;
   color: ${({ theme }): string => theme.color.primaryLight};
   cursor: pointer;
