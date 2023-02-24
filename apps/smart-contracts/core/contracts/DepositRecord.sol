@@ -62,7 +62,7 @@ contract DepositRecord is
     onlyRole(SET_GLOBAL_NET_DEPOSIT_CAP_ROLE)
   {
     _globalNetDepositCap = globalNetDepositCap;
-    emit GlobalNetDepositCapChange(_globalNetDepositCap);
+    emit GlobalNetDepositCapChange(globalNetDepositCap);
   }
 
   function setUserDepositCap(uint256 userDepositCap)
