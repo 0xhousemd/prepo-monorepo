@@ -15,7 +15,11 @@ import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { LongShortTokenAttachFixture } from '../fixtures/LongShortTokenFixture'
 import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
 import { prePOMarketFactoryFixture } from '../fixtures/PrePOMarketFactoryFixture'
-import { fakeMintHookFixture, fakeRedeemHookFixture } from '../fixtures/HookFixture'
+import {
+  fakeAccountListFixture,
+  fakeMintHookFixture,
+  fakeRedeemHookFixture,
+} from '../fixtures/HookFixture'
 import { calculateFee, getLastTimestamp, revertsIfNotRoleHolder, testRoleConstants } from '../utils'
 import { createMarket, generateLongShortSalts, roleAssigners } from '../../helpers'
 import { CreateMarketParams } from '../../types'
@@ -27,6 +31,7 @@ import {
   MintHook,
   RedeemHook,
 } from '../../types/generated'
+import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 
 chai.use(smock.matchers)
 
@@ -954,8 +959,73 @@ describe('=> prePOMarket', () => {
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
-    // TODO ADD 'sends correct collateral amount if hook takes partial fee'
-    // TODO ADD 'sends correct collateral amount if hook takes full fee'
+    it('sends correct collateral amount if hook takes partial fee', async () => {
+      // TestRedeemHook meant to take 50% of the fee
+      const factory = await ethers.getContractFactory('TestRedeemHook')
+      const testRedeemHook = await factory.connect(deployer).deploy()
+      const testTreasury = await testRedeemHook.treasury()
+      const amountMinted = await setupMarket()
+      const longToRedeem = amountMinted
+      const shortToRedeem = longToRedeem
+      const treasuryCollateralBefore = await collateralToken.balanceOf(testTreasury)
+      await prePOMarket.connect(treasury).setRedeemHook(testRedeemHook.address)
+      const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
+      expect(totalOwed).to.be.gt(0)
+      const redeemFee = calculateFee(totalOwed, await prePOMarket.getRedemptionFee())
+      expect(redeemFee).to.be.gt(0)
+      const expectedPartialFee = redeemFee.div(2)
+
+      await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
+
+      const filter = prePOMarket.filters.Redemption(user.address, user.address)
+      const events = await prePOMarket.queryFilter(filter)
+      const event = events[0].args
+      expect(event.redeemer).to.eq(user.address)
+      expect(event.recipient).to.eq(user.address)
+      expect(event.amountAfterFee).to.eq(amountMinted.sub(expectedPartialFee))
+      expect(event.fee).to.eq(expectedPartialFee)
+      expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed.sub(expectedPartialFee))
+      expect(await collateralToken.balanceOf(testTreasury)).eq(
+        treasuryCollateralBefore.add(expectedPartialFee)
+      )
+    })
+
+    it('sends correct collateral amount if hook takes full fee', async () => {
+      const allowedCallers = await fakeAccountListFixture()
+      const allowList = await fakeAccountListFixture()
+      const tokenSender = await fakeTokenSenderFixture()
+      const factory = await ethers.getContractFactory('RedeemHook')
+      const testRedeemHook = await factory.connect(deployer).deploy()
+      const amountMinted = await setupMarket()
+      const longToRedeem = amountMinted
+      const shortToRedeem = longToRedeem
+      const treasuryCollateralBefore = await collateralToken.balanceOf(treasury.address)
+      await testRedeemHook.connect(deployer).setAllowedMsgSenders(allowedCallers.address)
+      await testRedeemHook.connect(deployer).setAccountList(allowList.address)
+      await testRedeemHook.connect(deployer).setTreasury(treasury.address)
+      await testRedeemHook.connect(deployer).setTokenSender(tokenSender.address)
+      await prePOMarket.connect(treasury).setRedeemHook(testRedeemHook.address)
+      allowedCallers.isIncluded.whenCalledWith(prePOMarket.address).returns(true)
+      allowList.isIncluded.whenCalledWith(user.address).returns(true)
+      const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
+      expect(totalOwed).to.be.gt(0)
+      const redeemFee = calculateFee(totalOwed, await prePOMarket.getRedemptionFee())
+      expect(redeemFee).to.be.gt(0)
+
+      await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
+
+      const filter = prePOMarket.filters.Redemption(user.address, user.address)
+      const events = await prePOMarket.queryFilter(filter)
+      const event = events[0].args
+      expect(event.redeemer).to.eq(user.address)
+      expect(event.recipient).to.eq(user.address)
+      expect(event.amountAfterFee).to.eq(amountMinted.sub(redeemFee))
+      expect(event.fee).to.eq(redeemFee)
+      expect(await collateralToken.balanceOf(user.address)).eq(totalOwed.sub(redeemFee))
+      expect(await collateralToken.balanceOf(treasury.address)).eq(
+        treasuryCollateralBefore.add(redeemFee)
+      )
+    })
 
     it('sends full collateral amount if hook takes no fee', async () => {
       const amountMinted = await setupMarket()
