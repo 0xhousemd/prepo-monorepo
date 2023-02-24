@@ -1,12 +1,11 @@
 import chai, { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumberish } from 'ethers'
 import { parseEther } from '@ethersproject/units'
 import { id } from 'ethers/lib/utils'
-import { utils } from 'prepo-hardhat'
-import { Snapshotter } from '../snapshots'
+import { utils, snapshots } from 'prepo-hardhat'
 import { revertsIfNotRoleHolder } from '../utils'
 import { arbitrageBrokerFixture } from '../fixtures/ArbitrageBrokerFixture'
 import { fakeLongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
@@ -24,8 +23,9 @@ import {
 import { PromiseOrValue } from '../../types/generated/common'
 
 chai.use(smock.matchers)
-const snapshotter = new Snapshotter()
 const { nowPlusMonths } = utils
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> ArbitrageBroker', () => {
   let core: MockCore

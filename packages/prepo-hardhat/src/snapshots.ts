@@ -1,13 +1,19 @@
-/* eslint max-classes-per-file: 0 */
-import { ethers, network } from 'hardhat'
+import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
+import { Network } from 'hardhat/types'
 
+/* eslint max-classes-per-file: 0 */
 class Snapshot {
   public snapshotId: string
 
-  constructor(public name: string, public debug: boolean = false) {}
+  constructor(
+    public name: string,
+    public ethers: HardhatEthersHelpers,
+    public network: Network,
+    public debug: boolean = false
+  ) {}
 
   public async snapshot(): Promise<void> {
-    this.snapshotId = await ethers.provider.send('evm_snapshot', [])
+    this.snapshotId = await this.ethers.provider.send('evm_snapshot', [])
     // eslint-disable-next-line no-console
     if (this.debug) console.log(`💾 Snapshot taken - ${this.name} @ ${this.snapshotId}`)
   }
@@ -15,12 +21,13 @@ class Snapshot {
   public async reset(): Promise<void> {
     // eslint-disable-next-line no-console
     if (this.debug) console.log(`⚓ Reset snapshot - ${this.name} @ ${this.snapshotId}`)
-    await network.provider.send('evm_revert', [this.snapshotId])
-    this.snapshotId = await ethers.provider.send('evm_snapshot', [])
+    await this.network.provider.send('evm_revert', [this.snapshotId])
+    this.snapshotId = await this.ethers.provider.send('evm_snapshot', [])
   }
 }
 
 export class Snapshotter {
+  constructor(public ethers: HardhatEthersHelpers, public network: Network) {}
   // Snapshot stack and setup code. This allows us to nest snapshotting blocks
   // and have them all work together.
   private outerSetupComplete = false
@@ -47,7 +54,7 @@ export class Snapshotter {
   // This is the actual function which sets up snapshotting for a given block.
   public setupSnapshotContext(name: string | undefined = undefined): void {
     // Create our snapshot abstraction
-    const snapshot: Snapshot = new Snapshot(name || '')
+    const snapshot: Snapshot = new Snapshot(name || '', this.ethers, this.network)
 
     before(() => {
       // When this block becomes active, we set this snapshot as active
@@ -79,3 +86,5 @@ export class Snapshotter {
     await this.headSnapshot().snapshot()
   }
 }
+
+export const snapshots = { Snapshotter }

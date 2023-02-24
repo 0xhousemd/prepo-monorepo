@@ -5,14 +5,13 @@ import { FakeContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumber } from 'ethers'
 import { getPrePOAddressForNetwork } from 'prepo-constants'
-import { utils } from 'prepo-hardhat'
+import { utils, snapshots } from 'prepo-hardhat'
 import { parseEther } from '@ethersproject/units'
 import {
   arbitrageBrokerFixture,
   fakeArbitrageBrokerFixture,
 } from '../fixtures/ArbitrageBrokerFixture'
 import { create2DeployerFixture } from '../fixtures/Create2DeployerFixtures'
-import { Snapshotter } from '../snapshots'
 import { MockCore } from '../../harnesses/mock'
 import { roleAssigners } from '../../helpers/roles'
 import {
@@ -58,7 +57,8 @@ import {
 const { nowPlusMonths } = utils
 
 chai.use(smock.matchers)
-const snapshotter = new Snapshotter()
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> Arbitrage Trading', () => {
   let core: MockCore
@@ -117,7 +117,7 @@ describe('=> Arbitrage Trading', () => {
       ],
     })
     core = await MockCore.Instance.init(ethers)
-    ;[deployer, governance, user] = core.accounts
+    ;[deployer, governance] = core.accounts
     await core.baseToken.connect(deployer).mint(governance.address, parseEther('100000'))
     defaultMarketParams = {
       governance: governance.address,
