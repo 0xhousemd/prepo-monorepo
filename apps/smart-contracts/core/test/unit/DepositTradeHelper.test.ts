@@ -11,7 +11,7 @@ import { depositTradeHelperFixture } from '../fixtures/DepositTradeHelperFixture
 import { fakeSwapRouterFixture } from '../fixtures/UniswapFixtures'
 import { MockCore } from '../../harnesses/mock'
 import { DepositTradeHelper, IDepositTradeHelper, SwapRouter } from '../../types/generated'
-import { getCollateralAmount } from '../../helpers'
+import { getCollateralAmountForDeposit } from '../../helpers'
 
 const { getLastTimestamp, setNextTimestamp } = utils
 
@@ -79,7 +79,10 @@ describe('=> DepositTradeHelper', () => {
     beforeEach(async () => {
       await core.baseToken.mint(user.address, baseTokenToDeposit)
       core.collateral.depositHook.hook.returns()
-      expectedCollateralMinted = await getCollateralAmount(core.collateral, baseTokenToDeposit)
+      expectedCollateralMinted = await getCollateralAmountForDeposit(
+        core.collateral,
+        baseTokenToDeposit
+      )
     })
 
     it('reverts if insufficient base token approval', async () => {

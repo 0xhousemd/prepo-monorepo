@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish } from 'ethers'
 import { BytesLike, getCreate2Address, keccak256, solidityKeccak256 } from 'ethers/lib/utils'
-import { FEE_DENOMINATOR, USDC_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
+import { FEE_DENOMINATOR, ZERO_ADDRESS } from 'prepo-constants'
 import { MockContract } from '@defi-wonderland/smock'
 import { formatEther, parseEther } from '@ethersproject/units'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
@@ -38,29 +38,38 @@ export async function createMarket(marketParams: CreateMarketParams): Promise<Cr
   }
 }
 
-export function getBaseTokenAmountAfterFee(
+export function getBaseTokenEquivalent(
   collateralAmount: BigNumber,
   baseTokenDenominator: BigNumberish
 ): BigNumber {
   return collateralAmount.mul(baseTokenDenominator).div(parseEther('1'))
 }
 
-export async function getBaseTokenAmount(
+export async function getBaseTokenAmountForDeposit(
   collateral: Collateral | MockContract<Collateral>,
   collateralAmount: BigNumber
 ): Promise<BigNumber> {
-  const amountAfterFee = getBaseTokenAmountAfterFee(collateralAmount, USDC_DENOMINATOR)
+  const amountBeforeFee = getBaseTokenEquivalent(collateralAmount, parseEther('1'))
   const afterFeeFactor = BigNumber.from(FEE_DENOMINATOR).sub(await collateral.getDepositFee())
-  return amountAfterFee.mul(FEE_DENOMINATOR).div(afterFeeFactor)
+  return amountBeforeFee.mul(FEE_DENOMINATOR).div(afterFeeFactor)
 }
 
-export async function getCollateralAmount(
+export async function getCollateralAmountForDeposit(
   collateral: Collateral | MockContract<Collateral>,
   baseTokenAmount: BigNumber
 ): Promise<BigNumber> {
   const fee = baseTokenAmount.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
   const amountAfterFee = baseTokenAmount.sub(fee)
-  return amountAfterFee.mul(parseEther('1')).div(USDC_DENOMINATOR)
+  return amountAfterFee.mul(parseEther('1')).div(parseEther('1'))
+}
+
+export async function getBaseTokenForWithdrawal(
+  collateral: Collateral | MockContract<Collateral>,
+  collateralAmount: BigNumber
+): Promise<BigNumber> {
+  const amountBeforeFee = getBaseTokenEquivalent(collateralAmount, parseEther('1'))
+  const afterFeeFactor = BigNumber.from(FEE_DENOMINATOR).sub(await collateral.getWithdrawFee())
+  return amountBeforeFee.mul(FEE_DENOMINATOR).div(afterFeeFactor)
 }
 
 export async function depositRecordExists(
@@ -141,10 +150,10 @@ export async function mintCollateralFromBaseToken(
   collateralAmount: BigNumber,
   collateral: Collateral | MockContract<Collateral>
 ): Promise<BigNumber> {
-  const baseTokenAmountAfterFee = getBaseTokenAmountAfterFee(collateralAmount, USDC_DENOMINATOR)
-  await checkDepositCap(ethers, recipient, baseTokenAmountAfterFee, collateral)
+  const baseTokenAmountBeforeFee = getBaseTokenEquivalent(collateralAmount, parseEther('1'))
+  await checkDepositCap(ethers, recipient, baseTokenAmountBeforeFee, collateral)
   const baseToken = (await ethers.getContractAt('ERC20', await collateral.getBaseToken())) as ERC20
-  const baseTokenAmount = await getBaseTokenAmount(collateral, collateralAmount)
+  const baseTokenAmount = await getBaseTokenAmountForDeposit(collateral, collateralAmount)
   await baseToken.connect(funder).approve(collateral.address, baseTokenAmount)
   await collateral.connect(funder).deposit(recipient, baseTokenAmount)
   const mintEvents = await findTransferEvent(collateral, ZERO_ADDRESS, recipient)

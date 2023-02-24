@@ -12,6 +12,7 @@ export type ImportantKeywords =
   | 'UNIV3_POSITION_MANAGER'
   | 'UNIV3_SWAP_ROUTER'
   | 'PPO'
+  | 'WETH'
 
 export type ImportantAddresses = {
   [key in ImportantKeywords]?: ImportantAddress
@@ -41,6 +42,9 @@ export const PREPO_ADDRESSES: ImportantAddresses = {
   },
   PPO: {
     arbitrumOne: '0xB40DBBb7931Cfef8Be73AEEC6c67d3809bD4600B',
+  },
+  WETH: {
+    arbitrumOne: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   },
 }
 

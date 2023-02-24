@@ -9,7 +9,7 @@ import {
   MockExtendedTokenSender,
   PrePOMarketParams,
 } from '../types'
-import { Create2Deployer, TestERC20 } from '../types/generated'
+import { Create2Deployer, ERC20, TestERC20 } from '../types/generated'
 import { smockCollateralFixture } from '../test/fixtures/CollateralFixture'
 import {
   smockDepositHookFixture,
@@ -24,7 +24,6 @@ import { smockPrePOMarketFixture } from '../test/fixtures/PrePOMarketFixture'
 
 export class MockCore extends Base {
   private static _instance: MockCore
-  public baseToken: MockContract<TestERC20>
   public rewardToken: MockContract<TestERC20>
   public collateral: MockExtendedCollateral
   public depositRecord: MockExtendedDepositRecord
@@ -42,16 +41,17 @@ export class MockCore extends Base {
     return this._instance
   }
 
-  public async init(ethers: HardhatEthersHelpers): Promise<MockCore> {
+  public async init(ethers: HardhatEthersHelpers, baseToken?: ERC20): Promise<MockCore> {
     this.ethers = ethers
     this.accounts = await ethers.getSigners()
-    this.baseToken = await smockTestERC20Fixture('Test USDC', 'TUSDC', 6)
+    this.baseToken =
+      baseToken === undefined ? await smockTestERC20Fixture('Test WETH', 'TWETH', 18) : baseToken
     this.rewardToken = await smockTestERC20Fixture('Test PPO', 'TPPO', 18)
     this.collateral = await smockCollateralFixture(
-      'prePO USDC Collateral',
-      'preUSDC',
+      'prePO ETH Collateral',
+      'preETH',
       this.baseToken.address,
-      6
+      await this.baseToken.decimals()
     )
     this.collateral.depositHook = await smockDepositHookFixture()
     this.collateral.withdrawHook = await smockWithdrawHookFixture()

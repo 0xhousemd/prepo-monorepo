@@ -70,8 +70,8 @@ describe('=> Arbitrage Trading', () => {
   let positionManager: NonfungiblePositionManager
   let swapRouter: SwapRouter
   let arbitrageBroker: ArbitrageBroker
-  const TEST_NAME_SUFFIX = 'preSPACEX 2000-10000 31-December 2022'
-  const TEST_SYMBOL_SUFFIX = 'preSPACEX_2000_10000_31_DEC_22'
+  const TEST_NAME_SUFFIX = 'Fake Token ($5-10B)'
+  const TEST_SYMBOL_SUFFIX = 'FAKE_5-10B'
   const TEST_FLOOR_PAYOUT = ethers.utils.parseEther('0.2')
   const TEST_CEILING_PAYOUT = ethers.utils.parseEther('0.8')
   const TEST_FLOOR_VAL = BigNumber.from(2000)

@@ -2,10 +2,16 @@
 pragma solidity =0.8.7;
 
 import "./interfaces/IDepositTradeHelper.sol";
+import "./interfaces/IWETH9.sol";
 import "prepo-shared-contracts/contracts/SafeOwnable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 
-contract DepositTradeHelper is IDepositTradeHelper, SafeOwnable {
+contract DepositTradeHelper is
+  IDepositTradeHelper,
+  ReentrancyGuard,
+  SafeOwnable
+{
   ICollateral private immutable _collateral;
   IERC20 private immutable _baseToken;
   ISwapRouter private immutable _swapRouter;
@@ -19,19 +25,24 @@ contract DepositTradeHelper is IDepositTradeHelper, SafeOwnable {
     collateral.approve(address(swapRouter), type(uint256).max);
   }
 
+  /// @dev Assumes `_baseToken` is WETH
   function wrapAndDeposit(address recipient)
     public
     payable
     override
+    nonReentrant
     returns (uint256)
-  {}
+  {
+    IWETH9(address(_baseToken)).deposit{value: msg.value}();
+    _collateral.deposit(recipient, msg.value);
+  }
 
   function depositAndTrade(
     uint256 baseTokenAmount,
     Permit calldata baseTokenPermit,
     Permit calldata collateralPermit,
     OffChainTradeParams calldata tradeParams
-  ) external override {
+  ) external override nonReentrant {
     if (baseTokenPermit.deadline != 0) {
       IERC20Permit(address(_baseToken)).permit(
         msg.sender,
@@ -81,11 +92,12 @@ contract DepositTradeHelper is IDepositTradeHelper, SafeOwnable {
   function wrapAndDepositAndTrade(
     Permit calldata collateralPermit,
     OffChainTradeParams calldata tradeParams
-  ) external payable override {}
+  ) external payable override nonReentrant {}
 
   function withdrawAndUnwrap(address recipient, uint256 amount)
     external
     override
+    nonReentrant
   {}
 
   function getCollateral() external view override returns (ICollateral) {
