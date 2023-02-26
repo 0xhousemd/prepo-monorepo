@@ -11,11 +11,10 @@ chai.use(smock.matchers)
 describe('=> TokenSenderCaller', () => {
   let tokenSenderCaller: TokenSenderCaller
   let deployer: SignerWithAddress
-  let user: SignerWithAddress
   let tokenSender: SignerWithAddress
 
   beforeEach(async () => {
-    ;[deployer, user, tokenSender] = await ethers.getSigners()
+    ;[deployer, tokenSender] = await ethers.getSigners()
     tokenSenderCaller = await tokenSenderCallerFixture()
   })
 

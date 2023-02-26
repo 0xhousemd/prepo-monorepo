@@ -1,11 +1,10 @@
 import chai, { expect } from 'chai'
+import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
+import { MockContract, smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { safeOwnableCallerTestFixture } from './fixtures/SafeOwnableCallerFixture'
 import { SafeOwnableCallerTest } from '../types/generated'
-import { MockContract, smock } from '@defi-wonderland/smock'
-import { Contract } from 'ethers'
-import { ZERO_ADDRESS } from 'prepo-constants'
 
 chai.use(smock.matchers)
 

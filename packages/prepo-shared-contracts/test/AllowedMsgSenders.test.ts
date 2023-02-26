@@ -1,22 +1,18 @@
 import chai, { expect } from 'chai'
-import { ethers } from 'hardhat'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { FakeContract, smock } from '@defi-wonderland/smock'
-import { allowedMsgSendersFixture } from './fixtures/AllowedMsgSendersFixture'
-import { AllowedMsgSenders } from '../types/generated'
 import { Contract } from 'ethers'
-import { fakeAccountListFixture } from './fixtures/AccountListFixture'
+import { FakeContract, smock } from '@defi-wonderland/smock'
 import { ZERO_ADDRESS } from 'prepo-constants'
+import { allowedMsgSendersFixture } from './fixtures/AllowedMsgSendersFixture'
+import { fakeAccountListFixture } from './fixtures/AccountListFixture'
+import { AllowedMsgSenders } from '../types/generated'
 
 chai.use(smock.matchers)
 
 describe('=> AllowedMsgSenders', () => {
   let allowedCallers: AllowedMsgSenders
   let allowlist: FakeContract<Contract>
-  let deployer: SignerWithAddress
 
   beforeEach(async () => {
-    ;[deployer] = await ethers.getSigners()
     allowedCallers = await allowedMsgSendersFixture()
     allowlist = await fakeAccountListFixture()
   })

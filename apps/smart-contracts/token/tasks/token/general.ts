@@ -346,6 +346,7 @@ task('monitor-minisales-balance', 'monitor PPO and USDC balance for a MiniSales 
     const miniSales = await ethers.getContract(args.name)
     console.log('Fetched', args.name, 'at', miniSales.address)
     const ppoSupply = parseEther('100000000')
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       console.log(
         'MiniSales PPO Sold:',

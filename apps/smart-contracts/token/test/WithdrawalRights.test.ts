@@ -9,13 +9,12 @@ describe('WithdrawalRights', () => {
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
   let user1: SignerWithAddress
-  let user2: SignerWithAddress
   let ppoStaking: SignerWithAddress
   let withdrawalRights: WithdrawalRights
   const testURI = 'https://newBaseURI/'
 
   const setupAccounts = async (): Promise<void> => {
-    ;[deployer, governance, user1, user2, ppoStaking] = await ethers.getSigners()
+    ;[deployer, governance, user1, ppoStaking] = await ethers.getSigners()
   }
 
   const deployWithdrawalRights = async (): Promise<void> => {

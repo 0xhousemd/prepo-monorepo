@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { ChainId, DEPLOYMENT_NAMES } from 'prepo-constants'
+import { ChainId } from 'prepo-constants'
 import { utils } from 'prepo-hardhat'
 import dotenv from 'dotenv'
 import { MiniSalesFlag } from '../types/generated'

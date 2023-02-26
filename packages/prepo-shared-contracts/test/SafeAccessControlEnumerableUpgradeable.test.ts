@@ -2,9 +2,9 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { DEFAULT_ADMIN_ROLE, ZERO_ADDRESS } from 'prepo-constants'
+import { formatBytes32String } from 'ethers/lib/utils'
 import { safeAccessControlEnumerableUpgradeableTestFixture } from './fixtures/SafeAccessControlEnumerableFixtures'
 import { SafeAccessControlEnumerableUpgradeableTest } from '../types/generated'
-import { formatBytes32String } from 'ethers/lib/utils'
 
 describe('SafeAccessControlEnumerableUpgradeableTest', () => {
   let deployer: SignerWithAddress

@@ -6,7 +6,9 @@
   "files": ["src/index.ts", "src/types.ts"],
   "scripts": {
     "build": "tsc",
-    "build:watch": "yarn build --watch"
+    "build:watch": "yarn build --watch",
+    "l": "yarn prettier --write ./src/*.ts && yarn lint",
+    "lint": "eslint . --max-warnings 0 --ext ts,tsx"
   },
   "dependencies": {
     "prepo-constants": "*",

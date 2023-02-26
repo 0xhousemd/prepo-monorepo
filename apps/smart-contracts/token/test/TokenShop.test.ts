@@ -9,7 +9,7 @@ import { ZERO_ADDRESS, JUNK_ADDRESS } from 'prepo-constants'
 import { tokenShopFixture, fakePurchaseHookFixture } from './fixtures/TokenShopFixtures'
 import { mockERC20Fixture } from './fixtures/MockERC20Fixtures'
 import { ZERO } from '../utils'
-import { TokenShop, MockERC20, contracts } from '../types/generated'
+import { TokenShop, MockERC20 } from '../types/generated'
 
 chai.use(smock.matchers)
 
@@ -18,7 +18,6 @@ describe('TokenShop', () => {
   let owner: SignerWithAddress
   let user1: SignerWithAddress
   let paymentToken: MockERC20
-  let externalERC20Token: MockERC20
   let tokenShop: TokenShop
   let mockERC721: MockContract<Contract>
   let mockERC1155: MockContract<Contract>

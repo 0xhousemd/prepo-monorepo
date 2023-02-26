@@ -11,10 +11,9 @@ chai.use(smock.matchers)
 describe('=> TreasuryCaller', () => {
   let treasuryCaller: TreasuryCaller
   let deployer: SignerWithAddress
-  let user: SignerWithAddress
   let treasury: SignerWithAddress
   beforeEach(async () => {
-    ;[deployer, user, treasury] = await ethers.getSigners()
+    ;[deployer, treasury] = await ethers.getSigners()
     treasuryCaller = await treasuryCallerFixture()
   })
 

@@ -22,6 +22,7 @@
         "changed:ci": "npx ts-node scripts/changedApps.ts $FILTER_BRANCH",
         "dev": "turbo run compile && turbo run dev --parallel",
         "compile": "turbo run compile",
+        "l": "./scripts/global-lint.sh",
         "lint": "turbo run lint",
         "format": "prettier --write \"**/*.{ts,tsx,md}\"",
         "prepare": "npx is-ci || npx husky install",

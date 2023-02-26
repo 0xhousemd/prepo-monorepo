@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+/* eslint-disable prettier/prettier */
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ChainId, getPrePOAddressForNetwork } from 'prepo-constants'

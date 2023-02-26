@@ -1,10 +1,9 @@
 import chai, { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { MockContract, smock } from '@defi-wonderland/smock'
-import { ERC721Mintable } from '../types/generated'
-import { Contract } from 'ethers'
+import { smock } from '@defi-wonderland/smock'
 import { erc721MintableFixture } from './fixtures/ERC721MintableFixture'
+import { ERC721Mintable } from '../types/generated'
 
 chai.use(smock.matchers)
 

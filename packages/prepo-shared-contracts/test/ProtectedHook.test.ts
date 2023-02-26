@@ -9,11 +9,10 @@ describe('ProtectedHook', () => {
   let deployer: SignerWithAddress
   let owner: SignerWithAddress
   let user1: SignerWithAddress
-  let user2: SignerWithAddress
   let protectedHook: ProtectedHookTest
 
   const setupProtectedHook = async (): Promise<void> => {
-    ;[deployer, user1, user2] = await ethers.getSigners()
+    ;[deployer, user1] = await ethers.getSigners()
     owner = deployer
     protectedHook = await protectedHookTestFixture()
   }
@@ -87,7 +86,7 @@ describe('ProtectedHook', () => {
     })
   })
 
-  describe('# testOnlyAllowedContract', async () => {
+  describe('# testOnlyAllowedContract', () => {
     beforeEach(async () => {
       await setupProtectedHook()
     })

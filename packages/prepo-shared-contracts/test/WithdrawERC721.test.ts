@@ -1,11 +1,11 @@
 import { expect } from 'chai'
+import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { ZERO_ADDRESS } from 'prepo-constants'
+import { MockContract, smock } from '@defi-wonderland/smock'
 import { withdrawERC721Fixture } from './fixtures/WithdrawERC721Fixture'
 import { WithdrawERC721 } from '../types/generated'
-import { MockContract, smock } from '@defi-wonderland/smock'
-import { Contract } from 'ethers'
 
 describe('WithdrawERC721', () => {
   let deployer: SignerWithAddress
@@ -45,8 +45,8 @@ describe('WithdrawERC721', () => {
     })
   })
 
-  //TODO: add tests and modify current ones for Recipient Array inclusion
-  describe('# withdrawERC721', async () => {
+  // TODO: add tests and modify current ones for Recipient Array inclusion
+  describe('# withdrawERC721', () => {
     let ERC721ContractArray: string[]
     let RecipientsArray: string[]
     beforeEach(async () => {

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { ZERO_ADDRESS, JUNK_ADDRESS } from 'prepo-constants'
+import { ZERO_ADDRESS } from 'prepo-constants'
 import { pausableTestFixture } from './fixtures/PausableFixture'
 import { PausableTest } from '../types/generated'
 
@@ -9,11 +9,10 @@ describe('Pausable', () => {
   let deployer: SignerWithAddress
   let owner: SignerWithAddress
   let user1: SignerWithAddress
-  let user2: SignerWithAddress
   let pausable: PausableTest
 
   const setupPausable = async (): Promise<void> => {
-    ;[deployer, user1, user2] = await ethers.getSigners()
+    ;[deployer, user1] = await ethers.getSigners()
     owner = deployer
     pausable = await pausableTestFixture()
   }
@@ -87,7 +86,7 @@ describe('Pausable', () => {
     })
   })
 
-  describe('# testWhenNotPaused', async () => {
+  describe('# testWhenNotPaused', () => {
     beforeEach(async () => {
       await setupPausable()
     })

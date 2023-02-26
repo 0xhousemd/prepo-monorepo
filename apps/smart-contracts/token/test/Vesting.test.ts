@@ -23,7 +23,6 @@ describe('Vesting', () => {
   let vestingEndTime: number
   let currentTime: number
   let mockERC20Token: MockERC20
-  let externalERC20Token: MockERC20
   let mockVestingClaimer: MockVestingClaimer
   let recipients: string[]
   let amountsAllocated: BigNumber[]

@@ -11,7 +11,7 @@
     "prec": "yarn typechain && yarn clean && yarn sl",
     "c": "yarn compile",
     "compile": "yarn typechain && npx hardhat compile",
-    "l": "yarn prettier --write './test/**/*.ts' './hardhat.config.ts'",
+    "l": "yarn prettier --write './test/**/*.ts' './hardhat.config.ts' && yarn lint",
     "pret": "yarn c && yarn l",
     "t": "npx hardhat test",
     "test:ci": "yarn c && npx hardhat test",

@@ -1,18 +1,15 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { Contract } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { ZERO_ADDRESS } from 'prepo-constants'
-import { withdrawERC20Fixture } from './fixtures/WithdrawTokensFixtures'
-import { WithdrawERC20 } from '../types/generated'
 import { MockContract, smock } from '@defi-wonderland/smock'
 import { parseEther } from 'ethers/lib/utils'
-import { Contract } from 'ethers'
+import { withdrawERC20Fixture } from './fixtures/WithdrawTokensFixtures'
+import { WithdrawERC20 } from '../types/generated'
 
 describe('WithdrawERC20', () => {
   let deployer: SignerWithAddress
   let owner: SignerWithAddress
-  let user1: SignerWithAddress
-  let user2: SignerWithAddress
   let withdrawERC20: WithdrawERC20
   let firstMockERC20: MockContract<Contract>
   let secondMockERC20: MockContract<Contract>
@@ -20,7 +17,7 @@ describe('WithdrawERC20', () => {
   const erc20AmountArray = [parseEther('1'), parseEther('2')]
 
   const setupWithdrawERC20 = async (): Promise<void> => {
-    ;[deployer, user1, user2] = await ethers.getSigners()
+    ;[deployer] = await ethers.getSigners()
     owner = deployer
     withdrawERC20 = await withdrawERC20Fixture()
   }
@@ -40,7 +37,7 @@ describe('WithdrawERC20', () => {
     })
   })
 
-  describe('# withdrawERC20 (amounts)', async () => {
+  describe('# withdrawERC20 (amounts)', () => {
     beforeEach(async () => {
       await setupWithdrawERC20AndMockERC20()
       erc20ContractArray = [firstMockERC20.address, secondMockERC20.address]
@@ -198,7 +195,7 @@ describe('WithdrawERC20', () => {
     })
   })
 
-  describe('# withdrawERC20 (full balance)', async () => {
+  describe('# withdrawERC20 (full balance)', () => {
     beforeEach(async () => {
       await setupWithdrawERC20AndMockERC20()
       erc20ContractArray = [firstMockERC20.address, secondMockERC20.address]

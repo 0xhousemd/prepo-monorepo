@@ -23,6 +23,7 @@ subtask<{ solcVersion: string }>(
   TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD,
   // eslint-disable-next-line require-await
   async (args, hre, runSuper) => {
+    // eslint-disable-next-line no-console
     console.log(process.env.LOCAL_SOLC)
     if (args.solcVersion === '0.8.7' && process.env.LOCAL_SOLC) {
       const compilerPath = resolve(__dirname, '../compiler', 'soljson-v0.8.7+commit.e28d00a7.js')

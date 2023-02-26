@@ -2,7 +2,7 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { ZERO_ADDRESS, JUNK_ADDRESS } from 'prepo-constants'
+import { ZERO_ADDRESS } from 'prepo-constants'
 import { accountListFixture } from './fixtures/PPOFixtures'
 import { AccountList } from '../types/generated'
 

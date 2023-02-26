@@ -1,18 +1,17 @@
 import { expect } from 'chai'
+import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { ZERO_ADDRESS } from 'prepo-constants'
-import { withdrawERC1155Fixture } from './fixtures/WithdrawERC1155Fixture'
-import { WithdrawERC1155 } from '../types/generated'
 import { MockContract, smock } from '@defi-wonderland/smock'
 import { parseEther } from 'ethers/lib/utils'
-import { Contract } from 'ethers'
+import { withdrawERC1155Fixture } from './fixtures/WithdrawERC1155Fixture'
+import { WithdrawERC1155 } from '../types/generated'
 
 describe('WithdrawERC1155', () => {
   let deployer: SignerWithAddress
   let owner: SignerWithAddress
   let user1: SignerWithAddress
-  let user2: SignerWithAddress
   let withdrawERC1155: WithdrawERC1155
   let firstMockERC1155: MockContract<Contract>
   let secondMockERC1155: MockContract<Contract>
@@ -20,7 +19,7 @@ describe('WithdrawERC1155', () => {
   const ERC1155AmountArray = [parseEther('1'), parseEther('2')]
 
   const setupWithdrawERC1155 = async (): Promise<void> => {
-    ;[deployer, user1, user2] = await ethers.getSigners()
+    ;[deployer, user1] = await ethers.getSigners()
     owner = deployer
     withdrawERC1155 = await withdrawERC1155Fixture()
   }
@@ -52,8 +51,8 @@ describe('WithdrawERC1155', () => {
     })
   })
 
-  //TODO: add tests of Recipients inclusion and modify current tests
-  describe('# withdrawERC1155', async () => {
+  // TODO: add tests of Recipients inclusion and modify current tests
+  describe('# withdrawERC1155', () => {
     let ERC1155ContractArray: string[]
     let RecipientsArray: string[]
     beforeEach(async () => {
@@ -346,7 +345,7 @@ describe('WithdrawERC1155', () => {
     })
 
     it('is compliant with ERC1155 safeTransferFrom() requirements', async () => {
-      //Since id = 1 is already minted in beforeEach
+      // Since id = 1 is already minted in beforeEach
       await firstMockERC1155.mint(user1.address, ERC1155IdArray[1], ERC1155AmountArray[1])
 
       await expect(
@@ -369,7 +368,7 @@ describe('WithdrawERC1155', () => {
     })
 
     it('is compliant with ERC1155 safeBatchTransferFrom() requirements', async () => {
-      //Since id = 1 is already minted in beforeEach
+      // Since id = 1 is already minted in beforeEach
       await firstMockERC1155.mint(user1.address, ERC1155IdArray[1], ERC1155AmountArray[1])
 
       await expect(

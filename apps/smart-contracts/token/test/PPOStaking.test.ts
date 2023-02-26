@@ -30,11 +30,9 @@ describe('PPOStaking', () => {
     ppoStaking: MockPPOStaking
   }
 
-  let deployer: SignerWithAddress
   let owner: SignerWithAddress
   let user1: SignerWithAddress
   let user2: SignerWithAddress
-  let user3: SignerWithAddress
   let rewardsDistributor: SignerWithAddress
   let nexus: MockNexus
   let ppoToken: MockERC20
@@ -49,7 +47,7 @@ describe('PPOStaking', () => {
   const MULTIPLIER_DENOMINATOR = 1e12
 
   const initAccounts = async (): Promise<void> => {
-    ;[deployer, owner, user1, user2, user3, rewardsDistributor] = await ethers.getSigners()
+    ;[owner, user1, user2, rewardsDistributor] = await ethers.getSigners()
   }
 
   const redeployPPOStaking = async (tokenSupply: BigNumber): Promise<Deployment> => {

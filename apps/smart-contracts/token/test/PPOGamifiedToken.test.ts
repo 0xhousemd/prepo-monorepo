@@ -28,11 +28,8 @@ describe('PPOGamifiedToken', () => {
     gamifiedToken: MockPPOGamifiedToken
   }
 
-  let deployer: SignerWithAddress
   let owner: SignerWithAddress
   let user1: SignerWithAddress
-  let user2: SignerWithAddress
-  let user3: SignerWithAddress
   let rewardsDistributor: SignerWithAddress
   let nexus: MockNexus
   let ppoToken: MockERC20
@@ -55,14 +52,7 @@ describe('PPOGamifiedToken', () => {
   }
 
   const initAccounts = async (): Promise<void> => {
-    const [localDeployer, localOwner, localUser1, localUser2, localUser3, localRewardsDistributor] =
-      await ethers.getSigners()
-    deployer = localDeployer
-    owner = localOwner
-    user1 = localUser1
-    user2 = localUser2
-    user3 = localUser3
-    rewardsDistributor = localRewardsDistributor
+    ;[owner, user1, rewardsDistributor] = await ethers.getSigners()
   }
 
   const redeployGamifiedToken = async (): Promise<Deployment> => {

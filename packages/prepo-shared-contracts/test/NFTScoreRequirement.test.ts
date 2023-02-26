@@ -1,10 +1,10 @@
 import chai, { expect } from 'chai'
+import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { MockContract, smock } from '@defi-wonderland/smock'
-import { NFTScoreRequirement } from '../types/generated'
 import { nftScoreRequirementFixture } from './fixtures/NFTScoreRequirementFixture'
-import { Contract } from 'ethers'
+import { NFTScoreRequirement } from '../types/generated'
 
 chai.use(smock.matchers)
 
