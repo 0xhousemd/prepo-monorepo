@@ -8,7 +8,6 @@ import { FakeContract, smock } from '@defi-wonderland/smock'
 import {
   COLLATERAL_FEE_LIMIT,
   DEFAULT_ADMIN_ROLE,
-  FEE_DENOMINATOR,
   PERCENT_DENOMINATOR,
   ZERO_ADDRESS,
 } from 'prepo-constants'
@@ -51,6 +50,7 @@ describe('=> Collateral', () => {
   const TEST_DEPOSIT_FEE = 1000 // 0.1%
   const TEST_WITHDRAW_FEE = 2000 // 0.2%
   const TEST_MIN_RESERVE_PERCENTAGE = 250000 // 25%
+  const TEST_COLLATERALIZATION_FACTOR = PERCENT_DENOMINATOR / 2 // 50%
   const USDC_DECIMALS = 6
   const USDC_DENOMINATOR = 10 ** USDC_DECIMALS
 
@@ -101,6 +101,7 @@ describe('=> Collateral', () => {
     await getSignersAndDeployContracts(baseTokenDecimals)
     await setupCollateralRoles()
     await setupDepositHook()
+    await collateral.connect(deployer).setCollateralizationFactor(PERCENT_DENOMINATOR)
   }
 
   const setupCollateralStackForWithdrawals = async (
@@ -133,8 +134,16 @@ describe('=> Collateral', () => {
       expect(await collateral.symbol()).to.eq('preUSDC')
     })
 
+    it('sets collateralization to 100%', async () => {
+      expect(await collateral.getCollateralizationFactor()).to.eq(PERCENT_DENOMINATOR)
+    })
+
     it('sets DEFAULT_ADMIN_ROLE holder to deployer', async () => {
       expect(await collateral.hasRole(DEFAULT_ADMIN_ROLE, deployer.address)).to.eq(true)
+    })
+
+    it('sets PERCENT_DENOMINATOR constant', async () => {
+      expect(await collateral.PERCENT_DENOMINATOR()).to.eq(PERCENT_DENOMINATOR)
     })
 
     it('sets FEE_LIMIT constant', async () => {
@@ -146,6 +155,9 @@ describe('=> Collateral', () => {
       expect(await collateral.SET_MANAGER_ROLE()).to.eq(id('setManager'))
       expect(await collateral.SET_DEPOSIT_FEE_ROLE()).to.eq(id('setDepositFee'))
       expect(await collateral.SET_WITHDRAW_FEE_ROLE()).to.eq(id('setWithdrawFee'))
+      expect(await collateral.SET_COLLATERALIZATION_FACTOR_ROLE()).eq(
+        id('setCollateralizationFactor')
+      )
       expect(await collateral.SET_DEPOSIT_HOOK_ROLE()).to.eq(id('setDepositHook'))
       expect(await collateral.SET_WITHDRAW_HOOK_ROLE()).to.eq(id('setWithdrawHook'))
       expect(await collateral.SET_MANAGER_WITHDRAW_HOOK_ROLE()).to.eq(id('setManagerWithdrawHook'))
@@ -346,6 +358,76 @@ describe('=> Collateral', () => {
       const tx = await collateral.connect(deployer).setWithdrawFee(TEST_WITHDRAW_FEE)
 
       await expect(tx).to.emit(collateral, 'WithdrawFeeChange').withArgs(TEST_WITHDRAW_FEE)
+    })
+  })
+
+  describe('# setCollateralizationFactor', () => {
+    before(async () => {
+      await getSignersAndDeployContracts()
+      await grantAndAcceptRole(
+        collateral,
+        deployer,
+        deployer,
+        await collateral.SET_COLLATERALIZATION_FACTOR_ROLE()
+      )
+      snapshotBeforeEachTest = await ethers.provider.send('evm_snapshot', [])
+    })
+
+    it('reverts if not role holder', async () => {
+      expect(
+        await collateral.hasRole(await collateral.SET_COLLATERALIZATION_FACTOR_ROLE(), user.address)
+      ).eq(false)
+
+      await expect(collateral.connect(user).setCollateralizationFactor(1)).revertedWith(
+        `AccessControl: account ${user.address.toLowerCase()} is missing role ${await collateral.SET_COLLATERALIZATION_FACTOR_ROLE()}`
+      )
+    })
+
+    it('reverts if > 100%', async () => {
+      await expect(
+        collateral.connect(deployer).setCollateralizationFactor(PERCENT_DENOMINATOR + 1)
+      ).revertedWith('Invalid factor')
+    })
+
+    it('reverts if = 0', async () => {
+      await expect(collateral.connect(deployer).setCollateralizationFactor(0)).revertedWith(
+        'Invalid factor'
+      )
+    })
+
+    it('sets to 0.0001%', async () => {
+      expect(await collateral.getCollateralizationFactor()).not.eq(1)
+
+      await collateral.connect(deployer).setCollateralizationFactor(1)
+
+      expect(await collateral.getCollateralizationFactor()).eq(1)
+    })
+
+    it('sets to 100%', async () => {
+      await collateral.connect(deployer).setCollateralizationFactor(1)
+      expect(await collateral.getCollateralizationFactor()).not.eq(PERCENT_DENOMINATOR)
+
+      await collateral.connect(deployer).setCollateralizationFactor(PERCENT_DENOMINATOR)
+
+      expect(await collateral.getCollateralizationFactor()).eq(PERCENT_DENOMINATOR)
+    })
+
+    it('is idempotent', async () => {
+      expect(await collateral.getCollateralizationFactor()).not.eq(TEST_COLLATERALIZATION_FACTOR)
+
+      await collateral.connect(deployer).setCollateralizationFactor(TEST_COLLATERALIZATION_FACTOR)
+
+      expect(await collateral.getCollateralizationFactor()).eq(TEST_COLLATERALIZATION_FACTOR)
+
+      await collateral.connect(deployer).setCollateralizationFactor(TEST_COLLATERALIZATION_FACTOR)
+
+      expect(await collateral.getCollateralizationFactor()).eq(TEST_COLLATERALIZATION_FACTOR)
+    })
+
+    it('emits CollateralizationFactorChange', async () => {
+      const tx = await collateral.connect(deployer).setCollateralizationFactor(PERCENT_DENOMINATOR)
+
+      expect(tx).to.emit(collateral, 'CollateralizationFactorChange').withArgs(PERCENT_DENOMINATOR)
     })
   })
 
@@ -661,7 +743,9 @@ describe('=> Collateral', () => {
       expect(await collateral.getDepositFee()).to.be.gt(0)
       const amountToDeposit = BigNumber.from(1)
       // expect fee to be zero
-      expect(amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)).to.eq(0)
+      expect(amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)).to.eq(
+        0
+      )
 
       await expect(
         collateral.connect(sender).deposit(recipient.address, amountToDeposit)
@@ -728,7 +812,7 @@ describe('=> Collateral', () => {
         amountToDeposit
       )
       expect(await baseToken.allowance(collateral.address, depositHook.address)).to.eq(0)
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
 
       const tx = await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
 
@@ -744,7 +828,7 @@ describe('=> Collateral', () => {
         amountToDeposit
       )
       expect(await baseToken.allowance(collateral.address, depositHook.address)).to.eq(0)
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
 
       const tx = await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
 
@@ -765,7 +849,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
       const expectedCT = amountToDeposit.sub(fee).mul(parseEther('1')).div(USDC_DENOMINATOR)
 
       await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
@@ -783,7 +867,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
       const expectedCT = amountToDeposit.sub(fee)
 
       await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
@@ -801,7 +885,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
       const GREATER_DECIMAL_DENOMINATOR = parseUnits('1', (await collateral.decimals()) + 1)
       const expectedCT = amountToDeposit
         .sub(fee)
@@ -822,7 +906,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
       const expectedCT = amountToDeposit.sub(fee).mul(parseEther('1')).div(USDC_DENOMINATOR)
 
       await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
@@ -836,7 +920,9 @@ describe('=> Collateral', () => {
       const contractBTBefore = await baseToken.balanceOf(collateral.address)
       const recipientCTBefore = await collateral.balanceOf(recipient.address)
       const amountToDeposit = senderBTBefore
-      const feeAmount = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const feeAmount = amountToDeposit
+        .mul(await collateral.getDepositFee())
+        .div(PERCENT_DENOMINATOR)
       expect(feeAmount).to.eq(0)
       const expectedCT = amountToDeposit.mul(parseEther('1')).div(USDC_DENOMINATOR)
 
@@ -866,7 +952,7 @@ describe('=> Collateral', () => {
     it("doesn't give fee approval if hook not set", async () => {
       const amountToDeposit = await baseToken.balanceOf(sender.address)
       expect(amountToDeposit).to.be.gt(0)
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
       expect(fee).to.be.gt(0)
       expect(await baseToken.allowance(collateral.address, depositHook.address)).to.eq(0)
       await collateral.connect(deployer).setDepositHook(ZERO_ADDRESS)
@@ -882,7 +968,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
 
       await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
 
@@ -900,7 +986,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
 
       const tx = await collateral.connect(sender).deposit(recipient.address, amountToDeposit)
 
@@ -915,7 +1001,7 @@ describe('=> Collateral', () => {
       expect(await baseToken.allowance(sender.address, collateral.address)).to.be.eq(
         amountToDeposit
       )
-      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(FEE_DENOMINATOR)
+      const fee = amountToDeposit.mul(await collateral.getDepositFee()).div(PERCENT_DENOMINATOR)
       const expectedCT = amountToDeposit.sub(fee).mul(parseEther('1')).div(USDC_DENOMINATOR)
       expect(expectedCT).to.be.gt(0)
 
@@ -976,7 +1062,7 @@ describe('=> Collateral', () => {
       const baseTokenToReceive = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       const feeAmount = baseTokenToReceive
         .mul(await collateral.getWithdrawFee())
-        .div(FEE_DENOMINATOR)
+        .div(PERCENT_DENOMINATOR)
       expect(feeAmount).to.eq(0)
       expect(await collateral.getWithdrawFee()).to.be.gt(0)
 
@@ -1016,6 +1102,49 @@ describe('=> Collateral', () => {
       expect(withdrawHook.hook).callCount(1)
     })
 
+    it('reverts if collateralization factor reduces base token amount to 0', async () => {
+      /**
+       * Given USDC precision is 6, and Collateral is 18, 2e12 will result in 0.000099 USDC
+       * * 1% collateralizaiton = 0, since USDC is 6 decimals.
+       */
+      const amountToWithdraw = parseUnits('99', 12)
+      expect(amountToWithdraw).to.be.gt(0)
+      const baseTokenToReceive = amountToWithdraw
+        .mul(USDC_DENOMINATOR)
+        .div(parseEther('1'))
+        .mul(1)
+        .div(PERCENT_DENOMINATOR)
+      expect(baseTokenToReceive).to.eq(0)
+      await collateral.connect(deployer).setCollateralizationFactor(1)
+
+      await expect(collateral.connect(user).withdraw(user.address, amountToWithdraw)).revertedWith(
+        'fee = 0'
+      )
+    })
+
+    it('reverts if collateralization factor reduces fee to 0', async () => {
+      /**
+       * Given USDC precision is 6, and Collateral is 18, 2e12 will result in 0.000002 USDC
+       * * 50% collateralizaiton = 0.000001 (the smallest amount) before fees, resulting in
+       * a fee of 0.
+       */
+      const amountToWithdraw = parseUnits('2', 12)
+      const baseTokenToReceive = amountToWithdraw
+        .mul(USDC_DENOMINATOR)
+        .div(parseEther('1'))
+        .mul(TEST_COLLATERALIZATION_FACTOR)
+        .div(PERCENT_DENOMINATOR)
+      const feeAmount = baseTokenToReceive
+        .mul(await collateral.getWithdrawFee())
+        .div(PERCENT_DENOMINATOR)
+      expect(feeAmount).to.eq(0)
+      expect(await collateral.getWithdrawFee()).to.be.gt(0)
+
+      await expect(collateral.connect(user).withdraw(user.address, amountToWithdraw)).revertedWith(
+        'fee = 0'
+      )
+    })
+
     it("burns caller's collateral without approval", async () => {
       const totalSupplyBefore = await collateral.totalSupply()
       expect(totalSupplyBefore).to.be.gt(0)
@@ -1038,7 +1167,7 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
       const tx = await collateral.connect(user).withdraw(user.address, amountToWithdraw)
@@ -1054,11 +1183,29 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
 
       await collateral.connect(user).withdraw(user.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user.address)).to.eq(userBTBefore.add(expectedBT.sub(fee)))
+    })
+
+    it('withdraws partial amount to recipient if collateralization < 100% and decimals > base token decimals', async () => {
+      await collateral.connect(deployer).setCollateralizationFactor(TEST_COLLATERALIZATION_FACTOR)
+      expect(await collateral.decimals()).gt(await baseToken.decimals())
+      const userBTBefore = await baseToken.balanceOf(user.address)
+      const amountToWithdraw = await collateral.balanceOf(user.address)
+      expect(amountToWithdraw).gt(0)
+      const expectedBT = amountToWithdraw
+        .mul(USDC_DENOMINATOR)
+        .div(parseEther('1'))
+        .mul(TEST_COLLATERALIZATION_FACTOR)
+        .div(PERCENT_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
+
+      await collateral.connect(user).withdraw(user.address, amountToWithdraw)
+
+      expect(await baseToken.balanceOf(user.address)).eq(userBTBefore.add(expectedBT.sub(fee)))
     })
 
     it('approves fee to hook adjusting for when decimals = base token decimals', async () => {
@@ -1067,7 +1214,7 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
       const tx = await collateral.connect(user).withdraw(user.address, amountToWithdraw)
@@ -1084,11 +1231,27 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
 
       await collateral.connect(user).withdraw(user.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user.address)).to.eq(userBTBefore.add(expectedBT.sub(fee)))
+    })
+
+    it('withdraws partial amount to recipient if collateralization < 100% and decimals = base token decimals', async () => {
+      await collateral.connect(deployer).setCollateralizationFactor(TEST_COLLATERALIZATION_FACTOR)
+      expect(await collateral.decimals()).eq(await baseToken.decimals())
+      const userBTBefore = await baseToken.balanceOf(user.address)
+      const amountToWithdraw = await collateral.balanceOf(user.address)
+      expect(amountToWithdraw).gt(0)
+      const expectedBT = amountToWithdraw
+        .mul(TEST_COLLATERALIZATION_FACTOR)
+        .div(PERCENT_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
+
+      await collateral.connect(user).withdraw(user.address, amountToWithdraw)
+
+      expect(await baseToken.balanceOf(user.address)).eq(userBTBefore.add(expectedBT.sub(fee)))
     })
 
     it('approves fee to hook adjusting for when decimals < base token decimals', async () => {
@@ -1098,7 +1261,7 @@ describe('=> Collateral', () => {
       expect(amountToWithdraw).to.be.gt(0)
       const GREATER_DECIMAL_DENOMINATOR = parseUnits('1', (await collateral.decimals()) + 1)
       const expectedBT = amountToWithdraw.mul(GREATER_DECIMAL_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 
       const tx = await collateral.connect(user).withdraw(user.address, amountToWithdraw)
@@ -1116,17 +1279,36 @@ describe('=> Collateral', () => {
       expect(amountToWithdraw).to.be.gt(0)
       const GREATER_DECIMAL_DENOMINATOR = parseUnits('1', (await collateral.decimals()) + 1)
       const expectedBT = amountToWithdraw.mul(GREATER_DECIMAL_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
 
       await collateral.connect(user).withdraw(user.address, amountToWithdraw)
 
       expect(await baseToken.balanceOf(user.address)).to.eq(userBTBefore.add(expectedBT.sub(fee)))
     })
 
+    it('withdraws partial amount to recipient if collateralization < 100% and decimals < base token decimals', async () => {
+      await collateral.connect(deployer).setCollateralizationFactor(TEST_COLLATERALIZATION_FACTOR)
+      expect(await collateral.decimals()).lt(await baseToken.decimals())
+      const userBTBefore = await baseToken.balanceOf(user.address)
+      const amountToWithdraw = await collateral.balanceOf(user.address)
+      expect(amountToWithdraw).gt(0)
+      const GREATER_DECIMAL_DENOMINATOR = parseUnits('1', (await collateral.decimals()) + 1)
+      const expectedBT = amountToWithdraw
+        .mul(GREATER_DECIMAL_DENOMINATOR)
+        .div(parseEther('1'))
+        .mul(TEST_COLLATERALIZATION_FACTOR)
+        .div(PERCENT_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
+
+      await collateral.connect(user).withdraw(user.address, amountToWithdraw)
+
+      expect(await baseToken.balanceOf(user.address)).eq(userBTBefore.add(expectedBT.sub(fee)))
+    })
+
     it('sets hook approval back to 0', async () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       expect(fee).to.be.gt(0)
 
       const tx = await collateral.connect(user).withdraw(user.address, amountToWithdraw)
@@ -1165,7 +1347,7 @@ describe('=> Collateral', () => {
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
       expect(recipientBTBefore).to.eq(0)
       expect(amountToWithdraw).to.be.gt(0)
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       const tx = await collateral.connect(user).withdraw(recipient.address, amountToWithdraw)
 
       await expect(tx)
@@ -1191,7 +1373,7 @@ describe('=> Collateral', () => {
     it("doesn't give fee approval if hook not set", async () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       expect(fee).to.be.gt(0)
       await collateral.connect(deployer).setWithdrawHook(ZERO_ADDRESS)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.eq(0)
@@ -1205,7 +1387,7 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
 
       await collateral.connect(user).withdraw(recipient.address, amountToWithdraw)
 
@@ -1221,7 +1403,7 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
 
       const tx = await collateral.connect(user).withdraw(user.address, amountToWithdraw)
 
@@ -1234,7 +1416,7 @@ describe('=> Collateral', () => {
       const amountToWithdraw = await collateral.balanceOf(user.address)
       expect(amountToWithdraw).to.be.gt(0)
       const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
-      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(PERCENT_DENOMINATOR)
       expect(fee).gt(0)
       expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
 

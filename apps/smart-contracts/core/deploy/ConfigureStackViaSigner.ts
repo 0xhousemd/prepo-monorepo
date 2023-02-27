@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { ChainId, DEPLOYMENT_NAMES } from 'prepo-constants'
+import { ChainId, DEPLOYMENT_NAMES, PERCENT_DENOMINATOR } from 'prepo-constants'
 import { deployNonUpgradeableContract } from 'prepo-hardhat'
 import { getNetworkByChainId } from 'prepo-utils'
 import dotenv from 'dotenv'
@@ -70,6 +70,7 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
       manager: signer.address,
       depositFee: 0,
       withdrawFee: 0,
+      collateralizationFactor: PERCENT_DENOMINATOR,
     },
     depositHook: {
       depositsAllowed: true,
@@ -109,7 +110,8 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
     signer,
     deploymentParameters.collateral.manager,
     deploymentParameters.collateral.depositFee,
-    deploymentParameters.collateral.withdrawFee
+    deploymentParameters.collateral.withdrawFee,
+    deploymentParameters.collateral.collateralizationFactor
   )
   console.log('Configuring DepositHook via Signer...')
   await core.configureDepositHookViaSigner(

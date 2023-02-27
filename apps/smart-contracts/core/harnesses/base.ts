@@ -160,7 +160,8 @@ export abstract class Base {
     signer: SignerWithAddress,
     manager?: string,
     depositFee?: BigNumberish,
-    withdrawFee?: BigNumberish
+    withdrawFee?: BigNumberish,
+    collateralizationFactor?: number
   ): Promise<void> {
     await setContractIfNotAlreadySet(
       signer,
@@ -188,6 +189,10 @@ export abstract class Base {
       await sendTxAndWait(await this.collateral.connect(signer).setDepositFee(depositFee))
     if (withdrawFee !== undefined)
       await sendTxAndWait(await this.collateral.connect(signer).setWithdrawFee(withdrawFee))
+    if (collateralizationFactor !== undefined)
+      await sendTxAndWait(
+        await this.collateral.connect(signer).setCollateralizationFactor(collateralizationFactor)
+      )
   }
 
   public async configureDepositHookViaSigner(

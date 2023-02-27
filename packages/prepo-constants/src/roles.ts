@@ -5,6 +5,7 @@ export const COLLATERAL_ROLES = [
   id('setManager'),
   id('setDepositFee'),
   id('setWithdrawFee'),
+  id('setCollateralizationFactor'),
   id('setDepositHook'),
   id('setWithdrawHook'),
   id('setManagerWithdrawHook'),

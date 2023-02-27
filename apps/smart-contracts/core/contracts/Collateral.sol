@@ -18,16 +18,19 @@ contract Collateral is
   address private _manager;
   uint256 private _depositFee;
   uint256 private _withdrawFee;
+  uint256 private _collateralizationFactor;
   IHook private _depositHook;
   IHook private _withdrawHook;
   IHook private _managerWithdrawHook;
 
-  uint256 public constant FEE_DENOMINATOR = 1000000;
+  uint256 public constant override PERCENT_DENOMINATOR = 1000000;
   uint256 public constant FEE_LIMIT = 100000;
   bytes32 public constant MANAGER_WITHDRAW_ROLE = keccak256("managerWithdraw");
   bytes32 public constant SET_MANAGER_ROLE = keccak256("setManager");
   bytes32 public constant SET_DEPOSIT_FEE_ROLE = keccak256("setDepositFee");
   bytes32 public constant SET_WITHDRAW_FEE_ROLE = keccak256("setWithdrawFee");
+  bytes32 public constant SET_COLLATERALIZATION_FACTOR_ROLE =
+    keccak256("setCollateralizationFactor");
   bytes32 public constant SET_DEPOSIT_HOOK_ROLE = keccak256("setDepositHook");
   bytes32 public constant SET_WITHDRAW_HOOK_ROLE =
     keccak256("setWithdrawHook");
@@ -47,6 +50,7 @@ contract Collateral is
     __ERC20_init(name, symbol);
     __ERC20Permit_init(name);
     __ReentrancyGuard_init();
+    _collateralizationFactor = PERCENT_DENOMINATOR;
   }
 
   /**
@@ -60,7 +64,7 @@ contract Collateral is
     nonReentrant
     returns (uint256)
   {
-    uint256 fee = (amount * _depositFee) / FEE_DENOMINATOR;
+    uint256 fee = (amount * _depositFee) / PERCENT_DENOMINATOR;
     if (_depositFee > 0) {
       require(fee > 0, "fee = 0");
     } else {
@@ -89,7 +93,10 @@ contract Collateral is
     returns (uint256 baseTokenAmountAfterFee)
   {
     uint256 baseTokenAmount = (amount * _baseTokenDenominator) / 1e18;
-    uint256 fee = (baseTokenAmount * _withdrawFee) / FEE_DENOMINATOR;
+    baseTokenAmount =
+      (baseTokenAmount * _collateralizationFactor) /
+      PERCENT_DENOMINATOR;
+    uint256 fee = (baseTokenAmount * _withdrawFee) / PERCENT_DENOMINATOR;
     if (_withdrawFee > 0) {
       require(fee > 0, "fee = 0");
     } else {
@@ -152,6 +159,16 @@ contract Collateral is
     emit WithdrawFeeChange(withdrawFee);
   }
 
+  function setCollateralizationFactor(uint256 factor)
+    external
+    override
+    onlyRole(SET_COLLATERALIZATION_FACTOR_ROLE)
+  {
+    require(factor > 0 && factor <= PERCENT_DENOMINATOR, "Invalid factor");
+    _collateralizationFactor = factor;
+    emit CollateralizationFactorChange(factor);
+  }
+
   function setDepositHook(IHook depositHook)
     external
     override
@@ -193,6 +210,15 @@ contract Collateral is
 
   function getWithdrawFee() external view override returns (uint256) {
     return _withdrawFee;
+  }
+
+  function getCollateralizationFactor()
+    external
+    view
+    override
+    returns (uint256)
+  {
+    return _collateralizationFactor;
   }
 
   function getDepositHook() external view override returns (IHook) {

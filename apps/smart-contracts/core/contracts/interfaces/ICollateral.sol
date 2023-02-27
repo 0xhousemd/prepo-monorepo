@@ -26,6 +26,8 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
 
   event WithdrawFeeChange(uint256 fee);
 
+  event CollateralizationFactorChange(uint256 factor);
+
   event DepositHookChange(address hook);
 
   event WithdrawHookChange(address hook);
@@ -42,17 +44,19 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
 
   function managerWithdraw(uint256 amount) external;
 
-  function setManager(address newManager) external;
+  function setManager(address manager) external;
 
-  function setDepositFee(uint256 newDepositFee) external;
+  function setDepositFee(uint256 depositFee) external;
 
-  function setWithdrawFee(uint256 newWithdrawFee) external;
+  function setWithdrawFee(uint256 withdrawFee) external;
 
-  function setDepositHook(IHook newHook) external;
+  function setCollateralizationFactor(uint256 factor) external;
 
-  function setWithdrawHook(IHook newHook) external;
+  function setDepositHook(IHook hook) external;
 
-  function setManagerWithdrawHook(IHook newHook) external;
+  function setWithdrawHook(IHook hook) external;
+
+  function setManagerWithdrawHook(IHook hook) external;
 
   function getBaseToken() external view returns (IERC20);
 
@@ -62,6 +66,8 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
 
   function getWithdrawFee() external view returns (uint256);
 
+  function getCollateralizationFactor() external view returns (uint256);
+
   function getDepositHook() external view returns (IHook);
 
   function getWithdrawHook() external view returns (IHook);
@@ -69,4 +75,6 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
   function getManagerWithdrawHook() external view returns (IHook);
 
   function getBaseTokenBalance() external view returns (uint256);
+
+  function PERCENT_DENOMINATOR() external view returns (uint256);
 }
