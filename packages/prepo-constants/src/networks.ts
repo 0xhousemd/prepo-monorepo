@@ -1,6 +1,3 @@
-import { BigNumber, utils } from 'ethers'
-import { GasPriceSource, maticGas } from './gas'
-
 export enum ChainId {
   Mainnet = 1,
   Ropsten = 3,
@@ -51,8 +48,6 @@ export type Network = {
   defenderName?: string
   rpcUrls: string[]
   faucet?: string
-  gasPrice?: BigNumber
-  gasPriceCheckers?: GasPriceSource[]
   type?: NetworkType
   testNetwork?: boolean
   chainName: string
@@ -149,7 +144,6 @@ export const NETWORKS: Networks = {
     blockExplorer: 'https://goerli.etherscan.io',
     iconName: 'weth',
     rpcUrls: [`https://goerli.infura.io/v3/${METAMASK_INFURA_ID}`],
-    gasPrice: utils.parseUnits('30', 'gwei'),
     type: 'ethereum',
     testNetwork: true,
   },
@@ -176,8 +170,6 @@ export const NETWORKS: Networks = {
     faucet: 'https://faucet.matic.network',
     blockExplorer: 'https://polygonscan.com',
     iconName: 'polygon',
-    gasPrice: utils.parseUnits('60', 'gwei'),
-    gasPriceCheckers: maticGas,
     type: 'polygon',
     testNetwork: false,
   },
@@ -246,5 +238,3 @@ export const NETWORKS: Networks = {
     testNetwork: true,
   },
 }
-
-export const DEFAULT_NETWORK = NETWORKS.goerli

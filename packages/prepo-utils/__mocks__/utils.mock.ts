@@ -11,7 +11,6 @@ const mockData = {
     faucet: 'https://goerli-faucet.slock.it',
     blockExplorer: 'https://goerli.etherscan.io',
     rpcUrls: [`https://goerli.infura.io/v3/${METAMASK_INFURA_ID}`],
-    gasPrice: { _hex: '0x0df8475800', _isBigNumber: true },
   } as Network,
   onboardObject: {
     networkId: 5,

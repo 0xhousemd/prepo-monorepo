@@ -5,7 +5,6 @@ import { Web3Store } from './Web3Store'
 import { MulticallStore } from './MulticallStore'
 import { BrowserStore } from './BrowserStore'
 import { ClockStore } from './ClockStore'
-import { GasStore } from './GasStore'
 import { ToastStore } from './ToastStore'
 
 export class RootStore<SupportedContracts> {
@@ -14,7 +13,6 @@ export class RootStore<SupportedContracts> {
   browserStore: BrowserStore
   clockStore: ClockStore
   web3Store: Web3Store
-  gasStore: GasStore
   multicallStore: MulticallStore
   config: Required<StoreConfig<SupportedContracts>>
 
@@ -25,7 +23,6 @@ export class RootStore<SupportedContracts> {
     this.browserStore = new BrowserStore(this)
     this.clockStore = new ClockStore(this)
     this.web3Store = new Web3Store(this)
-    this.gasStore = new GasStore(this)
     this.multicallStore = new MulticallStore(this)
   }
 }

@@ -16,7 +16,7 @@ type SendTransactionOptions = {
   minimumGasLimit?: BigNumber
 } & UnsignedTransaction
 
-type GasOptions = { gasLimit?: BigNumber; gasPrice?: BigNumber }
+type GasOptions = { gasLimit?: BigNumber; }
 
 export class ContractStore<RootStoreType, SupportedContracts> {
   contractName: keyof SupportedContracts
@@ -127,9 +127,7 @@ export class ContractStore<RootStoreType, SupportedContracts> {
     if (!this.contract) throw Error('contract not initialzied')
 
     const estimateOptions = { from: this.root.web3Store.signerState.address, ...callerOptions }
-    const options: GasOptions = {
-      gasPrice: this.root.gasStore.gasPrice,
-    }
+    const options: GasOptions = {}
 
     try {
       const gasLimitEstimate = await this.contract.estimateGas[methodName](
