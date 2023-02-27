@@ -1,10 +1,10 @@
 import chai, { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { formatBytes32String, parseUnits, parseEther } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { FakeContract, smock } from '@defi-wonderland/smock'
-import { utils } from 'prepo-hardhat'
+import { utils, snapshots } from 'prepo-hardhat'
 import { JUNK_ADDRESS } from 'prepo-constants'
 import { getPermitFromSignature } from '../utils'
 import { depositTradeHelperFixture } from '../fixtures/DepositTradeHelperFixture'
@@ -16,12 +16,15 @@ import { getCollateralAmountForDeposit } from '../../helpers'
 const { getLastTimestamp, setNextTimestamp } = utils
 
 chai.use(smock.matchers)
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> DepositTradeHelper', () => {
   let core: MockCore
   let swapRouter: FakeContract<SwapRouter>
   let depositTradeHelper: DepositTradeHelper
   let user: SignerWithAddress
+  snapshotter.setupSnapshotContext('DepositTradeHelper')
 
   const junkPermit = <IDepositTradeHelper.PermitStruct>{
     deadline: 0,
@@ -37,7 +40,7 @@ describe('=> DepositTradeHelper', () => {
     sqrtPriceLimitX96: 0,
   }
 
-  beforeEach(async () => {
+  before(async () => {
     core = await MockCore.Instance.init(ethers)
     ;[user] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
@@ -45,6 +48,7 @@ describe('=> DepositTradeHelper', () => {
       core.collateral.address,
       swapRouter.address
     )
+    await snapshotter.saveSnapshot()
   })
 
   describe('initial state', () => {
@@ -76,13 +80,16 @@ describe('=> DepositTradeHelper', () => {
   describe('# depositAndTrade', () => {
     const baseTokenToDeposit = parseUnits('1', 6)
     let expectedCollateralMinted: BigNumber
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('DepositTradeHelper-depositAndTrade')
+
+    before(async () => {
       await core.baseToken.mint(user.address, baseTokenToDeposit)
       core.collateral.depositHook.hook.returns()
       expectedCollateralMinted = await getCollateralAmountForDeposit(
         core.collateral,
         baseTokenToDeposit
       )
+      await snapshotter.saveSnapshot()
     })
 
     it('reverts if insufficient base token approval', async () => {
@@ -261,7 +268,10 @@ describe('=> DepositTradeHelper', () => {
       let baseTokenPermit: IDepositTradeHelper.PermitStruct
       let collateralPermit: IDepositTradeHelper.PermitStruct
       let timestampToSignFor: number
-      beforeEach(async () => {
+
+      snapshotter.setupSnapshotContext('DepositTradeHelper-depositAndTrade-allPermitsProvided')
+
+      before(async () => {
         timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         baseTokenPermit = await getPermitFromSignature(
           core.baseToken,
@@ -277,6 +287,7 @@ describe('=> DepositTradeHelper', () => {
           ethers.constants.MaxUint256,
           timestampToSignFor
         )
+        await snapshotter.saveSnapshot()
       })
 
       it('reverts if insufficient base token', async () => {

@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumber } from 'ethers'
 import { FakeContract, smock } from '@defi-wonderland/smock'
@@ -10,7 +10,7 @@ import {
   MAX_PAYOUT,
   ZERO_ADDRESS,
 } from 'prepo-constants'
-import { utils } from 'prepo-hardhat'
+import { utils, snapshots } from 'prepo-hardhat'
 import { testERC20Fixture } from '../fixtures/TestERC20Fixture'
 import { LongShortTokenAttachFixture } from '../fixtures/LongShortTokenFixture'
 import { prePOMarketAttachFixture } from '../fixtures/PrePOMarketFixture'
@@ -36,6 +36,8 @@ import { fakeTokenSenderFixture } from '../fixtures/TokenSenderFixture'
 chai.use(smock.matchers)
 
 const { nowPlusMonths } = utils
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> prePOMarket', () => {
   let collateralToken: TestERC20
@@ -57,8 +59,8 @@ describe('=> prePOMarket', () => {
   const TEST_MINT_AMOUNT = ethers.utils.parseEther('1000')
   const TEST_FINAL_LONG_PAYOUT = TEST_FLOOR_PAYOUT.add(TEST_CEILING_PAYOUT).div(2)
   const MOCK_COLLATERAL_SUPPLY = ethers.utils.parseEther('1000000000')
-
-  beforeEach(async () => {
+  snapshotter.setupSnapshotContext('prePOMarket')
+  before(async () => {
     ;[deployer, user, treasury, recipient] = await ethers.getSigners()
     collateralToken = await testERC20Fixture('prePO USDC Collateral', 'preUSD', 18)
     await collateralToken.mint(deployer.address, MOCK_COLLATERAL_SUPPLY)
@@ -87,6 +89,7 @@ describe('=> prePOMarket', () => {
       ceilingValuation: TEST_CEILING_VAL,
       expiryTime: TEST_EXPIRY,
     }
+    await snapshotter.saveSnapshot()
   })
 
   describe('# initialize', () => {
@@ -207,9 +210,12 @@ describe('=> prePOMarket', () => {
   })
 
   describe('# setFinalLongPayout', () => {
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('prePOMarket-setFinalLongPayout')
+
+    before(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
+      await snapshotter.saveSnapshot()
     })
 
     it('reverts if not role holder', async () => {
@@ -255,9 +261,12 @@ describe('=> prePOMarket', () => {
   })
 
   describe('# setMintHook', () => {
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('prePOMarket-setMintHook')
+
+    before(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
+      await snapshotter.saveSnapshot()
     })
 
     it('reverts if not role holder', async () => {
@@ -304,9 +313,12 @@ describe('=> prePOMarket', () => {
   })
 
   describe('# setRedeemHook', () => {
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('prePOMarket-setRedeemHook')
+
+    before(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
+      await snapshotter.saveSnapshot()
     })
 
     it('reverts if not role holder', async () => {
@@ -353,9 +365,12 @@ describe('=> prePOMarket', () => {
   })
 
   describe('# setRedemptionFee', () => {
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('prePOMarket-setRedemptionFee')
+
+    before(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
+      await snapshotter.saveSnapshot()
     })
 
     it('reverts if not role holder', async () => {
@@ -406,9 +421,12 @@ describe('=> prePOMarket', () => {
 
   describe('# mint', () => {
     let mintHook: FakeContract<MintHook>
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('prePOMarket-mint')
+
+    before(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
+      await snapshotter.saveSnapshot()
     })
 
     it('prevents minting if market ended', async () => {
@@ -521,31 +539,20 @@ describe('=> prePOMarket', () => {
     let longToken: LongShortToken
     let shortToken: LongShortToken
     let redeemHook: FakeContract<RedeemHook>
+    snapshotter.setupSnapshotContext('prePOMarket-redeem')
 
-    const mintTestPosition = async (): Promise<BigNumber> => {
-      await collateralToken.connect(deployer).transfer(user.address, TEST_MINT_AMOUNT)
-      await collateralToken.connect(user).approve(prePOMarket.address, TEST_MINT_AMOUNT)
-      await prePOMarket.connect(user).mint(TEST_MINT_AMOUNT)
-      return TEST_MINT_AMOUNT
-    }
-
-    const setupMarket = async (): Promise<BigNumber> => {
+    before(async () => {
       prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
       await roleAssigners.assignPrePOMarketRoles(treasury, treasury, prePOMarket)
       redeemHook = await fakeRedeemHookFixture()
-      const amountMinted = await mintTestPosition()
+      await collateralToken.connect(deployer).transfer(user.address, TEST_MINT_AMOUNT)
+      await collateralToken.connect(user).approve(prePOMarket.address, TEST_MINT_AMOUNT)
+      await prePOMarket.connect(user).mint(TEST_MINT_AMOUNT)
       longToken = await LongShortTokenAttachFixture(await prePOMarket.getLongToken())
       shortToken = await LongShortTokenAttachFixture(await prePOMarket.getShortToken())
       await prePOMarket.connect(treasury).setRedemptionFee(TEST_REDEMPTION_FEE)
       await prePOMarket.connect(treasury).setRedeemHook(redeemHook.address)
-      return amountMinted
-    }
-
-    const setupMarketToEnd = async (finalLongPayout: BigNumber): Promise<BigNumber> => {
-      const amountMinted = await setupMarket()
-      await prePOMarket.connect(treasury).setFinalLongPayout(finalLongPayout)
-      return amountMinted
-    }
+    })
 
     const calculateTotalOwed = async (
       longToRedeem: BigNumber,
@@ -568,14 +575,13 @@ describe('=> prePOMarket', () => {
     }
 
     it('reverts if amounts = 0, fee = 0%, and before market end', async () => {
-      await setupMarket()
       await prePOMarket.connect(treasury).setRedemptionFee(0)
 
       await expect(prePOMarket.connect(user).redeem(0, 0, user.address)).revertedWith('amount = 0')
     })
 
     it('reverts if amounts = 0, fee = 0%, and after market end', async () => {
-      await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       expect(await prePOMarket.getFinalLongPayout()).to.be.lte(MAX_PAYOUT)
       await prePOMarket.connect(treasury).setRedemptionFee(0)
 
@@ -583,14 +589,13 @@ describe('=> prePOMarket', () => {
     })
 
     it('reverts if amounts = 0, fee > 0%, and before market end', async () => {
-      await setupMarket()
       expect(await prePOMarket.getRedemptionFee()).to.be.gt(0)
 
       await expect(prePOMarket.connect(user).redeem(0, 0, user.address)).revertedWith('fee = 0')
     })
 
     it('reverts if amounts = 0, fee > 0%, and after market end', async () => {
-      await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       expect(await prePOMarket.getFinalLongPayout()).to.be.lte(MAX_PAYOUT)
       expect(await prePOMarket.getRedemptionFee()).to.be.gt(0)
 
@@ -598,9 +603,8 @@ describe('=> prePOMarket', () => {
     })
 
     it('reverts if hook reverts', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
-      const shortToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
+      const shortToRedeem = TEST_MINT_AMOUNT
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
       expect(totalOwed).to.be.gt(0)
       redeemHook.hook.reverts()
@@ -610,7 +614,6 @@ describe('=> prePOMarket', () => {
     })
 
     it('reverts if amounts > 0, fee amount = 0, fee > 0%, and redeeming equal parts', async () => {
-      await setupMarket()
       expect(await prePOMarket.getRedemptionFee()).to.be.gt(0)
       /**
        * Given a test fee of 20 (0.002%), smallest redemption that would result in a
@@ -631,7 +634,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('reverts if amounts > 0, fee amount = 0, fee > 0%, and redeeming more long', async () => {
-      await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       expect(await prePOMarket.getFinalLongPayout()).to.be.lte(MAX_PAYOUT)
       expect(await prePOMarket.getRedemptionFee()).to.be.gt(0)
       /**
@@ -653,7 +656,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('reverts if amounts > 0, fee amount = 0, fee > 0%, and redeeming more short', async () => {
-      await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       expect(await prePOMarket.getFinalLongPayout()).to.be.lte(MAX_PAYOUT)
       expect(await prePOMarket.getRedemptionFee()).to.be.gt(0)
       /**
@@ -675,103 +678,92 @@ describe('=> prePOMarket', () => {
     })
 
     it('should not allow long token redemption exceeding long token balance', async () => {
-      prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      const amountMinted = await mintTestPosition()
-
       await expect(
-        prePOMarket.connect(user).redeem(amountMinted.add(1), amountMinted, user.address)
+        prePOMarket.connect(user).redeem(TEST_MINT_AMOUNT.add(1), TEST_MINT_AMOUNT, user.address)
       ).revertedWith('Insufficient long tokens')
     })
 
     it('should not allow short token redemption exceeding short token balance', async () => {
-      prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      const amountMinted = await mintTestPosition()
-
       await expect(
-        prePOMarket.connect(user).redeem(amountMinted, amountMinted.add(1), user.address)
+        prePOMarket.connect(user).redeem(TEST_MINT_AMOUNT, TEST_MINT_AMOUNT.add(1), user.address)
       ).revertedWith('Insufficient short tokens')
     })
 
     it('should only allow token redemption in equal parts before expiry', async () => {
-      prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      const amountMinted = await mintTestPosition()
-
       await expect(
-        prePOMarket.connect(user).redeem(amountMinted, amountMinted.sub(1), user.address)
+        prePOMarket.connect(user).redeem(TEST_MINT_AMOUNT, TEST_MINT_AMOUNT.sub(1), user.address)
       ).revertedWith('Long and Short must be equal')
     })
 
     it('should correctly settle equal non-zero redemption amounts before market end', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
-      const shortToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
+      const shortToRedeem = TEST_MINT_AMOUNT
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
     it('redeems if funder != recipient and market not ended', async () => {
       expect(user.address).not.eq(recipient.address)
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
-      const shortToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
+      const shortToRedeem = TEST_MINT_AMOUNT
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, recipient.address)
 
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(recipient.address)).to.eq(totalOwed)
     })
 
     it('should correctly settle non-equal non-zero redemption amounts after market end', async () => {
-      const amountMinted = await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
-      const longToRedeem = amountMinted
-      const shortToRedeem = amountMinted.sub(1)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
+      const longToRedeem = TEST_MINT_AMOUNT
+      const shortToRedeem = TEST_MINT_AMOUNT.sub(1)
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
     it('should correctly settle redemption done with only long tokens after market end', async () => {
-      const amountMinted = await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
-      const longToRedeem = amountMinted
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = ethers.utils.parseEther('0')
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
     it('should correctly settle redemption done with only short tokens after market end', async () => {
-      const amountMinted = await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       const longToRedeem = ethers.utils.parseEther('0')
-      const shortToRedeem = amountMinted
+      const shortToRedeem = TEST_MINT_AMOUNT
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
     it('redeems if funder != recipient and market ended', async () => {
       expect(user.address).not.eq(recipient.address)
-      const amountMinted = await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
-      const longToRedeem = amountMinted
-      const shortToRedeem = amountMinted
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
+      const longToRedeem = TEST_MINT_AMOUNT
+      const shortToRedeem = TEST_MINT_AMOUNT
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, recipient.address)
@@ -783,14 +775,13 @@ describe('=> prePOMarket', () => {
       expect(event.recipient).to.eq(recipient.address)
       expect(event.amountAfterFee).to.eq(totalOwed)
       expect(event.fee).to.eq(0)
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(recipient.address)).to.eq(totalOwed)
     })
 
     it('allows amounts > 0 if fee = 0% and redeeming equal parts', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       await prePOMarket.connect(treasury).setRedemptionFee(0)
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
@@ -798,13 +789,13 @@ describe('=> prePOMarket', () => {
 
       await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(await longToken.balanceOf(user.address)).to.eq(amountMinted.sub(longToRedeem))
-      expect(await shortToken.balanceOf(user.address)).to.eq(amountMinted.sub(shortToRedeem))
+      expect(await longToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(longToRedeem))
+      expect(await shortToken.balanceOf(user.address)).to.eq(TEST_MINT_AMOUNT.sub(shortToRedeem))
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed)
     })
 
     it('allows amounts > 0 if fee = 0% and redeeming more long', async () => {
-      await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       expect(await prePOMarket.getFinalLongPayout()).to.be.lte(MAX_PAYOUT)
       await prePOMarket.connect(treasury).setRedemptionFee(0)
       /**
@@ -826,7 +817,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('allows amounts > 0 if fee = 0% and redeeming more short', async () => {
-      await setupMarketToEnd(TEST_FINAL_LONG_PAYOUT)
+      await prePOMarket.connect(treasury).setFinalLongPayout(TEST_FINAL_LONG_PAYOUT)
       expect(await prePOMarket.getFinalLongPayout()).to.be.lte(MAX_PAYOUT)
       await prePOMarket.connect(treasury).setRedemptionFee(0)
       /**
@@ -848,8 +839,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('calls hook with correct parameters and redeemer = recipient', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
       expect(totalOwed).to.be.gt(0)
@@ -867,8 +857,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('calls hook with correct parameters if redeemer != recipient', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
       expect(totalOwed).to.be.gt(0)
@@ -886,8 +875,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('ignores hook if not set', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       await prePOMarket.connect(treasury).setRedeemHook(ZERO_ADDRESS)
 
@@ -897,8 +885,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('approves fee for hook to use', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
       expect(totalOwed).to.be.gt(0)
@@ -913,8 +900,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('sets approval back to 0', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
       expect(totalOwed).to.be.gt(0)
@@ -933,8 +919,7 @@ describe('=> prePOMarket', () => {
     })
 
     it("doesn't approve fee if hook not set", async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       await prePOMarket.connect(treasury).setRedeemHook(ZERO_ADDRESS)
 
@@ -945,8 +930,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('sends full collateral amount if hook not set', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       await prePOMarket.connect(treasury).setRedeemHook(ZERO_ADDRESS)
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
@@ -964,8 +948,7 @@ describe('=> prePOMarket', () => {
       const factory = await ethers.getContractFactory('TestRedeemHook')
       const testRedeemHook = await factory.connect(deployer).deploy()
       const testTreasury = await testRedeemHook.treasury()
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const treasuryCollateralBefore = await collateralToken.balanceOf(testTreasury)
       await prePOMarket.connect(treasury).setRedeemHook(testRedeemHook.address)
@@ -982,7 +965,7 @@ describe('=> prePOMarket', () => {
       const event = events[0].args
       expect(event.redeemer).to.eq(user.address)
       expect(event.recipient).to.eq(user.address)
-      expect(event.amountAfterFee).to.eq(amountMinted.sub(expectedPartialFee))
+      expect(event.amountAfterFee).to.eq(TEST_MINT_AMOUNT.sub(expectedPartialFee))
       expect(event.fee).to.eq(expectedPartialFee)
       expect(await collateralToken.balanceOf(user.address)).to.eq(totalOwed.sub(expectedPartialFee))
       expect(await collateralToken.balanceOf(testTreasury)).eq(
@@ -996,8 +979,7 @@ describe('=> prePOMarket', () => {
       const tokenSender = await fakeTokenSenderFixture()
       const factory = await ethers.getContractFactory('RedeemHook')
       const testRedeemHook = await factory.connect(deployer).deploy()
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const treasuryCollateralBefore = await collateralToken.balanceOf(treasury.address)
       await testRedeemHook.connect(deployer).setAllowedMsgSenders(allowedCallers.address)
@@ -1019,7 +1001,7 @@ describe('=> prePOMarket', () => {
       const event = events[0].args
       expect(event.redeemer).to.eq(user.address)
       expect(event.recipient).to.eq(user.address)
-      expect(event.amountAfterFee).to.eq(amountMinted.sub(redeemFee))
+      expect(event.amountAfterFee).to.eq(TEST_MINT_AMOUNT.sub(redeemFee))
       expect(event.fee).to.eq(redeemFee)
       expect(await collateralToken.balanceOf(user.address)).eq(totalOwed.sub(redeemFee))
       expect(await collateralToken.balanceOf(treasury.address)).eq(
@@ -1028,8 +1010,7 @@ describe('=> prePOMarket', () => {
     })
 
     it('sends full collateral amount if hook takes no fee', async () => {
-      const amountMinted = await setupMarket()
-      const longToRedeem = amountMinted
+      const longToRedeem = TEST_MINT_AMOUNT
       const shortToRedeem = longToRedeem
       const totalOwed = await calculateTotalOwed(longToRedeem, shortToRedeem, false)
       expect(totalOwed).to.be.gt(0)
@@ -1045,19 +1026,20 @@ describe('=> prePOMarket', () => {
     })
 
     it('emits Redemption indexed by redeemer', async () => {
-      prePOMarket = await prePOMarketAttachFixture(await createMarket(defaultParams))
-      const amountMinted = await mintTestPosition()
-      const redeemFee = calculateFee(amountMinted, await prePOMarket.getRedemptionFee())
-
-      await prePOMarket.connect(user).redeem(amountMinted, amountMinted, recipient.address)
+      // redeem expected to not take any fee
+      await prePOMarket.connect(user).redeem(TEST_MINT_AMOUNT, TEST_MINT_AMOUNT, recipient.address)
 
       const filter = prePOMarket.filters.Redemption(user.address, recipient.address)
       const events = await prePOMarket.queryFilter(filter)
       const event = events[0].args
       expect(event.redeemer).to.eq(user.address)
       expect(event.recipient).to.eq(recipient.address)
-      expect(event.amountAfterFee).to.eq(amountMinted.sub(redeemFee))
-      expect(event.fee).to.eq(redeemFee)
+      expect(event.amountAfterFee).to.eq(TEST_MINT_AMOUNT)
+      expect(event.fee).to.eq(0)
+    })
+
+    afterEach(() => {
+      redeemHook.hook.reset()
     })
   })
 })

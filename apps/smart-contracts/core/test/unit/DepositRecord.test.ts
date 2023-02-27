@@ -1,9 +1,9 @@
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { id, parseEther } from 'ethers/lib/utils'
 import { DEFAULT_ADMIN_ROLE } from 'prepo-constants'
-import { utils } from 'prepo-hardhat'
+import { utils, snapshots } from 'prepo-hardhat'
 import { FakeContract } from '@defi-wonderland/smock'
 import { depositRecordFixture } from '../fixtures/DepositRecordFixture'
 import { AccountList, DepositRecord } from '../../types/generated'
@@ -11,6 +11,8 @@ import { fakeAccountListFixture } from '../fixtures/HookFixture'
 import { roleAssigners } from '../../helpers'
 
 const { grantAndAcceptRole } = utils
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> DepositRecord', () => {
   let depositRecord: DepositRecord
@@ -24,16 +26,17 @@ describe('=> DepositRecord', () => {
   const TEST_USER_DEPOSIT_CAP = parseEther('10000')
   const TEST_AMOUNT_ONE = parseEther('1')
   const TEST_AMOUNT_TWO = parseEther('2')
+  snapshotter.setupSnapshotContext('DepositRecord')
 
-  const getSignersAndDeployRecord = async (): Promise<void> => {
+  before(async () => {
     ;[deployer, caller, user, uncappedUser] = await ethers.getSigners()
     depositRecord = await depositRecordFixture()
     bypassList = await fakeAccountListFixture()
     allowlist = await fakeAccountListFixture()
-  }
+    await snapshotter.saveSnapshot()
+  })
 
   const setupDepositRecord = async (): Promise<void> => {
-    await getSignersAndDeployRecord()
     await roleAssigners.assignDepositRecordRoles(deployer, deployer, depositRecord)
     await depositRecord.connect(deployer).setAccountList(allowlist.address)
     await depositRecord.connect(deployer).setAllowedMsgSenders(allowlist.address)
@@ -43,10 +46,6 @@ describe('=> DepositRecord', () => {
   }
 
   describe('initial state', () => {
-    beforeEach(async () => {
-      await getSignersAndDeployRecord()
-    })
-
     it('sets global deposit cap to 0', async () => {
       expect(await depositRecord.getGlobalNetDepositCap()).eq(0)
     })
@@ -68,8 +67,14 @@ describe('=> DepositRecord', () => {
   })
 
   describe('# recordDeposit', () => {
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('DepositRecord-recordDeposit')
+
+    before(async () => {
       await setupDepositRecord()
+      await snapshotter.saveSnapshot()
+    })
+
+    beforeEach(() => {
       allowlist.isIncluded.whenCalledWith(caller.address).returns(true)
     })
 
@@ -236,19 +241,22 @@ describe('=> DepositRecord', () => {
         'Global deposit cap exceeded'
       )
     })
-
-    afterEach(() => {
-      bypassList.isIncluded.reset()
-    })
   })
 
   describe('# recordWithdrawal', () => {
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('DepositRecord-recordWithdrawal')
+
+    before(async () => {
       await setupDepositRecord()
       allowlist.isIncluded.whenCalledWith(caller.address).returns(true)
       await depositRecord
         .connect(caller)
         .recordDeposit(user.address, TEST_AMOUNT_ONE.add(TEST_AMOUNT_TWO))
+      await snapshotter.saveSnapshot()
+    })
+
+    beforeEach(() => {
+      allowlist.isIncluded.whenCalledWith(caller.address).returns(true)
     })
 
     it('reverts if caller not allowed', async () => {
@@ -368,7 +376,6 @@ describe('=> DepositRecord', () => {
   describe('# setGlobalNetDepositCap', () => {
     const differentCapToTestWith = TEST_GLOBAL_DEPOSIT_CAP.add(1)
     beforeEach(async () => {
-      await getSignersAndDeployRecord()
       await grantAndAcceptRole(
         depositRecord,
         deployer,
@@ -433,7 +440,6 @@ describe('=> DepositRecord', () => {
   describe('# setUserDepositCap', () => {
     const differentCapToTestWith = TEST_USER_DEPOSIT_CAP.add(1)
     beforeEach(async () => {
-      await getSignersAndDeployRecord()
       await grantAndAcceptRole(
         depositRecord,
         deployer,

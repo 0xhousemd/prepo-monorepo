@@ -1,9 +1,9 @@
 import chai, { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { id, parseEther } from 'ethers/lib/utils'
 import { ZERO_ADDRESS } from 'prepo-constants'
-import { utils } from 'prepo-hardhat'
+import { utils, snapshots } from 'prepo-hardhat'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { fakeAccountListFixture, withdrawHookFixture } from '../fixtures/HookFixture'
 import { smockDepositRecordFixture } from '../fixtures/DepositRecordFixture'
@@ -24,6 +24,8 @@ import {
 chai.use(smock.matchers)
 
 const { getLastTimestamp, setNextTimestamp } = utils
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> WithdrawHook', () => {
   let withdrawHook: WithdrawHook
@@ -41,8 +43,9 @@ describe('=> WithdrawHook', () => {
   const TEST_AMOUNT_AFTER_FEE = parseEther('1')
   const TEST_GLOBAL_PERIOD_LENGTH = 20
   const TEST_GLOBAL_WITHDRAW_LIMIT = TEST_AMOUNT_BEFORE_FEE.mul(3)
+  snapshotter.setupSnapshotContext('WithdrawHook')
 
-  beforeEach(async () => {
+  before(async () => {
     ;[deployer, user, treasury, recipient] = await ethers.getSigners()
     withdrawHook = await withdrawHookFixture()
     mockTestToken = await smockTestERC20Fixture('Test Token', 'TEST', 18)
@@ -58,6 +61,7 @@ describe('=> WithdrawHook', () => {
     await mockDepositRecord.connect(deployer).setAccountList(allowList.address)
     allowList.isIncluded.whenCalledWith(user.address).returns(true)
     allowList.isIncluded.whenCalledWith(withdrawHook.address).returns(true)
+    await snapshotter.saveSnapshot()
   })
 
   describe('initial state', () => {
@@ -87,7 +91,8 @@ describe('=> WithdrawHook', () => {
      * Tests below use different values for TEST_AMOUNT_BEFORE_FEE and
      * TEST_AMOUNT_AFTER_FEE to ensure TEST_AMOUNT_AFTER_FEE is ignored.
      */
-    beforeEach(async () => {
+    snapshotter.setupSnapshotContext('WithdrawHook-hook')
+    before(async () => {
       await withdrawHook.setCollateral(fakeCollateral.address)
       await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
       await withdrawHook.connect(deployer).setGlobalPeriodLength(TEST_GLOBAL_PERIOD_LENGTH)
@@ -104,6 +109,7 @@ describe('=> WithdrawHook', () => {
         .approve(withdrawHook.address, ethers.constants.MaxUint256)
       fakeTokenSender.send.returns()
       fakeCollateral.getBaseToken.returns(mockTestToken.address)
+      await snapshotter.saveSnapshot()
     })
 
     it('only callable by collateral', async () => {
@@ -130,7 +136,6 @@ describe('=> WithdrawHook', () => {
 
     describe('fee reimbursement', () => {
       it('transfers fee to treasury if fee > 0', async () => {
-        mockTestToken.transferFrom.reset()
         expect(TEST_AMOUNT_BEFORE_FEE).to.not.eq(TEST_AMOUNT_AFTER_FEE)
 
         await withdrawHook
@@ -394,6 +399,11 @@ describe('=> WithdrawHook', () => {
         )
 
       await expect(tx).revertedWith('Global withdraw limit exceeded')
+    })
+
+    afterEach(() => {
+      fakeTokenSender.send.reset()
+      mockTestToken.transferFrom.reset()
     })
   })
 
