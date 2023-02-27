@@ -94,11 +94,26 @@ contract DepositTradeHelper is
     OffChainTradeParams calldata tradeParams
   ) external payable override nonReentrant {}
 
-  function withdrawAndUnwrap(address recipient, uint256 amount)
-    external
-    override
-    nonReentrant
-  {}
+  function withdrawAndUnwrap(
+    address recipient,
+    uint256 amount,
+    Permit calldata collateralPermit
+  ) external override nonReentrant {
+    if (collateralPermit.deadline != 0) {
+      _collateral.permit(
+        msg.sender,
+        address(this),
+        type(uint256).max,
+        collateralPermit.deadline,
+        collateralPermit.v,
+        collateralPermit.r,
+        collateralPermit.s
+      );
+    }
+    _collateral.transferFrom(msg.sender, address(this), amount);
+    uint256 wethAmount = _collateral.withdraw(address(this), amount);
+    IWETH9(address(_baseToken)).withdrawTo(recipient, wethAmount);
+  }
 
   function getCollateral() external view override returns (ICollateral) {
     return _collateral;

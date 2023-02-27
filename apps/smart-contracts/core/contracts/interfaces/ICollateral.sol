@@ -36,7 +36,9 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
     external
     returns (uint256);
 
-  function withdraw(address recipient, uint256 amount) external;
+  function withdraw(address recipient, uint256 amount)
+    external
+    returns (uint256 baseTokenAmountAfterFee);
 
   function managerWithdraw(uint256 amount) external;
 

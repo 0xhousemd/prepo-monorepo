@@ -51,7 +51,11 @@ interface IDepositTradeHelper {
     OffChainTradeParams calldata tradeParams
   ) external payable;
 
-  function withdrawAndUnwrap(address recipient, uint256 amount) external;
+  function withdrawAndUnwrap(
+    address recipient,
+    uint256 amount,
+    Permit calldata collateralPermit
+  ) external;
 
   function getBaseToken() external view returns (IERC20);
 

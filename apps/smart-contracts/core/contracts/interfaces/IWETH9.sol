@@ -6,4 +6,6 @@ interface IWETH9 {
   function deposit() external payable;
 
   function withdraw(uint256 amount) external;
+
+  function withdrawTo(address account, uint256 amount) external;
 }

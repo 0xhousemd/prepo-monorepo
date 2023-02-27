@@ -63,13 +63,13 @@ export async function getCollateralAmountForDeposit(
   return amountAfterFee.mul(parseEther('1')).div(parseEther('1'))
 }
 
-export async function getBaseTokenForWithdrawal(
+export async function getBaseTokenAmountForWithdrawal(
   collateral: Collateral | MockContract<Collateral>,
   collateralAmount: BigNumber
 ): Promise<BigNumber> {
   const amountBeforeFee = getBaseTokenEquivalent(collateralAmount, parseEther('1'))
   const afterFeeFactor = BigNumber.from(FEE_DENOMINATOR).sub(await collateral.getWithdrawFee())
-  return amountBeforeFee.mul(FEE_DENOMINATOR).div(afterFeeFactor)
+  return amountBeforeFee.mul(afterFeeFactor).div(FEE_DENOMINATOR)
 }
 
 export async function depositRecordExists(

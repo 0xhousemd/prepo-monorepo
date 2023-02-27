@@ -3,24 +3,32 @@ import { ethers, network } from 'hardhat'
 import { smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumber } from 'ethers'
+import { formatBytes32String } from 'ethers/lib/utils'
 import { getPrePOAddressForNetwork } from 'prepo-constants'
-import { utils } from 'prepo-hardhat'
+import { utils, snapshots } from 'prepo-hardhat'
 import { parseEther } from '@ethersproject/units'
 import { create2DeployerFixture } from '../fixtures/Create2DeployerFixtures'
-import { Snapshotter } from '../snapshots'
 import { MockCore } from '../../harnesses/mock'
 import { roleAssigners } from '../../helpers/roles'
 import { attachSwapRouter } from '../../helpers/uniswap'
 import { PrePOMarketParams } from '../../types'
-import { Create2Deployer, ERC20, SwapRouter, DepositTradeHelper } from '../../types/generated'
+import {
+  Create2Deployer,
+  ERC20,
+  SwapRouter,
+  DepositTradeHelper,
+  IDepositTradeHelper,
+} from '../../types/generated'
 import { depositTradeHelperFixture } from '../fixtures/DepositTradeHelperFixture'
 import { ERC20AttachFixture } from '../fixtures/ERC20Fixture'
-import { getCollateralAmountForDeposit } from '../../helpers'
+import { getBaseTokenAmountForWithdrawal, getCollateralAmountForDeposit } from '../../helpers'
+import { getPermitFromSignature } from '../utils'
 
 const { nowPlusMonths } = utils
 
 chai.use(smock.matchers)
-const snapshotter = new Snapshotter()
+const { Snapshotter } = snapshots
+const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> DepositTradeHelper', () => {
   let weth: ERC20
@@ -40,6 +48,8 @@ describe('=> DepositTradeHelper', () => {
   const TEST_CEILING_VAL = BigNumber.from(10000)
   const TEST_EXPIRY = nowPlusMonths(2)
   const TEST_DEPOSIT_AMOUNT = parseEther('1')
+  const TEST_DEPOSIT_FEE = 10000 // 1%
+  const TEST_WITHDRAW_FEE = 10000 // 1%
   const GOVERNANCE_COLLATERAL_SUPPLY = parseEther('10')
   const GOVERNANCE_LSTOKEN_SUPPLY = parseEther('10')
 
@@ -83,6 +93,8 @@ describe('=> DepositTradeHelper', () => {
       ceilingValuation: TEST_CEILING_VAL,
       expiryTime: TEST_EXPIRY,
     }
+    await core.collateral.connect(governance).setDepositFee(TEST_DEPOSIT_FEE)
+    await core.collateral.connect(governance).setWithdrawFee(TEST_WITHDRAW_FEE)
     /**
      * Deploy market ensuring L/S token addresses are less than
      * the Collateral address.
@@ -215,6 +227,147 @@ describe('=> DepositTradeHelper', () => {
         ethBalanceBefore
           .sub(TEST_DEPOSIT_AMOUNT)
           .sub(receipt.gasUsed.mul(receipt.effectiveGasPrice))
+      )
+    })
+  })
+
+  describe('# withdrawAndUnwrap', () => {
+    /**
+     * TODO: Add tests using a non-WETH base token, 1 to ensure `withdrawAndUnwrap`
+     * reverts due to the absence of WETH functions existing on the base token,
+     * and one to ensure that if for some reason, the WETH contract returns <
+     * WETH burned in ETH, the transaction reverts. This will require creating a
+     * custom interface that combines IWETH9 and ERC20 so that these functions can
+     * be mocked.
+     */
+    let collateralBalanceBefore: BigNumber
+    let collateralPermit: IDepositTradeHelper.PermitStruct
+    const JUNK_PERMIT = <IDepositTradeHelper.PermitStruct>{
+      deadline: 0,
+      v: 0,
+      r: formatBytes32String('JUNK_DATA'),
+      s: formatBytes32String('JUNK_DATA'),
+    }
+    snapshotter.setupSnapshotContext('DepositTradeHelper-withdrawAndUnwrap')
+    before(async () => {
+      await depositTradeHelper
+        .connect(user)
+        .wrapAndDeposit(user.address, { value: TEST_DEPOSIT_AMOUNT })
+      collateralBalanceBefore = await core.collateral.balanceOf(user.address)
+      collateralPermit = await getPermitFromSignature(
+        core.collateral,
+        user,
+        depositTradeHelper.address,
+        ethers.constants.MaxUint256,
+        TEST_EXPIRY
+      )
+      await snapshotter.saveSnapshot()
+    })
+
+    it('reverts if insufficient collateral', async () => {
+      await core.collateral
+        .connect(user)
+        .approve(depositTradeHelper.address, collateralBalanceBefore.add(1))
+
+      await expect(
+        depositTradeHelper
+          .connect(user)
+          .withdrawAndUnwrap(deployer.address, collateralBalanceBefore.add(1), JUNK_PERMIT)
+      ).revertedWith('ERC20: transfer amount exceeds balance')
+    })
+
+    it('reverts if insufficient collateral approval', async () => {
+      await core.collateral
+        .connect(user)
+        .approve(depositTradeHelper.address, collateralBalanceBefore.sub(1))
+
+      await expect(
+        depositTradeHelper
+          .connect(user)
+          .withdrawAndUnwrap(deployer.address, collateralBalanceBefore, JUNK_PERMIT)
+      ).revertedWith('ERC20: insufficient allowance')
+    })
+
+    it('ignores collateral approval if deadline = 0', async () => {
+      await core.collateral
+        .connect(user)
+        .approve(depositTradeHelper.address, collateralBalanceBefore)
+      expect(JUNK_PERMIT.deadline).eq(0)
+
+      const tx = await depositTradeHelper
+        .connect(user)
+        .withdrawAndUnwrap(deployer.address, collateralBalanceBefore, JUNK_PERMIT)
+
+      expect(tx).not.emit(core.collateral, 'Approval')
+      expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).eq(0)
+    })
+
+    it('processes collateral permit if deadline != 0', async () => {
+      expect(collateralPermit.deadline).not.eq(0)
+      expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).not.eq(
+        ethers.constants.MaxUint256
+      )
+
+      await depositTradeHelper
+        .connect(user)
+        .withdrawAndUnwrap(deployer.address, collateralBalanceBefore, collateralPermit)
+
+      expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).eq(
+        ethers.constants.MaxUint256
+      )
+    })
+
+    it('withdraws WETH to DepositTradeHelper contract', async () => {
+      const expectedBaseTokenFromWithdrawal = await getBaseTokenAmountForWithdrawal(
+        core.collateral,
+        collateralBalanceBefore
+      )
+
+      const tx = await depositTradeHelper
+        .connect(user)
+        .withdrawAndUnwrap(deployer.address, collateralBalanceBefore, collateralPermit)
+
+      expect(tx)
+        .emit(core.baseToken, 'Transfer')
+        .withArgs(
+          core.collateral.address,
+          depositTradeHelper.address,
+          expectedBaseTokenFromWithdrawal
+        )
+    })
+
+    it('withdraws WETH to funder if funder = recipient', async () => {
+      const expectedBaseTokenFromWithdrawal = await getBaseTokenAmountForWithdrawal(
+        core.collateral,
+        collateralBalanceBefore
+      )
+      const recipientEthBefore = await user.getBalance()
+
+      const tx = await depositTradeHelper
+        .connect(user)
+        .withdrawAndUnwrap(user.address, collateralBalanceBefore, collateralPermit)
+
+      const receipt = await tx.wait()
+      expect(await user.getBalance()).eq(
+        recipientEthBefore
+          .add(expectedBaseTokenFromWithdrawal)
+          .sub(receipt.gasUsed.mul(receipt.effectiveGasPrice))
+      )
+    })
+
+    it('withdraws ETH to recipient if funder != recipient', async () => {
+      const expectedBaseTokenFromWithdrawal = await getBaseTokenAmountForWithdrawal(
+        core.collateral,
+        collateralBalanceBefore
+      )
+      const recipientEthBefore = await deployer.getBalance()
+
+      await depositTradeHelper
+        .connect(user)
+        .withdrawAndUnwrap(deployer.address, collateralBalanceBefore, collateralPermit)
+
+      expect(await deployer.getBalance()).eq(
+        recipientEthBefore.add(expectedBaseTokenFromWithdrawal)
       )
     })
   })

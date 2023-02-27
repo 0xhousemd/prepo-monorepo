@@ -86,6 +86,7 @@ contract Collateral is
     external
     override
     nonReentrant
+    returns (uint256 baseTokenAmountAfterFee)
   {
     uint256 baseTokenAmount = (amount * _baseTokenDenominator) / 1e18;
     uint256 fee = (baseTokenAmount * _withdrawFee) / FEE_DENOMINATOR;
@@ -95,7 +96,7 @@ contract Collateral is
       require(baseTokenAmount > 0, "amount = 0");
     }
     _burn(msg.sender, amount);
-    uint256 baseTokenAmountAfterFee = baseTokenAmount - fee;
+    baseTokenAmountAfterFee = baseTokenAmount - fee;
     if (address(_withdrawHook) != address(0)) {
       _baseToken.approve(address(_withdrawHook), fee);
       _withdrawHook.hook(

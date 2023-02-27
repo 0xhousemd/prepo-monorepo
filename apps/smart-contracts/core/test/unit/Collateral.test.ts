@@ -1199,7 +1199,6 @@ describe('=> Collateral', () => {
       const tx = await collateral.connect(user).withdraw(user.address, amountToWithdraw)
 
       await expect(tx).to.not.emit(baseToken, 'Approval')
-      expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.eq(0)
     })
 
     it('calls withdraw hook with correct parameters', async () => {
@@ -1229,6 +1228,19 @@ describe('=> Collateral', () => {
       await expect(tx)
         .to.emit(collateral, 'Withdraw')
         .withArgs(user.address, user.address, expectedBT.sub(fee), fee)
+    })
+
+    it('returns base token transferred to user', async () => {
+      const amountToWithdraw = await collateral.balanceOf(user.address)
+      expect(amountToWithdraw).to.be.gt(0)
+      const expectedBT = amountToWithdraw.mul(USDC_DENOMINATOR).div(parseEther('1'))
+      const fee = expectedBT.mul(await collateral.getWithdrawFee()).div(FEE_DENOMINATOR)
+      expect(fee).gt(0)
+      expect(await baseToken.allowance(collateral.address, withdrawHook.address)).to.be.eq(0)
+
+      expect(await collateral.connect(user).callStatic.withdraw(user.address, amountToWithdraw)).eq(
+        expectedBT.sub(fee)
+      )
     })
 
     afterEach(() => {
