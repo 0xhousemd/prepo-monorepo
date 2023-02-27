@@ -29,7 +29,6 @@ export const DEPOSIT_HOOK_ROLES = [
 export const WITHDRAW_HOOK_ROLES = [
   id('setCollateral'),
   id('setDepositRecord'),
-  id('setWithdrawalsAllowed'),
   id('setGlobalPeriodLength'),
   id('setUserPeriodLength'),
   id('setGlobalWithdrawLimitPerPeriod'),

@@ -2,7 +2,7 @@ import chai, { expect } from 'chai'
 import { ethers, network } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { id, parseEther } from 'ethers/lib/utils'
-import { ZERO_ADDRESS } from 'prepo-constants'
+import { ZERO_ADDRESS, MAX_GLOBAL_PERIOD_LENGTH } from 'prepo-constants'
 import { utils, snapshots } from 'prepo-hardhat'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { fakeAccountListFixture, withdrawHookFixture } from '../fixtures/HookFixture'
@@ -73,12 +73,15 @@ describe('=> WithdrawHook', () => {
       expect(await withdrawHook.getLastGlobalPeriodReset()).to.eq(0)
     })
 
+    it('sets max global period length', async () => {
+      expect(await withdrawHook.MAX_GLOBAL_PERIOD_LENGTH()).to.eq(MAX_GLOBAL_PERIOD_LENGTH)
+    })
+
     it('sets role constants to the correct hash', async () => {
       expect(await withdrawHook.SET_TREASURY_ROLE()).to.eq(id('setTreasury'))
       expect(await withdrawHook.SET_TOKEN_SENDER_ROLE()).to.eq(id('setTokenSender'))
       expect(await withdrawHook.SET_COLLATERAL_ROLE()).to.eq(id('setCollateral'))
       expect(await withdrawHook.SET_DEPOSIT_RECORD_ROLE()).to.eq(id('setDepositRecord'))
-      expect(await withdrawHook.SET_WITHDRAWALS_ALLOWED_ROLE()).to.eq(id('setWithdrawalsAllowed'))
       expect(await withdrawHook.SET_GLOBAL_PERIOD_LENGTH_ROLE()).to.eq(id('setGlobalPeriodLength'))
       expect(await withdrawHook.SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE()).to.eq(
         id('setGlobalWithdrawLimitPerPeriod')
@@ -94,7 +97,6 @@ describe('=> WithdrawHook', () => {
     snapshotter.setupSnapshotContext('WithdrawHook-hook')
     before(async () => {
       await withdrawHook.setCollateral(fakeCollateral.address)
-      await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
       await withdrawHook.connect(deployer).setGlobalPeriodLength(TEST_GLOBAL_PERIOD_LENGTH)
       await withdrawHook
         .connect(deployer)
@@ -441,53 +443,6 @@ describe('=> WithdrawHook', () => {
     })
   })
 
-  describe('# setWithdrawalsAllowed', () => {
-    it('reverts if not role holder', async () => {
-      expect(
-        await withdrawHook.hasRole(await withdrawHook.SET_WITHDRAWALS_ALLOWED_ROLE(), user.address)
-      ).to.eq(false)
-
-      await expect(withdrawHook.connect(user).setWithdrawalsAllowed(true)).revertedWith(
-        `AccessControl: account ${user.address.toLowerCase()} is missing role ${await withdrawHook.SET_WITHDRAWALS_ALLOWED_ROLE()}`
-      )
-    })
-
-    it('sets to false', async () => {
-      await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
-      expect(await withdrawHook.withdrawalsAllowed()).to.not.eq(false)
-
-      await withdrawHook.connect(deployer).setWithdrawalsAllowed(false)
-
-      expect(await withdrawHook.withdrawalsAllowed()).to.eq(false)
-    })
-
-    it('sets to true', async () => {
-      expect(await withdrawHook.withdrawalsAllowed()).to.not.eq(true)
-
-      await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
-
-      expect(await withdrawHook.withdrawalsAllowed()).to.eq(true)
-    })
-
-    it('is idempotent', async () => {
-      expect(await withdrawHook.withdrawalsAllowed()).to.not.eq(true)
-
-      await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
-
-      expect(await withdrawHook.withdrawalsAllowed()).to.eq(true)
-
-      await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
-
-      expect(await withdrawHook.withdrawalsAllowed()).to.eq(true)
-    })
-
-    it('emits WithdrawalsAllowedChange', async () => {
-      const tx = await withdrawHook.connect(deployer).setWithdrawalsAllowed(true)
-
-      await expect(tx).to.emit(withdrawHook, 'WithdrawalsAllowedChange').withArgs(true)
-    })
-  })
-
   describe('# setGlobalPeriodLength', () => {
     it('reverts if not role holder', async () => {
       expect(
@@ -499,6 +454,12 @@ describe('=> WithdrawHook', () => {
       ).revertedWith(
         `AccessControl: account ${user.address.toLowerCase()} is missing role ${await withdrawHook.SET_GLOBAL_PERIOD_LENGTH_ROLE()}`
       )
+    })
+
+    it('reverts if > max period length', async () => {
+      await expect(
+        withdrawHook.connect(deployer).setGlobalPeriodLength(MAX_GLOBAL_PERIOD_LENGTH + 1)
+      ).revertedWith('Exceeds period limit')
     })
 
     it('sets to zero', async () => {
@@ -516,6 +477,14 @@ describe('=> WithdrawHook', () => {
       await withdrawHook.connect(deployer).setGlobalPeriodLength(TEST_GLOBAL_PERIOD_LENGTH)
 
       expect(await withdrawHook.getGlobalPeriodLength()).to.eq(TEST_GLOBAL_PERIOD_LENGTH)
+    })
+
+    it('sets to max period length', async () => {
+      expect(await withdrawHook.getGlobalPeriodLength()).to.not.eq(MAX_GLOBAL_PERIOD_LENGTH)
+
+      await withdrawHook.connect(deployer).setGlobalPeriodLength(MAX_GLOBAL_PERIOD_LENGTH)
+
+      expect(await withdrawHook.getGlobalPeriodLength()).to.eq(MAX_GLOBAL_PERIOD_LENGTH)
     })
 
     it('is idempotent', async () => {

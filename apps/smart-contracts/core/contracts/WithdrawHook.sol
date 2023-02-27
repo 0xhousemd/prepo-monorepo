@@ -16,17 +16,16 @@ contract WithdrawHook is
   TokenSenderCaller,
   TreasuryCaller
 {
-  bool private _withdrawalsAllowed;
   uint256 private _globalPeriodLength;
   uint256 private _globalWithdrawLimitPerPeriod;
   uint256 private _lastGlobalPeriodReset;
   uint256 private _globalAmountWithdrawnThisPeriod;
 
+  uint256 public constant override MAX_GLOBAL_PERIOD_LENGTH = 7 days;
+
   bytes32 public constant SET_COLLATERAL_ROLE = keccak256("setCollateral");
   bytes32 public constant SET_DEPOSIT_RECORD_ROLE =
     keccak256("setDepositRecord");
-  bytes32 public constant SET_WITHDRAWALS_ALLOWED_ROLE =
-    keccak256("setWithdrawalsAllowed");
   bytes32 public constant SET_GLOBAL_PERIOD_LENGTH_ROLE =
     keccak256("setGlobalPeriodLength");
   bytes32 public constant SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE =
@@ -48,7 +47,6 @@ contract WithdrawHook is
     uint256 amountBeforeFee,
     uint256 amountAfterFee
   ) external override onlyCollateral {
-    require(_withdrawalsAllowed, "Withdrawals not allowed");
     if (_lastGlobalPeriodReset + _globalPeriodLength < block.timestamp) {
       _lastGlobalPeriodReset = block.timestamp;
       _globalAmountWithdrawnThisPeriod = 0;
@@ -87,20 +85,15 @@ contract WithdrawHook is
     super.setDepositRecord(depositRecord);
   }
 
-  function setWithdrawalsAllowed(bool withdrawalsAllowed)
-    external
-    override
-    onlyRole(SET_WITHDRAWALS_ALLOWED_ROLE)
-  {
-    _withdrawalsAllowed = withdrawalsAllowed;
-    emit WithdrawalsAllowedChange(withdrawalsAllowed);
-  }
-
   function setGlobalPeriodLength(uint256 globalPeriodLength)
     external
     override
     onlyRole(SET_GLOBAL_PERIOD_LENGTH_ROLE)
   {
+    require(
+      globalPeriodLength <= MAX_GLOBAL_PERIOD_LENGTH,
+      "Exceeds period limit"
+    );
     _globalPeriodLength = globalPeriodLength;
     emit GlobalPeriodLengthChange(globalPeriodLength);
   }
@@ -126,10 +119,6 @@ contract WithdrawHook is
     onlyRole(SET_TOKEN_SENDER_ROLE)
   {
     super.setTokenSender(tokenSender);
-  }
-
-  function withdrawalsAllowed() external view override returns (bool) {
-    return _withdrawalsAllowed;
   }
 
   function getGlobalPeriodLength() external view override returns (uint256) {

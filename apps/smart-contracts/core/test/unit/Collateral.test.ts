@@ -80,7 +80,6 @@ describe('=> Collateral', () => {
 
   const setupWithdrawHook = (): void => {
     withdrawHook.getCollateral.returns(collateral.address)
-    withdrawHook.withdrawalsAllowed.returns(true)
     withdrawHook.getTreasury.returns(manager.address)
     withdrawHook.getTokenSender.returns(tokenSender.address)
   }

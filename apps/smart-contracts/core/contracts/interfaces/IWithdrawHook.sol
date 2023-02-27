@@ -4,21 +4,15 @@ pragma solidity =0.8.7;
 import "./IHook.sol";
 
 interface IWithdrawHook is IHook {
-  event WithdrawalsAllowedChange(bool allowed);
-
   event GlobalPeriodLengthChange(uint256 period);
 
   event GlobalWithdrawLimitPerPeriodChange(uint256 limit);
-
-  function setWithdrawalsAllowed(bool withdrawalsAllowed) external;
 
   function setGlobalPeriodLength(uint256 globalPeriodLength) external;
 
   function setGlobalWithdrawLimitPerPeriod(
     uint256 globalWithdrawLimitPerPeriod
   ) external;
-
-  function withdrawalsAllowed() external view returns (bool);
 
   function getGlobalPeriodLength() external view returns (uint256);
 
@@ -30,4 +24,6 @@ interface IWithdrawHook is IHook {
     external
     view
     returns (uint256);
+
+  function MAX_GLOBAL_PERIOD_LENGTH() external pure returns (uint256);
 }

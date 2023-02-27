@@ -231,11 +231,8 @@ export abstract class Base {
 
   public async configureWithdrawHookViaSigner(
     signer: SignerWithAddress,
-    withdrawalsAllowed?: boolean,
     globalPeriodLength?: BigNumberish,
-    userPeriodLength?: BigNumberish,
-    globalWithdrawLimitPerPeriod?: BigNumberish,
-    userWithdrawLimitPerPeriod?: BigNumberish
+    globalWithdrawLimitPerPeriod?: BigNumberish
   ): Promise<void> {
     await setContractIfNotAlreadySet(
       signer,
@@ -251,27 +248,15 @@ export abstract class Base {
       'getDepositRecord',
       'setDepositRecord'
     )
-    if (withdrawalsAllowed !== undefined)
-      await sendTxAndWait(await this.collateral.withdrawHook.setWithdrawalsAllowed(true))
     if (globalPeriodLength !== undefined)
       await sendTxAndWait(
         await this.collateral.withdrawHook.connect(signer).setGlobalPeriodLength(globalPeriodLength)
-      )
-    if (userPeriodLength !== undefined)
-      await sendTxAndWait(
-        await this.collateral.withdrawHook.connect(signer).setUserPeriodLength(userPeriodLength)
       )
     if (globalWithdrawLimitPerPeriod !== undefined)
       await sendTxAndWait(
         await this.collateral.withdrawHook
           .connect(signer)
           .setGlobalWithdrawLimitPerPeriod(globalWithdrawLimitPerPeriod)
-      )
-    if (userWithdrawLimitPerPeriod !== undefined)
-      await sendTxAndWait(
-        await this.collateral.withdrawHook
-          .connect(signer)
-          .setUserWithdrawLimitPerPeriod(userWithdrawLimitPerPeriod)
       )
   }
 

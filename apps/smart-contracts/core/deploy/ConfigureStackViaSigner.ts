@@ -1,7 +1,12 @@
 /* eslint-disable no-console */
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { ChainId, DEPLOYMENT_NAMES, PERCENT_DENOMINATOR } from 'prepo-constants'
+import {
+  ChainId,
+  DEPLOYMENT_NAMES,
+  PERCENT_DENOMINATOR,
+  MAX_GLOBAL_PERIOD_LENGTH,
+} from 'prepo-constants'
 import { deployNonUpgradeableContract } from 'prepo-hardhat'
 import { getNetworkByChainId } from 'prepo-utils'
 import dotenv from 'dotenv'
@@ -77,11 +82,8 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
       treasury: signer.address,
     },
     withdrawHook: {
-      withdrawalsAllowed: true,
-      globalPeriodLength: 0,
-      userPeriodLength: 0,
+      globalPeriodLength: MAX_GLOBAL_PERIOD_LENGTH,
       globalWithdrawLimitPerPeriod: 0,
-      userWithdrawLimitPerPeriod: 0,
     },
     managerWithdrawHook: {
       minReservePercentage: 0,
@@ -122,11 +124,8 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
   console.log('Configuring WithdrawHook via Signer...')
   await core.configureWithdrawHookViaSigner(
     signer,
-    deploymentParameters.withdrawHook.withdrawalsAllowed,
     deploymentParameters.withdrawHook.globalPeriodLength,
-    deploymentParameters.withdrawHook.userPeriodLength,
-    deploymentParameters.withdrawHook.globalWithdrawLimitPerPeriod,
-    deploymentParameters.withdrawHook.userWithdrawLimitPerPeriod
+    deploymentParameters.withdrawHook.globalWithdrawLimitPerPeriod
   )
   console.log('Configuring ManagerWithdrawHook via Signer...')
   await core.configureManagerWithdrawHookViaSigner(
@@ -135,7 +134,6 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
   )
   console.log('Configuring DepositRecord via Signer...')
   await core.configureDepositRecordViaSigner(
-    // TODO update this to add allowedMsgSenders and bypass allowlist
     signer,
     deploymentParameters.depositRecord.globalNetDepositCap,
     deploymentParameters.depositRecord.userDepositCap,
