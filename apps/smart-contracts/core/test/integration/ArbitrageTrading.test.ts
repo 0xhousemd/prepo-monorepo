@@ -12,7 +12,7 @@ import {
   fakeArbitrageBrokerFixture,
 } from '../fixtures/ArbitrageBrokerFixture'
 import { create2DeployerFixture } from '../fixtures/Create2DeployerFixtures'
-import { MockCore } from '../../harnesses/mock'
+import { MockCoreWithMockBaseToken } from '../../harnesses/mock'
 import { roleAssigners } from '../../helpers/roles'
 import {
   attachNonfungiblePositionManager,
@@ -61,7 +61,7 @@ const { Snapshotter } = snapshots
 const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> Arbitrage Trading', () => {
-  let core: MockCore
+  let core: MockCoreWithMockBaseToken
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
   let defaultMarketParams: PrePOMarketParams
@@ -116,7 +116,7 @@ describe('=> Arbitrage Trading', () => {
         },
       ],
     })
-    core = await MockCore.Instance.init(ethers)
+    core = await MockCoreWithMockBaseToken.Instance.init(ethers)
     ;[deployer, governance] = core.accounts
     await core.baseToken.connect(deployer).mint(governance.address, parseEther('100000'))
     defaultMarketParams = {

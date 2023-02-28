@@ -9,21 +9,22 @@ import { JUNK_ADDRESS } from 'prepo-constants'
 import { getPermitFromSignature } from '../utils'
 import { depositTradeHelperFixture } from '../fixtures/DepositTradeHelperFixture'
 import { fakeSwapRouterFixture } from '../fixtures/UniswapFixtures'
-import { MockCore } from '../../harnesses/mock'
+import { MockCoreWithMockBaseToken } from '../../harnesses/mock'
 import { DepositTradeHelper, IDepositTradeHelper, SwapRouter } from '../../types/generated'
 import { getCollateralAmountForDeposit } from '../../helpers'
 
-const { getLastTimestamp, setNextTimestamp } = utils
+const { setNextTimestamp, nowPlusMonths } = utils
 
 chai.use(smock.matchers)
 const { Snapshotter } = snapshots
 const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> DepositTradeHelper', () => {
-  let core: MockCore
+  let core: MockCoreWithMockBaseToken
   let swapRouter: FakeContract<SwapRouter>
   let depositTradeHelper: DepositTradeHelper
   let user: SignerWithAddress
+  const TEST_TIMESTAMP = nowPlusMonths(1)
   snapshotter.setupSnapshotContext('DepositTradeHelper')
 
   const junkPermit = <IDepositTradeHelper.PermitStruct>{
@@ -41,7 +42,7 @@ describe('=> DepositTradeHelper', () => {
   }
 
   before(async () => {
-    core = await MockCore.Instance.init(ethers)
+    core = await MockCoreWithMockBaseToken.Instance.init(ethers)
     ;[user] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
     depositTradeHelper = await depositTradeHelperFixture(
@@ -127,15 +128,14 @@ describe('=> DepositTradeHelper', () => {
       it('ignores base token approval if deadline = 0', async () => {
         await core.baseToken.connect(user).approve(depositTradeHelper.address, baseTokenToDeposit)
         expect(junkPermit.deadline).to.eq(0)
-        const timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         const collateralPermit = await getPermitFromSignature(
           core.collateral,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         const tx = await depositTradeHelper
           .connect(user)
@@ -150,15 +150,14 @@ describe('=> DepositTradeHelper', () => {
           .connect(user)
           .approve(depositTradeHelper.address, expectedCollateralMinted)
         expect(junkPermit.deadline).to.eq(0)
-        const timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         const baseTokenPermit = await getPermitFromSignature(
           core.baseToken,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         const tx = await depositTradeHelper
           .connect(user)
@@ -190,15 +189,14 @@ describe('=> DepositTradeHelper', () => {
           .connect(user)
           .approve(depositTradeHelper.address, expectedCollateralMinted)
         expect(await core.baseToken.allowance(user.address, depositTradeHelper.address)).to.eq(0)
-        const timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         const baseTokenPermit = await getPermitFromSignature(
           core.baseToken,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)
@@ -212,15 +210,14 @@ describe('=> DepositTradeHelper', () => {
       it('processes collateral approval permit from user', async () => {
         await core.baseToken.connect(user).approve(depositTradeHelper.address, baseTokenToDeposit)
         expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).to.eq(0)
-        const timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         const collateralPermit = await getPermitFromSignature(
           core.collateral,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)
@@ -234,22 +231,21 @@ describe('=> DepositTradeHelper', () => {
       it('processes both permits', async () => {
         expect(await core.baseToken.allowance(user.address, depositTradeHelper.address)).to.eq(0)
         expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).to.eq(0)
-        const timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         const baseTokenPermit = await getPermitFromSignature(
           core.baseToken,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
         const collateralPermit = await getPermitFromSignature(
           core.collateral,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)
@@ -267,32 +263,30 @@ describe('=> DepositTradeHelper', () => {
     describe('if all permits provided', () => {
       let baseTokenPermit: IDepositTradeHelper.PermitStruct
       let collateralPermit: IDepositTradeHelper.PermitStruct
-      let timestampToSignFor: number
 
       snapshotter.setupSnapshotContext('DepositTradeHelper-depositAndTrade-allPermitsProvided')
 
       before(async () => {
-        timestampToSignFor = (await getLastTimestamp(ethers.provider)) + 5
         baseTokenPermit = await getPermitFromSignature(
           core.baseToken,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
         collateralPermit = await getPermitFromSignature(
           core.collateral,
           user,
           depositTradeHelper.address,
           ethers.constants.MaxUint256,
-          timestampToSignFor
+          TEST_TIMESTAMP
         )
         await snapshotter.saveSnapshot()
       })
 
       it('reverts if insufficient base token', async () => {
         const userBTBalanceBefore = await core.baseToken.balanceOf(user.address)
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await expect(
           depositTradeHelper
@@ -308,7 +302,7 @@ describe('=> DepositTradeHelper', () => {
 
       it('takes `baseTokenAmount` from user prior to minting Collateral', async () => {
         const userBTBalanceBefore = await core.baseToken.balanceOf(user.address)
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)
@@ -326,7 +320,7 @@ describe('=> DepositTradeHelper', () => {
       })
 
       it('mints Collateral to user prior to transferring back', async () => {
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)
@@ -337,7 +331,7 @@ describe('=> DepositTradeHelper', () => {
       })
 
       it('transfers newly minted Collateral back prior to calling swap', async () => {
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)
@@ -362,7 +356,7 @@ describe('=> DepositTradeHelper', () => {
           amountOutMinimum: parseEther('1'),
           sqrtPriceLimitX96: parseEther('2'),
         }
-        await setNextTimestamp(ethers.provider, timestampToSignFor)
+        await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
         await depositTradeHelper
           .connect(user)

@@ -8,7 +8,7 @@ import { getPrePOAddressForNetwork } from 'prepo-constants'
 import { utils, snapshots } from 'prepo-hardhat'
 import { parseEther } from '@ethersproject/units'
 import { create2DeployerFixture } from '../fixtures/Create2DeployerFixtures'
-import { MockCore } from '../../harnesses/mock'
+import { MockCoreWithLiveBaseToken } from '../../harnesses/mock'
 import { roleAssigners } from '../../helpers/roles'
 import { attachSwapRouter } from '../../helpers/uniswap'
 import { PrePOMarketParams } from '../../types'
@@ -32,7 +32,7 @@ const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> DepositTradeHelper', () => {
   let weth: ERC20
-  let core: MockCore
+  let core: MockCoreWithLiveBaseToken
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
   let user: SignerWithAddress
@@ -50,8 +50,6 @@ describe('=> DepositTradeHelper', () => {
   const TEST_DEPOSIT_AMOUNT = parseEther('1')
   const TEST_DEPOSIT_FEE = 10000 // 1%
   const TEST_WITHDRAW_FEE = 10000 // 1%
-  const GOVERNANCE_COLLATERAL_SUPPLY = parseEther('10')
-  const GOVERNANCE_LSTOKEN_SUPPLY = parseEther('10')
 
   snapshotter.setupSnapshotContext('DepositTradeHelper')
   before(async () => {
@@ -71,7 +69,7 @@ describe('=> DepositTradeHelper', () => {
       ],
     })
     weth = await ERC20AttachFixture(ethers, getPrePOAddressForNetwork('WETH', 'arbitrumOne'))
-    core = await MockCore.Instance.init(ethers, weth)
+    core = await MockCoreWithLiveBaseToken.Instance.init(ethers, weth)
     ;[deployer, governance, user] = core.accounts
     /**
      * Mint WETH to governance, doing it via the fallback function which
@@ -113,18 +111,6 @@ describe('=> DepositTradeHelper', () => {
     depositTradeHelper = await depositTradeHelperFixture(
       core.collateral.address,
       swapRouter.address
-    )
-    // Supply governance with Collateral and LongShort tokens
-    await core.mintLSFromBaseToken(
-      governance,
-      governance,
-      GOVERNANCE_COLLATERAL_SUPPLY,
-      TEST_NAME_SUFFIX
-    )
-    await core.mintCollateralFromBaseToken(
-      governance,
-      governance.address,
-      GOVERNANCE_LSTOKEN_SUPPLY
     )
     await snapshotter.saveSnapshot()
   })

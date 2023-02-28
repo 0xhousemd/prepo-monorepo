@@ -11,7 +11,7 @@ import { arbitrageBrokerFixture } from '../fixtures/ArbitrageBrokerFixture'
 import { fakeLongShortTokenFixture } from '../fixtures/LongShortTokenFixture'
 import { fakePrePOMarketFixture } from '../fixtures/PrePOMarketFixture'
 import { fakeSwapRouterFixture } from '../fixtures/UniswapFixtures'
-import { MockCore } from '../../harnesses/mock'
+import { MockCoreWithMockBaseToken } from '../../harnesses/mock'
 import { roleAssigners } from '../../helpers'
 import {
   ArbitrageBroker,
@@ -28,7 +28,7 @@ const { Snapshotter } = snapshots
 const snapshotter = new Snapshotter(ethers, network)
 
 describe('=> ArbitrageBroker', () => {
-  let core: MockCore
+  let core: MockCoreWithMockBaseToken
   let deployer: SignerWithAddress
   let governance: SignerWithAddress
   let swapRouter: FakeContract<SwapRouter>
@@ -53,7 +53,7 @@ describe('=> ArbitrageBroker', () => {
 
   snapshotter.setupSnapshotContext('ArbitrageBroker')
   before(async () => {
-    core = await MockCore.Instance.init(ethers)
+    core = await MockCoreWithMockBaseToken.Instance.init(ethers)
     ;[deployer, governance] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
     arbitrageBroker = await arbitrageBrokerFixture(core.collateral.address, swapRouter.address)

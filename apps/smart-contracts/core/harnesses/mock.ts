@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types'
 import { MockContract } from '@defi-wonderland/smock'
 import { utils } from 'prepo-hardhat'
@@ -22,8 +23,7 @@ import { smockTokenSenderFixture } from '../test/fixtures/TokenSenderFixture'
 import { create2LongShortTokenFixture } from '../test/fixtures/LongShortTokenFixture'
 import { smockPrePOMarketFixture } from '../test/fixtures/PrePOMarketFixture'
 
-export class MockCore extends Base {
-  private static _instance: MockCore
+abstract class MockCore extends Base {
   public rewardToken: MockContract<TestERC20>
   public collateral: MockExtendedCollateral
   public depositRecord: MockExtendedDepositRecord
@@ -32,30 +32,10 @@ export class MockCore extends Base {
     [suffix: string]: MockExtendedMarket
   }
 
-  public static get Instance(): MockCore {
-    const instance = this._instance
-    if (instance) {
-      return instance
-    }
-    this._instance = new this()
-    return this._instance
-  }
-
-  public async init(ethers: HardhatEthersHelpers, baseToken?: ERC20): Promise<MockCore> {
+  async initWithoutBaseToken(ethers: HardhatEthersHelpers): Promise<MockCore> {
     this.ethers = ethers
     this.accounts = await ethers.getSigners()
-    this.baseToken =
-      baseToken === undefined ? await smockTestERC20Fixture('Test WETH', 'TWETH', 18) : baseToken
     this.rewardToken = await smockTestERC20Fixture('Test PPO', 'TPPO', 18)
-    this.collateral = await smockCollateralFixture(
-      'prePO ETH Collateral',
-      'preETH',
-      this.baseToken.address,
-      await this.baseToken.decimals()
-    )
-    this.collateral.depositHook = await smockDepositHookFixture()
-    this.collateral.withdrawHook = await smockWithdrawHookFixture()
-    this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
     this.depositRecord = await smockDepositRecordFixture()
     this.tokenSender = await smockTokenSenderFixture(this.rewardToken.address, 18)
     this.markets = {}
@@ -96,5 +76,66 @@ export class MockCore extends Base {
     this.markets[tokenNameSuffix] = market
     this.markets[tokenNameSuffix].longToken = longToken
     this.markets[tokenNameSuffix].shortToken = shortToken
+  }
+}
+
+export class MockCoreWithMockBaseToken extends MockCore {
+  private static _instance: MockCoreWithMockBaseToken
+  public baseToken: MockContract<TestERC20>
+
+  public static get Instance(): MockCoreWithMockBaseToken {
+    const instance = this._instance
+    if (instance) {
+      return instance
+    }
+    this._instance = new this()
+    return this._instance
+  }
+
+  public async init(ethers: HardhatEthersHelpers): Promise<MockCoreWithMockBaseToken> {
+    await this.initWithoutBaseToken(ethers)
+    this.baseToken = await smockTestERC20Fixture('Test ETH', 'TETH', 18)
+    this.collateral = await smockCollateralFixture(
+      'prePO ETH Collateral',
+      'preETH',
+      this.baseToken.address,
+      await this.baseToken.decimals()
+    )
+    this.collateral.depositHook = await smockDepositHookFixture()
+    this.collateral.withdrawHook = await smockWithdrawHookFixture()
+    this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
+    return this
+  }
+}
+
+export class MockCoreWithLiveBaseToken extends MockCore {
+  private static _instance: MockCoreWithLiveBaseToken
+  public baseToken: ERC20
+
+  public static get Instance(): MockCoreWithLiveBaseToken {
+    const instance = this._instance
+    if (instance) {
+      return instance
+    }
+    this._instance = new this()
+    return this._instance
+  }
+
+  public async init(
+    ethers: HardhatEthersHelpers,
+    baseToken: ERC20
+  ): Promise<MockCoreWithLiveBaseToken> {
+    await this.initWithoutBaseToken(ethers)
+    this.baseToken = baseToken
+    this.collateral = await smockCollateralFixture(
+      'prePO ETH Collateral',
+      'preETH',
+      this.baseToken.address,
+      await this.baseToken.decimals()
+    )
+    this.collateral.depositHook = await smockDepositHookFixture()
+    this.collateral.withdrawHook = await smockWithdrawHookFixture()
+    this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
+    return this
   }
 }
