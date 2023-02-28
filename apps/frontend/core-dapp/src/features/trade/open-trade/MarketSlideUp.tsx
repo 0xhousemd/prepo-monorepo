@@ -57,9 +57,9 @@ const MarketSlideUp: React.FC = () => {
           />
         )}
         {Object.entries(markets)
-          .filter(([id, market]) => id !== selectedMarket?.urlId && market.expired !== true)
+          .filter(([id, market]) => id !== selectedMarket?.urlId && market.resolved !== true)
           .map(([id, market]) =>
-            market.expired === undefined ? (
+            market.resolved === undefined ? (
               <PositionLoadingSkeleton key={id} />
             ) : (
               <SlideUpRow key={id} market={market} onClick={(): void => handleSelectMarket(id)} />

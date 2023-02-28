@@ -15,14 +15,19 @@ const ClosePositionButton: React.FC = () => {
     closePositionNeedApproval,
     insufficientBalanceForClosePosition,
     selectedPosition,
+    selectedMarket,
   } = tradeStore
   const { connected, isNetworkSupported } = web3Store
+
+  const selectedMarketResolved = !!selectedMarket?.resolved
 
   const buttonText = useMemo(() => {
     if (!selectedPosition) return 'Select a Position'
     if (closePositionButtonInitialLoading) return ''
     if (insufficientBalanceForClosePosition) return 'Insufficient Balance'
     if (closePositionNeedApproval) return 'Approve'
+
+    const verb = selectedMarketResolved ? 'Redeem' : 'Close'
 
     if (
       closePositionValueBN !== undefined &&
@@ -32,15 +37,16 @@ const ClosePositionButton: React.FC = () => {
       // mul 10000 because showing percentage + 2 decimals
       const percentageBN = closePositionValueBN.mul(10000).div(selectedPosition.totalValueBN)
       const percentage = formatUnits(percentageBN, 2)
-      if (percentageBN !== undefined) return `Close Position (${+percentage}%)`
+      if (percentageBN !== undefined) return `${verb} Position (${+percentage}%)`
     }
 
-    return 'Close Position'
+    return `${verb} Position`
   }, [
     closePositionButtonInitialLoading,
     closePositionNeedApproval,
     closePositionValueBN,
     insufficientBalanceForClosePosition,
+    selectedMarketResolved,
     selectedPosition,
   ])
 
@@ -50,7 +56,7 @@ const ClosePositionButton: React.FC = () => {
     if (closePositionNeedApproval) {
       tradeStore.approveClosePositions()
     } else {
-      tradeStore.closePosition()
+      tradeStore.closeOrRedeemPosition()
     }
   }
   return (

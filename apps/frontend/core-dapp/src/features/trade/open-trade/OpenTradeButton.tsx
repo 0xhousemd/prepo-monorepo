@@ -21,7 +21,7 @@ const OpenTradeButton: React.FC = () => {
   const buttonText = useMemo(() => {
     if (!selectedMarket) return 'Select a Market'
 
-    if (selectedMarket.expired) return 'Market Expired'
+    if (selectedMarket.resolved) return 'Market Closed'
 
     if (withinBounds === false) return 'Unprofitable Trade'
 

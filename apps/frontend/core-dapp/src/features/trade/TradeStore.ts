@@ -22,13 +22,13 @@ export class TradeStore {
   action: TradeAction = 'open'
   approving = false
   approvingClosePositions = false
-  closePositionAmountOutBN?: BigNumber
+  private closePositionMarketAmountOutBN?: BigNumber = undefined
   closeTradeHash?: string
   direction: Direction = DEFAULT_DIRECTION
-  closePositionValue = ''
+  private userClosePositionValue = ''
   closingPosition = false
   openTradeAmount = ''
-  openTradeAmountOutBN?: BigNumber
+  openTradeAmountOutBN?: BigNumber = undefined
   openTradeHash?: string
   openingTrade = false
   paymentTokenOverride?: Token = undefined
@@ -52,7 +52,7 @@ export class TradeStore {
         marketValuation: this.selectedMarket?.estimatedValuation,
       }),
       async ({ closePositionAmountBN, selectedPosition }) => {
-        this.closePositionAmountOutBN = undefined
+        this.closePositionMarketAmountOutBN = undefined
 
         const { address: preCTAddress } = this.root.preCTTokenStore
 
@@ -80,7 +80,7 @@ export class TradeStore {
             !output.cachedInAmount.eq(this.closePositionAmountBN)
 
           if (shouldNotUpdate) return
-          this.closePositionAmountOutBN = output.output
+          this.closePositionMarketAmountOutBN = output.output
         })
       }
     )
@@ -140,7 +140,7 @@ export class TradeStore {
   get openTradeButtonInitialLoading(): boolean {
     if (this.openTradeAmount === '') return false
     const loadingMarketExpiry =
-      this.selectedMarket !== undefined && this.selectedMarket.expired === undefined
+      this.selectedMarket !== undefined && this.selectedMarket.resolved === undefined
     return (
       this.needApproval === undefined ||
       this.openTradeAmountBN === undefined ||
@@ -187,7 +187,7 @@ export class TradeStore {
   }
 
   setClosePositionValue(value: string): void {
-    if (validateStringToBN(value)) this.closePositionValue = value
+    if (validateStringToBN(value)) this.userClosePositionValue = value
   }
 
   setCloseTradeHash(hash?: string): void {
@@ -281,6 +281,7 @@ export class TradeStore {
   get closePositionNeedApproval(): boolean | undefined {
     if (!this.selectedPosition || !this.root.web3Store.connected) return false
     if (this.closePositionAmount === undefined) return undefined
+    if (this.selectedMarket?.resolved) return false
 
     return this.selectedPosition.token.needToAllowFor(
       this.closePositionAmount,
@@ -541,7 +542,15 @@ export class TradeStore {
     })
   }
 
-  async closePosition(): Promise<void> {
+  closeOrRedeemPosition(): void {
+    if (this.selectedMarket?.resolved) {
+      this.redeemPosition()
+    } else {
+      this.closePosition()
+    }
+  }
+
+  private async closePosition(): Promise<void> {
     const { address: preCTAddress } = this.root.preCTTokenStore
 
     if (
@@ -576,7 +585,34 @@ export class TradeStore {
 
     runInAction(() => {
       this.closingPosition = false
-      if (!error) this.closePositionValue = ''
+      if (!error) this.userClosePositionValue = ''
+    })
+  }
+
+  private async redeemPosition(): Promise<void> {
+    const { selectedMarket, selectedPosition } = this
+    if (selectedPosition === undefined) return
+    const {
+      token: { balanceOfSigner },
+    } = selectedPosition
+
+    if (balanceOfSigner === undefined || selectedMarket === undefined) return
+
+    this.closingPosition = true
+    const { error } = await selectedMarket.redeem(
+      this.direction === 'long' ? balanceOfSigner : BigNumber.from(0),
+      this.direction === 'short' ? balanceOfSigner : BigNumber.from(0)
+      // TODO: add the third 'address' parameter when we migrate to new contracts
+    )
+
+    if (error) {
+      this.root.toastStore.errorToast('Redeem failed', error)
+    } else {
+      this.root.toastStore.successToast('Redeem was successful 🎉')
+    }
+
+    runInAction(() => {
+      this.closingPosition = false
     })
   }
 
@@ -591,7 +627,7 @@ export class TradeStore {
         this.openTradeAmountBN.eq(0) ||
         !this.withinBounds ||
         this.insufficientBalanceForOpenTrade ||
-        this.selectedMarket.expired ||
+        this.selectedMarket.resolved ||
         loadingValuationPrice
     )
   }
@@ -617,5 +653,36 @@ export class TradeStore {
     const amountOutAfterSlippage = +this.openTradeAmountOut * (1 - slippage)
 
     return +this.openTradeAmount / amountOutAfterSlippage
+  }
+
+  get closePositionValue(): string {
+    if (this.selectedMarket?.resolved) {
+      return this.selectedPosition?.totalValue ?? ''
+    }
+
+    return this.userClosePositionValue
+  }
+
+  private get redeemPositionAmountOutBN(): BigNumber | undefined {
+    const { selectedMarket, selectedPosition, direction } = this
+    if (selectedMarket === undefined || selectedPosition === undefined) return undefined
+    const { finalLongPrice, maxPrice } = selectedMarket
+    const {
+      token: { balanceOfSigner },
+    } = selectedPosition
+
+    if (finalLongPrice === undefined || maxPrice === undefined || balanceOfSigner === undefined) {
+      return undefined
+    }
+
+    if (direction === 'long') {
+      return balanceOfSigner.mul(finalLongPrice).div(maxPrice)
+    }
+
+    return balanceOfSigner.mul(maxPrice.sub(finalLongPrice)).div(maxPrice)
+  }
+
+  private get closePositionAmountOutBN(): BigNumber | undefined {
+    return this.redeemPositionAmountOutBN ?? this.closePositionMarketAmountOutBN
   }
 }

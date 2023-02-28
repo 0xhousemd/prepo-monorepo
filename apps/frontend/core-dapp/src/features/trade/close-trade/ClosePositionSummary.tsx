@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite'
 import styled from 'styled-components'
 import { useRootStore } from '../../../context/RootStoreProvider'
 import SummaryRecord from '../../../components/SummaryRecord'
-import { EstimateYourProfitLoss, EstimatedValuation } from '../../definitions/index'
+import { EstimateYourProfitLoss, EstimatedValuation } from '../../definitions'
 import { compactNumber } from '../../../utils/number-utils'
 
 const Profit = styled.span`
@@ -25,7 +25,10 @@ const ClosePositionSummary: React.FC = () => {
     closePositionValuation,
     closePositionPnlAmount,
     insufficientBalanceForClosePosition,
+    selectedMarket,
   } = tradeStore
+
+  const isMarketResolved = !!selectedMarket?.resolved
 
   const pnlText = useMemo(() => {
     // this line is only to get pass type check
@@ -54,17 +57,17 @@ const ClosePositionSummary: React.FC = () => {
   return (
     <Flex width="100%" flexDirection="column" px={12} pb={8} gap={4}>
       <SummaryRecord
-        label="Estimated Price"
+        label={isMarketResolved ? 'Final Price' : 'Estimated Price'}
         loading={closePositionValuation === undefined}
-        tooltip={<EstimatedValuation />}
+        tooltip={isMarketResolved ? undefined : <EstimatedValuation />}
       >
         ${closePositionValuation === undefined ? '' : compactNumber(closePositionValuation)}
       </SummaryRecord>
       {showPnL && (
         <SummaryRecord
-          label="Estimated PnL"
+          label={isMarketResolved ? 'PnL' : 'Estimated PnL'}
           loading={loadingPnl}
-          tooltip={<EstimateYourProfitLoss />}
+          tooltip={isMarketResolved ? undefined : <EstimateYourProfitLoss />}
         >
           {pnlText}&nbsp;(${compactNumber(Math.abs(closePositionPnlAmount ?? 0))})
         </SummaryRecord>

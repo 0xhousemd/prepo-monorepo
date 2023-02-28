@@ -31,7 +31,7 @@ const OpenTradeCurrencyInput: React.FC = () => {
       <CurrencyInput
         balance={balance}
         isBalanceZero={balanceBN?.eq(0)}
-        disabled={!selectedMarket || openingTrade || selectedMarket.expired}
+        disabled={!selectedMarket || openingTrade || selectedMarket.resolved}
         currency={{
           icon: paymentToken.iconName ?? 'cash',
           text: paymentToken.shortName ?? paymentToken.name,

@@ -5,6 +5,7 @@ import { action, makeObservable, observable, reaction, runInAction } from 'mobx'
 import { IconName } from 'prepo-ui'
 import { ContractReturn, ContractStore, Factory } from 'prepo-stores'
 import { SEC_IN_MS } from 'prepo-constants'
+import { makeError } from 'prepo-utils'
 import { UniswapPoolEntity } from './UniswapPoolEntity'
 import { Erc20Store } from './Erc20.entity'
 import { RootStore } from '../RootStore'
@@ -57,9 +58,11 @@ import { UNISWAP_MAX_DATAPOINTS } from '../graphs/UniswapV3GraphStore'
 
 type GetCeilingLongPrice = PrepoMarketAbi['functions']['getCeilingLongPrice']
 type GetCeilingValuation = PrepoMarketAbi['functions']['getCeilingValuation']
-type GetExpiryTime = PrepoMarketAbi['functions']['getExpiryTime']
+type GetFinalLongPrice = PrepoMarketAbi['functions']['getFinalLongPrice']
 type GetFloorLongPrice = PrepoMarketAbi['functions']['getFloorLongPrice']
 type GetFloorValuation = PrepoMarketAbi['functions']['getFloorValuation']
+type GetMaxPrice = PrepoMarketAbi['functions']['getMaxPrice']
+type Redeem = PrepoMarketAbi['functions']['redeem']
 
 const getProjectStartedHours = (): number => {
   const now = new Date().getTime()
@@ -250,7 +253,7 @@ export class MarketEntity
     this.selectedPool = this[`${direction}Pool`]
   }
 
-  // contract calls
+  // region contract calls
 
   getCeilingLongPrice(
     ...params: Parameters<GetCeilingLongPrice>
@@ -264,8 +267,8 @@ export class MarketEntity
     return this.call<GetCeilingValuation>('getCeilingValuation', params, { subscribe: false })
   }
 
-  getExpiryTime(...params: Parameters<GetExpiryTime>): ContractReturn<GetExpiryTime> {
-    return this.call<GetExpiryTime>('getExpiryTime', params, { subscribe: false })
+  getFinalLongPrice(...params: Parameters<GetFinalLongPrice>): ContractReturn<GetFinalLongPrice> {
+    return this.call<GetFinalLongPrice>('getFinalLongPrice', params)
   }
 
   getFloorLongPrice(...params: Parameters<GetFloorLongPrice>): ContractReturn<GetFloorLongPrice> {
@@ -276,7 +279,23 @@ export class MarketEntity
     return this.call<GetFloorValuation>('getFloorValuation', params, { subscribe: false })
   }
 
-  // getters
+  getMaxPrice(...params: Parameters<GetMaxPrice>): ContractReturn<GetFloorValuation> {
+    return this.call<GetMaxPrice>('getMaxPrice', params, { subscribe: false })
+  }
+
+  async redeem(...params: Parameters<Redeem>): Promise<{ error?: Error }> {
+    try {
+      const { wait } = await this.sendTransaction<Redeem>('redeem', params)
+      await wait()
+      return {}
+    } catch (error: unknown) {
+      return { error: makeError(error) }
+    }
+  }
+
+  // endregion
+
+  // region getters
 
   get ceilingLongPrice(): BigNumber | undefined {
     return getContractCall(this.getCeilingLongPrice())
@@ -284,6 +303,29 @@ export class MarketEntity
 
   get ceilingValuation(): number | undefined {
     return getContractCall(this.getCeilingValuation())?.toNumber()
+  }
+
+  get finalLongPrice(): BigNumber | undefined {
+    const { maxPrice } = this
+    const finalLongPrice = getContractCall(this.getFinalLongPrice())
+
+    if (maxPrice === undefined || finalLongPrice === undefined) return undefined
+
+    const { overrideFinalLongPayout } = this.root.debugStore
+
+    if (overrideFinalLongPayout !== undefined) {
+      return maxPrice.mul(overrideFinalLongPayout).div(100)
+    }
+
+    // The smart contract initially sets finalLongPrice to maxPrice + 1
+    // to indicate the absence of a final price (since 0 could be a valid finalLongPrice)
+    if (finalLongPrice.gt(maxPrice)) return undefined
+
+    return finalLongPrice
+  }
+
+  get maxPrice(): BigNumber | undefined {
+    return getContractCall(this.getMaxPrice())
   }
 
   /**
@@ -300,16 +342,8 @@ export class MarketEntity
     return { value: valuation, denominated: valuation / VALUATION_DENOMINATOR }
   }
 
-  get expiryTime(): number | undefined {
-    const expiryTimestampInSeconds = getContractCall(this.getExpiryTime())
-    if (expiryTimestampInSeconds === undefined) return undefined
-    return expiryTimestampInSeconds.toNumber() * SEC_IN_MS
-  }
-
-  get expired(): boolean | undefined {
-    if (this.expiryTime === undefined) return undefined
-    const { nowInMs } = this.root.timerStore
-    return this.expiryTime <= nowInMs
+  get resolved(): boolean {
+    return this.finalLongPrice !== undefined
   }
 
   get floorLongPrice(): BigNumber | undefined {
@@ -463,6 +497,8 @@ export class MarketEntity
       currentValuation: this.estimatedValuation?.denominated,
     }
   }
+
+  // endregion
 
   getProfitLossOnExit(
     direction: Direction,

@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import ClosePositionButton from './ClosePositionButton'
 import ClosePositionSummary from './ClosePositionSummary'
 import PositionsSlideUp from './PositionsSlideUp'
+import { DebugControls } from './DebugControls'
 import { useRootStore } from '../../../context/RootStoreProvider'
 
 const Wrapper = styled.div`
@@ -17,7 +18,7 @@ const Wrapper = styled.div`
 const CloseTrade: React.FC = () => {
   const { tradeStore, web3Store } = useRootStore()
   const { connected } = web3Store
-  const { closingPosition, closePositionValue, selectedPosition } = tradeStore
+  const { closingPosition, closePositionValue, selectedPosition, selectedMarket } = tradeStore
 
   return (
     <Wrapper>
@@ -25,7 +26,7 @@ const CloseTrade: React.FC = () => {
       <CurrencyInput
         balance={selectedPosition?.totalValue}
         currency={{ icon: 'cash', text: 'USD' }}
-        disabled={!selectedPosition || !connected || closingPosition}
+        disabled={!selectedPosition || !connected || closingPosition || !!selectedMarket?.resolved}
         isBalanceZero={selectedPosition?.totalValueBN?.eq(0)}
         onChange={tradeStore.setClosePositionValue}
         showBalance
@@ -33,6 +34,7 @@ const CloseTrade: React.FC = () => {
       />
       <ClosePositionButton />
       <ClosePositionSummary />
+      <DebugControls />
     </Wrapper>
   )
 }

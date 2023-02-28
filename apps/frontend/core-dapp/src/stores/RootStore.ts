@@ -17,12 +17,13 @@ import { DepositRecordStore } from './DepositRecordStore'
 import { TokenSenderStore } from './TokenSenderStore'
 import { MediaQueryStore } from './MediaQueryStore'
 import { WithdrawHookStore } from './WithdrawHookStore'
+import { DebugStore } from './DebugStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
 import { AdvancedSettingsStore } from '../components/AdvancedSettingsModal/AdvancedSettingsStore'
 import { DepositStore } from '../features/deposit/DepositStore'
 import { FilterStore } from '../components/Filter/FilterStore'
-import { PROJECT_NAME, USDC_SYMBOL } from '../lib/constants'
+import { PROJECT_NAME } from '../lib/constants'
 import { WithdrawStore } from '../features/withdraw/WithdrawStore'
 import { SupportedContracts } from '../lib/contract.types'
 import { PortfolioStore } from '../features/portfolio/PortfolioStore'
@@ -75,6 +76,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   tokenSenderStore: TokenSenderStore
   unstakeStore: UnstakeStore
   mediaQueryStore: MediaQueryStore
+  debugStore: DebugStore
 
   constructor() {
     super({
@@ -114,5 +116,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.tokenSenderStore = new TokenSenderStore(this)
     this.unstakeStore = new UnstakeStore(this)
     this.mediaQueryStore = new MediaQueryStore()
+    this.debugStore = new DebugStore()
   }
 }
