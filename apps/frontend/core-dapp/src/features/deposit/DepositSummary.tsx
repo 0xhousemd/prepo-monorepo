@@ -5,6 +5,7 @@ import SummaryRecord from '../../components/SummaryRecord'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { EstimatedReceivedAmount } from '../definitions'
 import { PPORewardSummaryRecord } from '../../components/PpoRewardSummaryRecord'
+import { displayEth } from '../../utils/number-utils'
 
 const DepositSummary: React.FC = () => {
   const { depositStore } = useRootStore()
@@ -19,10 +20,7 @@ const DepositSummary: React.FC = () => {
         {estimatedReceivedAmount === undefined ? (
           <Skeleton height="22px" width="64px" />
         ) : (
-          `$${Intl.NumberFormat(undefined, {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: 2,
-          }).format(estimatedReceivedAmount)}`
+          displayEth(estimatedReceivedAmount)
         )}
       </SummaryRecord>
 

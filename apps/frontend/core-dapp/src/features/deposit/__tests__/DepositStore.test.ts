@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BigNumber, utils } from 'ethers'
+import { utils } from 'ethers'
+import { parseEther } from 'ethers/lib/utils'
 import { configure } from 'mobx'
 import { ERC20_UNITS } from '../../../lib/constants'
 
@@ -8,10 +9,10 @@ configure({ safeDescriptors: false })
 
 const { rootStore } = global
 const amountToDeposit = '1000.0'
-const USDC_BALANCE = 2000
+const ETH_BALANCE = 2000
 
 describe('DepositStore tests', () => {
-  let spyBaseTokenBalance: jest.SpyInstance
+  let spyGetTokenBalance: jest.SpyInstance
   let spyNeedApproval: jest.SpyInstance
   let spySuccessToast: jest.SpyInstance
   beforeAll(() => {
@@ -21,21 +22,15 @@ describe('DepositStore tests', () => {
       .spyOn(rootStore.depositStore, 'needApproval', 'get')
       .mockReturnValue(false)
 
-    spyBaseTokenBalance = jest
-      .spyOn(rootStore.baseTokenStore, 'tokenBalance', 'get')
-      .mockReturnValue(USDC_BALANCE)
+    const ethBalanceBN = parseEther(`${ETH_BALANCE}`)
 
-    const USDC_BALANCE_BIGNUMBER = rootStore.baseTokenStore.parseUnits(
-      `${USDC_BALANCE}`
-    ) as BigNumber
-
-    jest
-      .spyOn(rootStore.baseTokenStore, 'balanceOfSigner', 'get')
-      .mockReturnValue(USDC_BALANCE_BIGNUMBER)
+    spyGetTokenBalance = jest
+      .spyOn(rootStore.tokensStore, 'getTokenBalanceBN')
+      .mockImplementation(() => ethBalanceBN)
   })
 
   afterAll(() => {
-    spyBaseTokenBalance.mockRestore()
+    spyGetTokenBalance.mockRestore()
     spyNeedApproval.mockRestore()
     spySuccessToast.mockRestore()
   })

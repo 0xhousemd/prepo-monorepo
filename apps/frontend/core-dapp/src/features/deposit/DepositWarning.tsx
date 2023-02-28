@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite'
 import styled from 'styled-components'
 import { Alert as BaseAlert, Icon, spacingIncrement } from 'prepo-ui'
 import { useRootStore } from '../../context/RootStoreProvider'
-import { compactNumber, formatUsd } from '../../utils/number-utils'
+import { compactNumber, displayEth } from '../../utils/number-utils'
 
 export const Alert = styled(BaseAlert).attrs({
   color: 'neutral1',
@@ -73,7 +73,7 @@ const DepositWarning: React.FC = () => {
       )
     }
     case 'exceeded-after-transfer': {
-      const formattedRemainingAmount = formatUsd(+depositLimit.remainingUnits)
+      const formattedRemainingAmount = displayEth(+depositLimit.remainingUnits)
 
       return (
         <Alert

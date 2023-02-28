@@ -1,3 +1,4 @@
+import { formatEther, parseEther } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { makeAutoObservable, runInAction, reaction } from 'mobx'
 import { validateStringToBN } from 'prepo-utils'
@@ -62,7 +63,9 @@ export class DepositStore {
 
   async approve(): Promise<void> {
     this.approving = true
-    await this.root.baseTokenStore.unlockPermanently('preCT')
+    // native eth dont require approval
+    if (this.depositToken.type === 'native') return
+    await this.depositToken.erc20.unlockPermanently('preCT')
     runInAction(() => {
       this.approving = false
     })
@@ -113,7 +116,8 @@ export class DepositStore {
 
   get depositAmountBN(): BigNumber | undefined {
     if (this.depositAmount === '') return BigNumber.from(0)
-    return this.root.baseTokenStore.parseUnits(this.depositAmount)
+    if (this.depositToken.type === 'native') return parseEther(this.depositAmount)
+    return this.depositToken.erc20.parseUnits(this.depositAmount)
   }
 
   private get depositFeesBN(): BigNumber | undefined {
@@ -149,21 +153,23 @@ export class DepositStore {
 
   get insufficientBalance(): boolean | undefined {
     if (!this.root.web3Store.connected) return false
+    const balanceBN = this.root.tokensStore.getTokenBalanceBN(this.depositToken)
 
-    const { balanceOfSigner } = this.root.baseTokenStore
-    if (balanceOfSigner === undefined || this.depositAmountBN === undefined) return undefined
+    if (balanceBN === undefined || this.depositAmountBN === undefined) return undefined
 
-    return this.depositAmountBN.gt(balanceOfSigner)
+    return this.depositAmountBN.gt(balanceBN)
   }
 
   get isLoadingBalance(): boolean {
     if (!this.root.web3Store.connected) return false
-    return this.root.baseTokenStore.balanceOfSigner === undefined
+    const balance = this.root.tokensStore.getTokenBalanceBN(this.depositToken)
+    return balance === undefined
   }
 
   get needApproval(): boolean | undefined {
     if (!this.root.web3Store.connected) return false
-    return this.root.baseTokenStore.needToAllowFor(this.depositAmount, 'preCT')
+    if (this.depositToken.type === 'native') return false
+    return this.depositToken.erc20.needToAllowFor(this.depositAmount, 'preCT')
   }
 
   get depositToken(): Token {
@@ -192,7 +198,10 @@ export class DepositStore {
       additionalAmount: this.depositAmountBN,
       cap: this.root.depositRecordStore.globalNetDepositCap,
       currentAmount: this.root.depositRecordStore.globalNetDepositAmount,
-      formatUnits: this.root.preCTTokenStore.formatUnits.bind(this.root.baseTokenStore),
+      formatUnits:
+        this.depositToken.type === 'native'
+          ? formatEther
+          : this.depositToken.erc20.formatUnits.bind(this.depositToken.erc20),
     })
   }
 
@@ -214,7 +223,10 @@ export class DepositStore {
       additionalAmount: this.depositAmountBN,
       cap: this.root.depositRecordStore.userDepositCap,
       currentAmount: this.root.depositRecordStore.userDepositAmountOfSigner,
-      formatUnits: this.root.preCTTokenStore.formatUnits.bind(this.root.baseTokenStore),
+      formatUnits:
+        this.depositToken.type === 'native'
+          ? formatEther
+          : this.depositToken.erc20.formatUnits.bind(this.depositToken.erc20),
     })
   }
 

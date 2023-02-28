@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import styled from 'styled-components'
 import { Flex, Icon, media, spacingIncrement } from 'prepo-ui'
-import { compactNumber } from '../../utils/number-utils'
+import { displayEth } from '../../utils/number-utils'
 import Skeleton from '../../components/Skeleton'
 import { Token } from '../../stores/TokensStore'
 import { useRootStore } from '../../context/RootStoreProvider'
@@ -62,8 +62,7 @@ const CurrencyRow: React.FC<Props> = ({ hideBalance, onClick, token, selected })
   let balanceUI: React.ReactNode = <Skeleton width={60} height={16} />
   const balance = tokensStore.getTokenBalance(token)
 
-  if (balance !== undefined)
-    balanceUI = <Balance>{compactNumber(+balance, { showUsdSign: true })}</Balance>
+  if (balance !== undefined) balanceUI = <Balance>{displayEth(+balance)}</Balance>
 
   if (hideBalance) balanceUI = null
 

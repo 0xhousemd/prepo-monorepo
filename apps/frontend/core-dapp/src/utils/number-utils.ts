@@ -136,3 +136,12 @@ export function compactNumber(value: number, options?: Partial<{ showUsdSign: bo
 
   return Intl.NumberFormat(undefined, intlOptions).format(value)
 }
+
+export const displayEth = (value: number): string => {
+  if (value === 0) return 'Ξ 0'
+  if (value < 0.0001) return '<Ξ 0.0001'
+  return `Ξ ${Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 4,
+  }).format(value)}`
+}

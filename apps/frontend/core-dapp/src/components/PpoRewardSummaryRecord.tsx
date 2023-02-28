@@ -2,9 +2,7 @@ import styled from 'styled-components'
 import { FC } from 'react'
 import SummaryRecord from './SummaryRecord'
 import { PPOReward } from '../features/definitions'
-import { numberFormatter } from '../utils/numberFormatter'
-
-const { toUsd } = numberFormatter
+import { displayEth } from '../utils/number-utils'
 
 const PPORewardAmount = styled.span`
   color: ${({ theme }): string => theme.color.primaryLight};
@@ -35,7 +33,7 @@ export const PPORewardSummaryRecord: FC<{
           signDisplay: 'exceptZero',
         }).format(+(ppoReward ?? '0'))}
       </PPORewardAmount>
-      &nbsp; ({toUsd(fee ?? '0')})
+      &nbsp; ({displayEth(+(fee ?? 0))})
     </SummaryRecord>
   )
 }
