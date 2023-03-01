@@ -12,11 +12,7 @@ import {
 } from '../types'
 import { Create2Deployer, ERC20, TestERC20 } from '../types/generated'
 import { smockCollateralFixture } from '../test/fixtures/CollateralFixture'
-import {
-  smockDepositHookFixture,
-  smockManagerWithdrawHookFixture,
-  smockWithdrawHookFixture,
-} from '../test/fixtures/HookFixture'
+import { smockDepositHookFixture, smockWithdrawHookFixture } from '../test/fixtures/HookFixture'
 import { smockTestERC20Fixture } from '../test/fixtures/TestERC20Fixture'
 import { smockDepositRecordFixture } from '../test/fixtures/DepositRecordFixture'
 import { smockTokenSenderFixture } from '../test/fixtures/TokenSenderFixture'
@@ -103,7 +99,6 @@ export class MockCoreWithMockBaseToken extends MockCore {
     )
     this.collateral.depositHook = await smockDepositHookFixture()
     this.collateral.withdrawHook = await smockWithdrawHookFixture()
-    this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
     return this
   }
 }
@@ -135,7 +130,6 @@ export class MockCoreWithLiveBaseToken extends MockCore {
     )
     this.collateral.depositHook = await smockDepositHookFixture()
     this.collateral.withdrawHook = await smockWithdrawHookFixture()
-    this.collateral.managerWithdrawHook = await smockManagerWithdrawHookFixture()
     return this
   }
 }

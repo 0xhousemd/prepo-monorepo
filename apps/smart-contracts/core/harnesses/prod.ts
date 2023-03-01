@@ -61,9 +61,6 @@ export class ProdCore extends Base {
     this.collateral.withdrawHook = await ethers.getContract(
       DEPLOYMENT_NAMES.preUSDC.withdrawHook.name
     )
-    this.collateral.managerWithdrawHook = await ethers.getContract(
-      DEPLOYMENT_NAMES.preUSDC.managerWithdrawHook.name
-    )
     this.depositRecord = await ethers.getContract(DEPLOYMENT_NAMES.preUSDC.depositRecord.name)
     this.depositRecord.allowedMsgSenders = await ethers.getContractOrNull(
       DEPLOYMENT_NAMES.preUSDC.depositRecord.allowedMsgSenders.name
@@ -114,11 +111,6 @@ export class ProdCore extends Base {
       nomineeAddress,
       this.collateral.withdrawHook
     )
-    await roleGranters.grantManagerWithdrawHookRoles(
-      rootAdmin,
-      nomineeAddress,
-      this.collateral.managerWithdrawHook
-    )
     await roleGranters.grantTokenSenderRoles(rootAdmin, nomineeAddress, this.tokenSender)
     await roleGranters.grantPrePOMarketFactoryRoles(rootAdmin, nomineeAddress, this.marketFactory)
     await roleGranters.grantArbitrageBrokerRoles(rootAdmin, nomineeAddress, this.arbitrageBroker)
@@ -133,10 +125,6 @@ export class ProdCore extends Base {
         roleProposalStepGetters.getWithdrawHookAcceptRoleSteps(
           network,
           this.collateral.withdrawHook
-        ),
-        roleProposalStepGetters.getManagerWithdrawHookAcceptRoleSteps(
-          network,
-          this.collateral.managerWithdrawHook
         ),
         roleProposalStepGetters.getTokenSenderAcceptRoleSteps(network, this.tokenSender),
         roleProposalStepGetters.getPrePOMarketFactoryAcceptRoleSteps(network, this.marketFactory),
@@ -184,7 +172,6 @@ export class ProdCore extends Base {
         this.depositRecord,
         this.collateral.depositHook,
         this.collateral.withdrawHook,
-        this.collateral.managerWithdrawHook,
         this.tokenSender,
         this.marketFactory,
         this.arbitrageBroker,
@@ -216,11 +203,6 @@ export class ProdCore extends Base {
           network,
           roleHolderAddress,
           this.collateral.withdrawHook
-        ),
-        roleProposalStepGetters.getManagerWithdrawHookRevokeRoleSteps(
-          network,
-          roleHolderAddress,
-          this.collateral.managerWithdrawHook
         ),
         roleProposalStepGetters.getTokenSenderRevokeRoleSteps(
           network,

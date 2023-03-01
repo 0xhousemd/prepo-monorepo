@@ -20,19 +20,13 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
     uint256 fee
   );
 
-  event ManagerChange(address manager);
-
   event DepositFeeChange(uint256 fee);
 
   event WithdrawFeeChange(uint256 fee);
 
-  event CollateralizationFactorChange(uint256 factor);
-
   event DepositHookChange(address hook);
 
   event WithdrawHookChange(address hook);
-
-  event ManagerWithdrawHookChange(address hook);
 
   function deposit(address recipient, uint256 amount)
     external
@@ -42,37 +36,23 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
     external
     returns (uint256 baseTokenAmountAfterFee);
 
-  function managerWithdraw(uint256 amount) external;
-
-  function setManager(address manager) external;
-
   function setDepositFee(uint256 depositFee) external;
 
   function setWithdrawFee(uint256 withdrawFee) external;
-
-  function setCollateralizationFactor(uint256 factor) external;
 
   function setDepositHook(IHook hook) external;
 
   function setWithdrawHook(IHook hook) external;
 
-  function setManagerWithdrawHook(IHook hook) external;
-
   function getBaseToken() external view returns (IERC20);
-
-  function getManager() external view returns (address);
 
   function getDepositFee() external view returns (uint256);
 
   function getWithdrawFee() external view returns (uint256);
 
-  function getCollateralizationFactor() external view returns (uint256);
-
   function getDepositHook() external view returns (IHook);
 
   function getWithdrawHook() external view returns (IHook);
-
-  function getManagerWithdrawHook() external view returns (IHook);
 
   function getBaseTokenBalance() external view returns (uint256);
 

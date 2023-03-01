@@ -148,20 +148,13 @@ export abstract class Base {
     await roleAssigners.assignDepositRecordRoles(rootAdmin, nominee, this.depositRecord)
     await roleAssigners.assignDepositHookRoles(rootAdmin, nominee, this.collateral.depositHook)
     await roleAssigners.assignWithdrawHookRoles(rootAdmin, nominee, this.collateral.withdrawHook)
-    await roleAssigners.assignManagerWithdrawHookRoles(
-      rootAdmin,
-      nominee,
-      this.collateral.managerWithdrawHook
-    )
     await roleAssigners.assignTokenSenderRoles(rootAdmin, nominee, this.tokenSender)
   }
 
   public async configureCollateralViaSigner(
     signer: SignerWithAddress,
-    manager?: string,
     depositFee?: BigNumberish,
-    withdrawFee?: BigNumberish,
-    collateralizationFactor?: number
+    withdrawFee?: BigNumberish
   ): Promise<void> {
     await setContractIfNotAlreadySet(
       signer,
@@ -177,22 +170,10 @@ export abstract class Base {
       'getWithdrawHook',
       'setWithdrawHook'
     )
-    await setContractIfNotAlreadySet(
-      signer,
-      this.collateral,
-      this.collateral.managerWithdrawHook.address,
-      'getManagerWithdrawHook',
-      'setManagerWithdrawHook'
-    )
-    if (manager) await sendTxAndWait(await this.collateral.connect(signer).setManager(manager))
     if (depositFee !== undefined)
       await sendTxAndWait(await this.collateral.connect(signer).setDepositFee(depositFee))
     if (withdrawFee !== undefined)
       await sendTxAndWait(await this.collateral.connect(signer).setWithdrawFee(withdrawFee))
-    if (collateralizationFactor !== undefined)
-      await sendTxAndWait(
-        await this.collateral.connect(signer).setCollateralizationFactor(collateralizationFactor)
-      )
   }
 
   public async configureDepositHookViaSigner(
@@ -258,33 +239,6 @@ export abstract class Base {
           .connect(signer)
           .setGlobalWithdrawLimitPerPeriod(globalWithdrawLimitPerPeriod)
       )
-  }
-
-  public async configureManagerWithdrawHookViaSigner(
-    signer: SignerWithAddress,
-    minReservePercentage?: BigNumberish
-  ): Promise<void> {
-    await setContractIfNotAlreadySet(
-      signer,
-      this.collateral.managerWithdrawHook,
-      this.collateral.address,
-      'getCollateral',
-      'setCollateral'
-    )
-    await setContractIfNotAlreadySet(
-      signer,
-      this.collateral.managerWithdrawHook,
-      this.depositRecord.address,
-      'getDepositRecord',
-      'setDepositRecord'
-    )
-    if (minReservePercentage !== undefined) {
-      await sendTxAndWait(
-        await this.collateral.managerWithdrawHook
-          .connect(signer)
-          .setMinReservePercentage(minReservePercentage)
-      )
-    }
   }
 
   public async configureDepositRecordViaSigner(

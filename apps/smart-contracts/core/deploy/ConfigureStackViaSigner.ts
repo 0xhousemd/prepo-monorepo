@@ -1,12 +1,7 @@
 /* eslint-disable no-console */
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import {
-  ChainId,
-  DEPLOYMENT_NAMES,
-  PERCENT_DENOMINATOR,
-  MAX_GLOBAL_PERIOD_LENGTH,
-} from 'prepo-constants'
+import { ChainId, DEPLOYMENT_NAMES, MAX_GLOBAL_PERIOD_LENGTH } from 'prepo-constants'
 import { deployNonUpgradeableContract } from 'prepo-hardhat'
 import { getNetworkByChainId } from 'prepo-utils'
 import dotenv from 'dotenv'
@@ -72,10 +67,8 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
    */
   const deploymentParameters = {
     collateral: {
-      manager: signer.address,
       depositFee: 0,
       withdrawFee: 0,
-      collateralizationFactor: PERCENT_DENOMINATOR,
     },
     depositHook: {
       depositsAllowed: true,
@@ -84,9 +77,6 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
     withdrawHook: {
       globalPeriodLength: MAX_GLOBAL_PERIOD_LENGTH,
       globalWithdrawLimitPerPeriod: 0,
-    },
-    managerWithdrawHook: {
-      minReservePercentage: 0,
     },
     depositRecord: {
       globalNetDepositCap: 0,
@@ -110,10 +100,8 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
   console.log('Configuring Collateral via Signer...')
   await core.configureCollateralViaSigner(
     signer,
-    deploymentParameters.collateral.manager,
     deploymentParameters.collateral.depositFee,
-    deploymentParameters.collateral.withdrawFee,
-    deploymentParameters.collateral.collateralizationFactor
+    deploymentParameters.collateral.withdrawFee
   )
   console.log('Configuring DepositHook via Signer...')
   await core.configureDepositHookViaSigner(
@@ -126,11 +114,6 @@ const deployFunction: DeployFunction = async function configureStackViaSigner(
     signer,
     deploymentParameters.withdrawHook.globalPeriodLength,
     deploymentParameters.withdrawHook.globalWithdrawLimitPerPeriod
-  )
-  console.log('Configuring ManagerWithdrawHook via Signer...')
-  await core.configureManagerWithdrawHookViaSigner(
-    signer,
-    deploymentParameters.managerWithdrawHook.minReservePercentage
   )
   console.log('Configuring DepositRecord via Signer...')
   await core.configureDepositRecordViaSigner(
@@ -159,7 +142,6 @@ deployFunction.dependencies = [
   'DepositHook',
   'DepositRecord',
   'FixedUintValue',
-  'ManagerWithdrawHook',
   'PrePOMarketFactory',
   'TokenSender',
   'WithdrawHook',

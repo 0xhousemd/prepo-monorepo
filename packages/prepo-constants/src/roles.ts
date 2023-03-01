@@ -1,14 +1,10 @@
 import { id } from 'ethers/lib/utils'
 
 export const COLLATERAL_ROLES = [
-  id('managerWithdraw'),
-  id('setManager'),
   id('setDepositFee'),
   id('setWithdrawFee'),
-  id('setCollateralizationFactor'),
   id('setDepositHook'),
   id('setWithdrawHook'),
-  id('setManagerWithdrawHook'),
 ]
 
 export const DEPOSIT_RECORD_ROLES = [
@@ -35,12 +31,6 @@ export const WITHDRAW_HOOK_ROLES = [
   id('setUserWithdrawLimitPerPeriod'),
   id('setTreasury'),
   id('setTokenSender'),
-]
-
-export const MANAGER_WITHDRAW_HOOK_ROLES = [
-  id('setCollateral'),
-  id('setDepositRecord'),
-  id('setMinReservePercentage'),
 ]
 
 export const TOKEN_SENDER_ROLES = [

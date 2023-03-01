@@ -9,7 +9,6 @@ import {
   Collateral,
   DepositHook,
   DepositRecord,
-  ManagerWithdrawHook,
   PrePOMarket,
   PrePOMarketFactory,
   TokenSender,
@@ -57,19 +56,6 @@ async function assignWithdrawHookRoles(
     rootAdmin,
     nominee,
     roleConstants.WITHDRAW_HOOK_ROLES
-  )
-}
-
-async function assignManagerWithdrawHookRoles(
-  rootAdmin: SignerWithAddress,
-  nominee: SignerWithAddress,
-  managerWithdrawHook: ManagerWithdrawHook | MockContract<ManagerWithdrawHook>
-): Promise<void> {
-  await batchGrantAndAcceptRoles(
-    managerWithdrawHook,
-    rootAdmin,
-    nominee,
-    roleConstants.MANAGER_WITHDRAW_HOOK_ROLES
   )
 }
 
@@ -167,19 +153,6 @@ async function grantWithdrawHookRoles(
   )
 }
 
-async function grantManagerWithdrawHookRoles(
-  rootAdmin: SignerWithAddress,
-  nomineeAddress: string,
-  managerWithdrawHook: ManagerWithdrawHook | MockContract<ManagerWithdrawHook>
-): Promise<void> {
-  await batchGrantRoles(
-    managerWithdrawHook,
-    rootAdmin,
-    nomineeAddress,
-    roleConstants.MANAGER_WITHDRAW_HOOK_ROLES.concat(DEFAULT_ADMIN_ROLE)
-  )
-}
-
 async function grantTokenSenderRoles(
   rootAdmin: SignerWithAddress,
   nomineeAddress: string,
@@ -260,17 +233,6 @@ function getWithdrawHookAcceptRoleSteps(
     network,
     withdrawHook,
     roleConstants.WITHDRAW_HOOK_ROLES.concat(DEFAULT_ADMIN_ROLE)
-  )
-}
-
-function getManagerWithdrawHookAcceptRoleSteps(
-  network: Network,
-  managerWithdrawHook: ManagerWithdrawHook | MockContract<ManagerWithdrawHook>
-): ProposalStep[] {
-  return getAcceptRoleSteps(
-    network,
-    managerWithdrawHook,
-    roleConstants.MANAGER_WITHDRAW_HOOK_ROLES.concat(DEFAULT_ADMIN_ROLE)
   )
 }
 
@@ -359,19 +321,6 @@ function getWithdrawHookRevokeRoleSteps(
   )
 }
 
-function getManagerWithdrawHookRevokeRoleSteps(
-  network: Network,
-  roleHolderAddress: string,
-  managerWithdrawHook: ManagerWithdrawHook | MockContract<ManagerWithdrawHook>
-): ProposalStep[] {
-  return getRevokeRoleSteps(
-    network,
-    roleHolderAddress,
-    managerWithdrawHook,
-    roleConstants.MANAGER_WITHDRAW_HOOK_ROLES.concat(DEFAULT_ADMIN_ROLE)
-  )
-}
-
 function getTokenSenderRevokeRoleSteps(
   network: Network,
   roleHolderAddress: string,
@@ -416,7 +365,6 @@ export const roleAssigners = {
   assignDepositRecordRoles,
   assignDepositHookRoles,
   assignWithdrawHookRoles,
-  assignManagerWithdrawHookRoles,
   assignTokenSenderRoles,
   assignPrePOMarketFactoryRoles,
   assignPrePOMarketRoles,
@@ -428,7 +376,6 @@ export const roleGranters = {
   grantDepositRecordRoles,
   grantDepositHookRoles,
   grantWithdrawHookRoles,
-  grantManagerWithdrawHookRoles,
   grantTokenSenderRoles,
   grantPrePOMarketFactoryRoles,
   grantArbitrageBrokerRoles,
@@ -439,7 +386,6 @@ export const roleProposalStepGetters = {
   getDepositRecordAcceptRoleSteps,
   getDepositHookAcceptRoleSteps,
   getWithdrawHookAcceptRoleSteps,
-  getManagerWithdrawHookAcceptRoleSteps,
   getTokenSenderAcceptRoleSteps,
   getPrePOMarketFactoryAcceptRoleSteps,
   getArbitrageBrokerAcceptRoleSteps,
@@ -447,7 +393,6 @@ export const roleProposalStepGetters = {
   getDepositRecordRevokeRoleSteps,
   getDepositHookRevokeRoleSteps,
   getWithdrawHookRevokeRoleSteps,
-  getManagerWithdrawHookRevokeRoleSteps,
   getTokenSenderRevokeRoleSteps,
   getPrePOMarketFactoryRevokeRoleSteps,
   getArbitrageBrokerRevokeRoleSteps,

@@ -43,12 +43,6 @@ export const DEPLOYMENT_NAMES = {
         name: 'PPOTokenSender',
       },
     },
-    managerWithdrawHook: {
-      name: 'preUSDC-ManagerWithdrawHook',
-      depositRecord: {
-        name: 'preUSDC-DepositRecord',
-      },
-    },
     withdrawHook: {
       name: 'preUSDC-WithdrawHook',
       depositRecord: {

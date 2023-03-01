@@ -3,14 +3,12 @@ import { MockContract, FakeContract, smock } from '@defi-wonderland/smock'
 import {
   DepositHook,
   WithdrawHook,
-  ManagerWithdrawHook,
   MintHook,
   RedeemHook,
   AccountList,
   AccountList__factory,
   DepositHook__factory,
   WithdrawHook__factory,
-  ManagerWithdrawHook__factory,
   MintHook__factory,
   RedeemHook__factory,
 } from '../../types/generated'
@@ -23,11 +21,6 @@ export async function depositHookFixture(): Promise<DepositHook> {
 export async function withdrawHookFixture(): Promise<WithdrawHook> {
   const factory = await ethers.getContractFactory('WithdrawHook')
   return (await factory.deploy()) as WithdrawHook
-}
-
-export async function managerWithdrawHookFixture(): Promise<ManagerWithdrawHook> {
-  const factory = await ethers.getContractFactory('ManagerWithdrawHook')
-  return (await factory.deploy()) as ManagerWithdrawHook
 }
 
 export async function mintHookFixture(): Promise<MintHook> {
@@ -47,13 +40,6 @@ export async function smockDepositHookFixture(): Promise<MockContract<DepositHoo
 
 export async function smockWithdrawHookFixture(): Promise<MockContract<WithdrawHook>> {
   const mockFactory = await smock.mock<WithdrawHook__factory>('WithdrawHook')
-  return mockFactory.deploy()
-}
-
-export async function smockManagerWithdrawHookFixture(): Promise<
-  MockContract<ManagerWithdrawHook>
-> {
-  const mockFactory = await smock.mock<ManagerWithdrawHook__factory>('ManagerWithdrawHook')
   return mockFactory.deploy()
 }
 
@@ -82,10 +68,6 @@ export function fakeDepositHookFixture(): Promise<FakeContract<DepositHook>> {
 
 export function fakeWithdrawHookFixture(): Promise<FakeContract<WithdrawHook>> {
   return smock.fake<WithdrawHook>('WithdrawHook')
-}
-
-export function fakeManagerWithdrawHookFixture(): Promise<FakeContract<ManagerWithdrawHook>> {
-  return smock.fake<ManagerWithdrawHook>('ManagerWithdrawHook')
 }
 
 export function fakeMintHookFixture(): Promise<FakeContract<MintHook>> {

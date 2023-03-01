@@ -7,7 +7,6 @@ import {
   ERC20,
   FixedUintValue,
   LongShortToken,
-  ManagerWithdrawHook,
   MintHook,
   PrePOMarket,
   RedeemHook,
@@ -18,13 +17,11 @@ import {
 export type ExtendedCollateral = Collateral & {
   depositHook?: DepositHook
   withdrawHook?: WithdrawHook
-  managerWithdrawHook?: ManagerWithdrawHook
 }
 
 export type MockExtendedCollateral = MockContract<Collateral> & {
   depositHook?: MockContract<DepositHook>
   withdrawHook?: MockContract<WithdrawHook>
-  managerWithdrawHook?: MockContract<ManagerWithdrawHook>
 }
 
 export type ExtendedMarket = PrePOMarket & {
