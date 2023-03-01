@@ -3,11 +3,6 @@ import { ExternalContract } from './contract.types'
 export type CoreTokenContractNames =
   | 'WETH'
   | 'preCT'
-  | 'PREPO_HELPER'
-  | 'SINGLE_STRATEGY_CONTROLLER'
-  | 'MOCK_STRATEGY'
-  | 'MARKET_FACTORY'
-  | 'PREPO_MARKET'
   | 'PPO'
   | 'PPO_STAKING'
   | 'DEPOSIT_RECORD'
@@ -18,72 +13,38 @@ export type CoreContracts = {
   [key in CoreTokenContractNames]: ExternalContract
 }
 
+// wstETH
 export const BASE_TOKEN_ADDRESS: ExternalContract = {
-  goerli: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
-  arbitrumOne: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+  arbitrumOne: '0x5979D7b546E38E414F7E9822514be443A4800529',
 }
 
 export const COLLATERAL_TOKEN_ADDRESS: ExternalContract = {
-  goerli: '0xab7F09a1bd92AE0508884e6ab02a7A11dF83512D',
-}
-
-export const PREPO_HELPER_ADDRESS: ExternalContract = {
-  goerli: '0xF22219e8479C964D1131B138F8C55c2b8b7201B8',
-}
-
-export const SINGLE_STRATEGY_CONTROLLER_ADDRESS: ExternalContract = {
-  goerli: '0xcf88bb8f916705D199B597e6131C9febE5289aE1',
-}
-
-export const MOCK_STRATEGY_ADDRESS: ExternalContract = {
-  goerli: '0x595F50A830A3a34686c8BA37467D7D1962c0d63E',
-}
-
-export const MARKET_FACTORY_ADDRESS: ExternalContract = {
-  goerli: '0x0FE8d6f54e49f10c5cF91c475aa9C2018Df9468e',
-}
-
-export const PREPO_MARKET_ADDRESS: ExternalContract = {
-  goerli: '0xa98559c16233f173ECf26b39b1331C36c736Ab38',
+  arbitrumOne: '0xF7a34B67c01862fBf0FB72944a3473AAB8552cDE',
 }
 
 export const PPO_ADDRESS: ExternalContract = {
-  goerli: '0xfD4D774f151f210F5761d60CC6618378658269f6',
+  arbitrumOne: '0xB40DBBb7931Cfef8Be73AEEC6c67d3809bD4600B',
 }
 
 export const PPO_STAKING_ADDRESS: ExternalContract = {
-  goerli: 'Not yet deployed',
+  arbitrumOne: 'Not yet deployed',
 }
 
 export const DEPOSIT_RECORD_ADDRESS: ExternalContract = {
-  // TODO: update to actual contract address
-  // A dummy contract for testing purposes only.
-  // The values can be modified by anyone.
-  goerli: '0x92680aa94e19176ac5a2dd20a43573521d6b8949',
+  arbitrumOne: '0xEe9e151C51758531FA2A9C550eFEB4c77845988d',
 }
 
 export const TOKEN_SENDER_ADDRESS: ExternalContract = {
-  // TODO: update to actual contract address
-  // A dummy contract for testing purposes only.
-  // The values can be modified by anyone.
-  goerli: '0xE8cCbbBe6dcC8b88484c8bC7e3bCfa1C431092d7',
+  arbitrumOne: '0x239EDBe7be361955b6fd20d36F036623594C9365',
 }
 
 export const WITHDRAW_HOOK_ADDRESS: ExternalContract = {
-  // TODO: update to actual contract address
-  // A dummy contract for testing purposes only.
-  // The values can be modified by anyone.
-  goerli: '0x6b50c9bdac1f4b075cead4d1dbea80f92daba9d6',
+  arbitrumOne: '0x829E6c99445C012A536A95E2993Eb7A055D1269d',
 }
 
 export const coreContracts: CoreContracts = {
   WETH: BASE_TOKEN_ADDRESS,
   preCT: COLLATERAL_TOKEN_ADDRESS,
-  PREPO_HELPER: PREPO_HELPER_ADDRESS,
-  SINGLE_STRATEGY_CONTROLLER: SINGLE_STRATEGY_CONTROLLER_ADDRESS,
-  MOCK_STRATEGY: MOCK_STRATEGY_ADDRESS,
-  MARKET_FACTORY: MARKET_FACTORY_ADDRESS,
-  PREPO_MARKET: PREPO_MARKET_ADDRESS,
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,
   DEPOSIT_RECORD: DEPOSIT_RECORD_ADDRESS,

@@ -1,7 +1,6 @@
-import { action, computed, makeObservable, observable, runInAction } from 'mobx'
+import { action, makeObservable, observable, runInAction } from 'mobx'
 import { BigNumber } from 'ethers'
 import { ContractReturn, Factory } from 'prepo-stores'
-import { formatEther, parseEther } from 'ethers/lib/utils'
 import { ChainId, Token } from '@uniswap/sdk'
 import { getContractAddress } from 'prepo-utils'
 import { RootStore } from './RootStore'
@@ -10,24 +9,16 @@ import { getContractCall } from './utils/web3-store-utils'
 import { CollateralAbi, CollateralAbi__factory } from '../../generated/typechain'
 import { SupportedContracts } from '../lib/contract.types'
 import { supportedContracts } from '../lib/supported-contracts'
-import { numberFormatter } from '../utils/numberFormatter'
-import { isProduction } from '../utils/isProduction'
-
-const { toUsd } = numberFormatter
 
 type Deposit = CollateralAbi['functions']['deposit']
-type GetAmountForShares = CollateralAbi['functions']['getAmountForShares']
-type GetFeeDenominator = CollateralAbi['functions']['getFeeDenominator']
-type GetSharesForAmount = CollateralAbi['functions']['getSharesForAmount']
-type GetMintingFee = CollateralAbi['functions']['getMintingFee']
-type GetRedemptionFee = CollateralAbi['functions']['getRedemptionFee']
+type GetPercentDenominator = CollateralAbi['functions']['PERCENT_DENOMINATOR']
+type GetDepositFee = CollateralAbi['functions']['getDepositFee']
+type GetWithdrawFee = CollateralAbi['functions']['getWithdrawFee']
 type Withdraw = CollateralAbi['functions']['withdraw']
 
 const TOKEN_SYMBOL = 'preCT'
 const TOKEN_DECIMALS = 18
 
-const calculateUserBalance = (preCTBalance: BigNumber, sharesForAmount: BigNumber): number =>
-  +formatEther(preCTBalance) / +formatEther(sharesForAmount)
 export class CollateralStore extends Erc20Store {
   depositHash?: string
   depositing = false
@@ -51,11 +42,8 @@ export class CollateralStore extends Erc20Store {
       deposit: action.bound,
       depositHash: observable,
       depositing: observable,
-      getAmountForShares: observable,
-      getSharesForAmount: observable,
-      getMintingFee: observable,
-      getRedemptionFee: observable,
-      sharesForAmount: computed,
+      getDepositFee: observable,
+      getWithdrawFee: observable,
       setDepositHash: action.bound,
       setTransferHash: action.bound,
       setWithdrawHash: action.bound,
@@ -64,28 +52,18 @@ export class CollateralStore extends Erc20Store {
     })
   }
 
-  getAmountForShares(
-    ...params: Parameters<GetAmountForShares>
-  ): ContractReturn<GetAmountForShares> {
-    return this.call<GetAmountForShares>('getAmountForShares', params)
+  getPercentDenominator(
+    ...params: Parameters<GetPercentDenominator>
+  ): ContractReturn<GetPercentDenominator> {
+    return this.call<GetPercentDenominator>('PERCENT_DENOMINATOR', params)
   }
 
-  getFeeDenominator(...params: Parameters<GetFeeDenominator>): ContractReturn<GetFeeDenominator> {
-    return this.call<GetFeeDenominator>('getFeeDenominator', params)
+  getDepositFee(...params: Parameters<GetDepositFee>): ContractReturn<GetDepositFee> {
+    return this.call<GetDepositFee>('getDepositFee', params)
   }
 
-  getSharesForAmount(
-    ...params: Parameters<GetSharesForAmount>
-  ): ContractReturn<GetSharesForAmount> {
-    return this.call<GetSharesForAmount>('getSharesForAmount', params)
-  }
-
-  getMintingFee(...params: Parameters<GetMintingFee>): ContractReturn<GetMintingFee> {
-    return this.call<GetMintingFee>('getMintingFee', params)
-  }
-
-  getRedemptionFee(...params: Parameters<GetRedemptionFee>): ContractReturn<GetRedemptionFee> {
-    return this.call<GetRedemptionFee>('getRedemptionFee', params)
+  getWithdrawFee(...params: Parameters<GetWithdrawFee>): ContractReturn<GetWithdrawFee> {
+    return this.call<GetWithdrawFee>('getWithdrawFee', params)
   }
 
   async deposit(...params: Parameters<Deposit>): Promise<{ success: boolean; error?: string }> {
@@ -131,43 +109,18 @@ export class CollateralStore extends Erc20Store {
     }
   }
 
-  get feeDenominator(): BigNumber | undefined {
-    const feeDenominatorRaw = this.getFeeDenominator()
-    if (feeDenominatorRaw === undefined) return undefined
-    return feeDenominatorRaw[0]
+  get percentDenominator(): BigNumber | undefined {
+    const percentDenominatorRaw = this.getPercentDenominator()
+    if (percentDenominatorRaw === undefined) return undefined
+    return percentDenominatorRaw[0]
   }
 
-  get sharesForAmount(): BigNumber | undefined {
-    const ONE_USD = parseEther('1')
-    const sharesForAmountCall = this.getSharesForAmount(ONE_USD)
-    if (sharesForAmountCall === undefined) return undefined
-    const [sharesForAmount] = sharesForAmountCall
-    return sharesForAmount
+  get depositFee(): BigNumber | undefined {
+    return getContractCall(this.getDepositFee())
   }
 
-  get mintingFee(): BigNumber | undefined {
-    return getContractCall(this.getMintingFee())
-  }
-
-  get redemptionFee(): BigNumber | undefined {
-    // TODO: remove this production check
-    if (!isProduction()) {
-      return BigNumber.from(20000)
-    }
-
-    return getContractCall(this.getRedemptionFee())
-  }
-
-  get signerBalance(): number {
-    if (this.balanceOfSigner && this.sharesForAmount) {
-      return calculateUserBalance(this.balanceOfSigner, this.sharesForAmount)
-    }
-
-    return 0
-  }
-
-  get formatSignerBalance(): string {
-    return toUsd(this.signerBalance)
+  get withdrawFee(): BigNumber | undefined {
+    return getContractCall(this.getWithdrawFee())
   }
 
   // setters

@@ -71,7 +71,7 @@ export class PortfolioStore {
     const { markets } = marketStore
 
     const positions: PositionEntity[] = []
-    Object.values(markets).forEach((market) => {
+    Object.values(markets ?? {}).forEach((market) => {
       positions.push(new PositionEntity(this.root, market, 'long'))
       positions.push(new PositionEntity(this.root, market, 'short'))
     })

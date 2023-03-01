@@ -73,9 +73,11 @@ export class DepositStore {
 
   // eslint-disable-next-line require-await
   async deposit(): Promise<void> {
+    const { address } = this.root.web3Store
+    if (this.depositAmountBN === undefined || address === undefined) return
+
     this.depositing = true
-    if (this.depositAmountBN === undefined) return
-    const { error } = await this.root.preCTTokenStore.deposit(this.depositAmountBN)
+    const { error } = await this.root.preCTTokenStore.deposit(address, this.depositAmountBN)
 
     if (error) {
       this.root.toastStore.errorToast('Deposit failed', error)
@@ -122,33 +124,30 @@ export class DepositStore {
 
   private get depositFeesBN(): BigNumber | undefined {
     const { preCTTokenStore } = this.root
-    const { feeDenominator, mintingFee } = preCTTokenStore
+    const { percentDenominator, depositFee } = preCTTokenStore
     if (
-      mintingFee === undefined ||
+      depositFee === undefined ||
       this.depositAmountBN === undefined ||
-      feeDenominator === undefined
+      percentDenominator === undefined
     )
       return undefined
 
-    return (
-      this.depositAmountBN
-        // TODO un-hardcode this when we have the fee enabled in our test contracts
-        .mul(isProduction() ? mintingFee : 20000)
-        .div(feeDenominator)
-    )
+    return this.depositAmountBN.mul(depositFee).div(percentDenominator)
   }
 
   get depositFees(): string | undefined {
     const { depositFeesBN } = this
     if (!depositFeesBN) return undefined
-    return this.root.baseTokenStore.formatUnits(depositFeesBN)
+    if (this.depositToken.type === 'native') return formatEther(depositFeesBN)
+    return this.depositToken.erc20.formatUnits(depositFeesBN)
   }
 
-  // perfect accuracy not required since this is estimation
   get estimatedReceivedAmount(): number | undefined {
-    const { sharesForAmount } = this.root.preCTTokenStore
-    if (sharesForAmount === undefined || this.depositAmountBN === undefined) return undefined
-    return +(this.root.preCTTokenStore.formatUnits(sharesForAmount) ?? 0) * +this.depositAmount
+    if (this.depositFeesBN === undefined || this.depositAmountBN === undefined) return undefined
+    return (
+      +(this.root.preCTTokenStore.formatUnits(this.depositAmountBN.sub(this.depositFeesBN)) ?? 0) *
+      +this.depositAmount
+    )
   }
 
   get insufficientBalance(): boolean | undefined {

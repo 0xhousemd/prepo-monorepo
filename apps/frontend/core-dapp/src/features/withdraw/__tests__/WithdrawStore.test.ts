@@ -91,9 +91,13 @@ describe('WithdrawStore tests', () => {
   describe('withdraw', () => {
     const mock: any = (): jest.Mock<void> => jest.fn()
     let spyWithdraw: jest.SpyInstance
+    let spyAddress: jest.SpyInstance
 
     beforeEach(() => {
       spyWithdraw = jest.spyOn(rootStore.preCTTokenStore, 'withdraw')
+      spyAddress = jest
+        .spyOn(rootStore.web3Store, 'address', 'get')
+        .mockReturnValue('0xdummycontract')
       spyWithdraw.mockImplementation(mock)
       rootStore.withdrawStore.setWithdrawalAmount(amountToWithdraw)
       rootStore.withdrawStore.withdraw()
@@ -101,6 +105,7 @@ describe('WithdrawStore tests', () => {
 
     afterEach(() => {
       spyWithdraw.mockRestore()
+      spyAddress.mockRestore()
     })
 
     it('should call withdraw method on the collateral contract when withdrawing', () => {
@@ -108,7 +113,7 @@ describe('WithdrawStore tests', () => {
     })
 
     it('should match same amount to withdraw to the one sent to the collateral contract', () => {
-      const withdrawParameters = spyWithdraw.mock.calls[0][0]
+      const withdrawParameters = spyWithdraw.mock.calls[0][1]
       expect(utils.formatUnits(withdrawParameters, ERC20_UNITS)).toBe(amountToWithdraw)
     })
   })

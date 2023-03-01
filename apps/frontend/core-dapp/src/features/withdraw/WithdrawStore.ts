@@ -33,15 +33,17 @@ export class WithdrawStore {
   }
 
   async withdraw(): Promise<void> {
+    const { address } = this.root.web3Store
     if (
       this.insufficientBalance ||
       this.withdrawalAmountBN === undefined ||
-      this.withdrawalAmountBN.eq(0)
+      this.withdrawalAmountBN.eq(0) ||
+      address === undefined
     )
       return
 
     this.withdrawing = true
-    const { error } = await this.root.preCTTokenStore.withdraw(this.withdrawalAmountBN)
+    const { error } = await this.root.preCTTokenStore.withdraw(address, this.withdrawalAmountBN)
 
     if (error) {
       this.root.toastStore.errorToast('Withdrawal failed', error)
@@ -86,17 +88,15 @@ export class WithdrawStore {
     )
   }
 
-  // TODO: preCTTokenStore's abi is outdated. Update to use withdrawFee instead of redepmtionFee when we update collateral contract
-  // returns withdrawalAmount * fee in Collateral token's decimals
   get withdrawalFeesAmountBN(): BigNumber | undefined {
-    const { redemptionFee, feeDenominator } = this.root.preCTTokenStore
+    const { withdrawFee, percentDenominator } = this.root.preCTTokenStore
     if (
       this.withdrawalAmountBN === undefined ||
-      feeDenominator === undefined ||
-      redemptionFee === undefined
+      percentDenominator === undefined ||
+      withdrawFee === undefined
     )
       return undefined
-    return this.withdrawalAmountBN.mul(redemptionFee).div(feeDenominator)
+    return this.withdrawalAmountBN.mul(withdrawFee).div(percentDenominator)
   }
 
   get withdrawalFeesAmount(): string | undefined {
@@ -127,9 +127,9 @@ export class WithdrawStore {
   }
 
   get withdrawalFee(): number | undefined {
-    const { redemptionFee, feeDenominator } = this.root.preCTTokenStore
-    if (redemptionFee === undefined || feeDenominator === undefined) return undefined
-    return redemptionFee.toNumber() / feeDenominator.toNumber()
+    const { withdrawFee, percentDenominator } = this.root.preCTTokenStore
+    if (withdrawFee === undefined || percentDenominator === undefined) return undefined
+    return withdrawFee.toNumber() / percentDenominator.toNumber()
   }
 
   get withdrawButtonInitialLoading(): boolean {
