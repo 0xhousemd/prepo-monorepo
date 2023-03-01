@@ -3,6 +3,7 @@ pragma solidity =0.8.7;
 
 import "./ICollateral.sol";
 import "./IPrePOMarket.sol";
+import "../balancer/IVault.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 interface IDepositTradeHelper {
@@ -13,6 +14,11 @@ interface IDepositTradeHelper {
     bytes32 s;
   }
 
+  struct OffChainBalancerParams {
+    uint256 amountOutMinimum;
+    uint256 deadline;
+  }
+
   struct OffChainTradeParams {
     address tokenOut;
     uint256 deadline;
@@ -20,10 +26,12 @@ interface IDepositTradeHelper {
     uint160 sqrtPriceLimitX96;
   }
 
-  function wrapAndDeposit(address recipient)
-    external
-    payable
-    returns (uint256);
+  event WstethPoolIdChange(bytes32 wstethPoolId);
+
+  function wrapAndDeposit(
+    address recipient,
+    OffChainBalancerParams calldata balancerParams
+  ) external payable returns (uint256);
 
   /**
    * @dev `baseTokenAmount` will be taken from msg.sender (assumes that
@@ -54,14 +62,21 @@ interface IDepositTradeHelper {
   function withdrawAndUnwrap(
     address recipient,
     uint256 amount,
-    Permit calldata collateralPermit
+    Permit calldata collateralPermit,
+    OffChainBalancerParams calldata balancerParams
   ) external;
+
+  function setWstethPoolId(bytes32 wstethPoolId) external;
 
   function getBaseToken() external view returns (IERC20);
 
   function getCollateral() external view returns (ICollateral);
 
   function getSwapRouter() external view returns (ISwapRouter);
+
+  function getWstethVault() external view returns (IVault);
+
+  function getWstethPoolId() external view returns (bytes32);
 
   function POOL_FEE_TIER() external view returns (uint24);
 }

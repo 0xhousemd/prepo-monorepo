@@ -13,6 +13,8 @@ export type ImportantKeywords =
   | 'UNIV3_SWAP_ROUTER'
   | 'PPO'
   | 'WETH'
+  | 'WSTETH'
+  | 'WSTETH_ETH_BALANCER_VAULT'
 
 export type ImportantAddresses = {
   [key in ImportantKeywords]?: ImportantAddress
@@ -45,6 +47,12 @@ export const PREPO_ADDRESSES: ImportantAddresses = {
   },
   WETH: {
     arbitrumOne: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+  },
+  WSTETH: {
+    arbitrumOne: '0x5979D7b546E38E414F7E9822514be443A4800529',
+  },
+  WSTETH_ETH_BALANCER_VAULT: {
+    arbitrumOne: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
   },
 }
 

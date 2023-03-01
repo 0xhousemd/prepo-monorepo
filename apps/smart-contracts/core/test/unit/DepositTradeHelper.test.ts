@@ -5,12 +5,13 @@ import { formatBytes32String, parseUnits, parseEther } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { utils, snapshots } from 'prepo-hardhat'
-import { JUNK_ADDRESS } from 'prepo-constants'
+import { ZERO_BYTES32, JUNK_ADDRESS } from 'prepo-constants'
 import { getPermitFromSignature } from '../utils'
+import { fakeVaultFixture } from '../fixtures/BalancerFixtures'
 import { depositTradeHelperFixture } from '../fixtures/DepositTradeHelperFixture'
 import { fakeSwapRouterFixture } from '../fixtures/UniswapFixtures'
 import { MockCoreWithMockBaseToken } from '../../harnesses/mock'
-import { DepositTradeHelper, IDepositTradeHelper, SwapRouter } from '../../types/generated'
+import { DepositTradeHelper, IDepositTradeHelper, IVault, SwapRouter } from '../../types/generated'
 import { getCollateralAmountForDeposit } from '../../helpers'
 
 const { setNextTimestamp, nowPlusMonths } = utils
@@ -22,8 +23,11 @@ const snapshotter = new Snapshotter(ethers, network)
 describe('=> DepositTradeHelper', () => {
   let core: MockCoreWithMockBaseToken
   let swapRouter: FakeContract<SwapRouter>
+  let wstethVault: FakeContract<IVault>
   let depositTradeHelper: DepositTradeHelper
+  let deployer: SignerWithAddress
   let user: SignerWithAddress
+  const TEST_POOL_ID = formatBytes32String('JUNK_DATA')
   const TEST_TIMESTAMP = nowPlusMonths(1)
   snapshotter.setupSnapshotContext('DepositTradeHelper')
 
@@ -43,11 +47,13 @@ describe('=> DepositTradeHelper', () => {
 
   before(async () => {
     core = await MockCoreWithMockBaseToken.Instance.init(ethers)
-    ;[user] = core.accounts
+    ;[deployer, user] = core.accounts
     swapRouter = await fakeSwapRouterFixture()
+    wstethVault = await fakeVaultFixture()
     depositTradeHelper = await depositTradeHelperFixture(
       core.collateral.address,
-      swapRouter.address
+      swapRouter.address,
+      wstethVault.address
     )
     await snapshotter.saveSnapshot()
   })
@@ -65,6 +71,10 @@ describe('=> DepositTradeHelper', () => {
       expect(await depositTradeHelper.getSwapRouter()).to.eq(swapRouter.address)
     })
 
+    it('sets WstETH vault from constructor', async () => {
+      expect(await depositTradeHelper.getWstethVault()).to.eq(wstethVault.address)
+    })
+
     it('gives collateral contract unlimited base token approval', async () => {
       expect(
         await core.baseToken.allowance(depositTradeHelper.address, core.collateral.address)
@@ -75,6 +85,50 @@ describe('=> DepositTradeHelper', () => {
       expect(await core.collateral.allowance(depositTradeHelper.address, swapRouter.address)).to.eq(
         ethers.constants.MaxUint256
       )
+    })
+  })
+
+  describe('# setWstethPoolId', () => {
+    it('reverts if not owner', async () => {
+      await expect(depositTradeHelper.connect(user).setWstethPoolId(TEST_POOL_ID)).revertedWith(
+        'Ownable: caller is not the owner'
+      )
+    })
+
+    it('sets to non-zero id', async () => {
+      expect(await depositTradeHelper.getWstethPoolId()).not.eq(TEST_POOL_ID)
+
+      await depositTradeHelper.connect(deployer).setWstethPoolId(TEST_POOL_ID)
+
+      expect(await depositTradeHelper.getWstethPoolId()).not.eq(ZERO_BYTES32)
+      expect(await depositTradeHelper.getWstethPoolId()).eq(TEST_POOL_ID)
+    })
+
+    it('sets to zero id', async () => {
+      await depositTradeHelper.connect(deployer).setWstethPoolId(TEST_POOL_ID)
+      expect(await depositTradeHelper.getWstethPoolId()).not.eq(ZERO_BYTES32)
+
+      await depositTradeHelper.connect(deployer).setWstethPoolId(ZERO_BYTES32)
+
+      expect(await depositTradeHelper.getWstethPoolId()).eq(ZERO_BYTES32)
+    })
+
+    it('is idempotent', async () => {
+      expect(await depositTradeHelper.getWstethPoolId()).not.eq(TEST_POOL_ID)
+
+      await depositTradeHelper.connect(deployer).setWstethPoolId(TEST_POOL_ID)
+
+      expect(await depositTradeHelper.getWstethPoolId()).eq(TEST_POOL_ID)
+
+      await depositTradeHelper.connect(deployer).setWstethPoolId(TEST_POOL_ID)
+
+      expect(await depositTradeHelper.getWstethPoolId()).eq(TEST_POOL_ID)
+    })
+
+    it('emits WstethPoolIdChange event', async () => {
+      const tx = await depositTradeHelper.connect(deployer).setWstethPoolId(TEST_POOL_ID)
+
+      await expect(tx).emit(depositTradeHelper, 'WstethPoolIdChange').withArgs(TEST_POOL_ID)
     })
   })
 

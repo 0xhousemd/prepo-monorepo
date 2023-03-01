@@ -21,8 +21,9 @@ export const HOUR_IN_MS = MIN_IN_MS * 60
 
 export const MINIMUM_GAS_FEE = 21000
 
-export const DEFAULT_ADMIN_ROLE =
-  '0x0000000000000000000000000000000000000000000000000000000000000000'
+export const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+export const DEFAULT_ADMIN_ROLE = ZERO_BYTES32
 
 // We use FallbackProvider to have some redundancy
 // Use QUORUM of 1 because we trust the endpoints and prioritise speed
