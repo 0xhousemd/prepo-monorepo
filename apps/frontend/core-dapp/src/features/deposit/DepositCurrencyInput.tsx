@@ -28,7 +28,6 @@ const OpenTradeCurrencyInput: React.FC = () => {
         currency={{
           icon: depositToken.iconName,
           text: depositToken.shortName ?? depositToken.name,
-          onClick: (): void => depositStore.setShowCurrencySlideUp(true),
         }}
         onChange={depositStore.setDepositAmount}
         value={depositAmount}

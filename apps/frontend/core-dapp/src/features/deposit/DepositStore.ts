@@ -173,10 +173,8 @@ export class DepositStore {
   }
 
   get depositToken(): Token {
-    const { defaultDepositToken } = this.root.tokensStore
     return (
-      this.depositTokenOverride ??
-      defaultDepositToken ?? {
+      this.depositTokenOverride ?? {
         iconName: 'eth',
         name: 'ETH',
         type: 'native',
