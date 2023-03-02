@@ -1,8 +1,14 @@
 import chai, { expect } from 'chai'
 import { ethers, network } from 'hardhat'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
-import { id, parseEther } from 'ethers/lib/utils'
-import { ZERO_ADDRESS, MAX_GLOBAL_PERIOD_LENGTH } from 'prepo-constants'
+import { id, parseUnits } from 'ethers/lib/utils'
+import {
+  ZERO_ADDRESS,
+  MAX_GLOBAL_PERIOD_LENGTH,
+  MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD,
+  MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_IN_UNITS,
+  PERCENT_DENOMINATOR,
+} from 'prepo-constants'
 import { utils, snapshots } from 'prepo-hardhat'
 import { FakeContract, MockContract, smock } from '@defi-wonderland/smock'
 import { fakeAccountListFixture, withdrawHookFixture } from '../fixtures/HookFixture'
@@ -38,22 +44,27 @@ describe('=> WithdrawHook', () => {
   let fakeCollateral: FakeContract<Collateral>
   let mockDepositRecord: MockContract<DepositRecord>
   let fakeTokenSender: FakeContract<TokenSender>
-  const TEST_GLOBAL_DEPOSIT_CAP = parseEther('50000')
-  const TEST_AMOUNT_BEFORE_FEE = parseEther('1.01')
-  const TEST_AMOUNT_AFTER_FEE = parseEther('1')
+  const BASE_TOKEN_DECIMALS = 18
+  const MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD = parseUnits(
+    MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_IN_UNITS.toString(),
+    BASE_TOKEN_DECIMALS
+  )
+  const TEST_AMOUNT_BEFORE_FEE = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+  const TEST_AMOUNT_AFTER_FEE = TEST_AMOUNT_BEFORE_FEE.mul(99).div(100)
   const TEST_GLOBAL_PERIOD_LENGTH = 20
   const TEST_GLOBAL_WITHDRAW_LIMIT = TEST_AMOUNT_BEFORE_FEE.mul(3)
   snapshotter.setupSnapshotContext('WithdrawHook')
 
   before(async () => {
     ;[deployer, user, treasury, recipient] = await ethers.getSigners()
-    withdrawHook = await withdrawHookFixture()
-    mockTestToken = await smockTestERC20Fixture('Test Token', 'TEST', 18)
+    withdrawHook = await withdrawHookFixture(BASE_TOKEN_DECIMALS)
+    mockTestToken = await smockTestERC20Fixture('Test Token', 'TEST', BASE_TOKEN_DECIMALS)
     fakeCollateral = await fakeCollateralFixture()
     allowList = await fakeAccountListFixture()
     fakeCollateral.getBaseToken.returns(mockTestToken.address)
     await setAccountBalance(fakeCollateral.address, '0.1')
     mockDepositRecord = await smockDepositRecordFixture()
+    mockDepositRecord.getGlobalNetDepositAmount.returns()
     fakeTokenSender = await fakeTokenSenderFixture()
     await roleAssigners.assignWithdrawHookRoles(deployer, deployer, withdrawHook)
     await roleAssigners.assignDepositRecordRoles(deployer, deployer, mockDepositRecord)
@@ -73,8 +84,24 @@ describe('=> WithdrawHook', () => {
       expect(await withdrawHook.getLastGlobalPeriodReset()).to.eq(0)
     })
 
+    it('sets percent denominator', async () => {
+      expect(await withdrawHook.PERCENT_DENOMINATOR()).eq(PERCENT_DENOMINATOR)
+    })
+
     it('sets max global period length', async () => {
-      expect(await withdrawHook.MAX_GLOBAL_PERIOD_LENGTH()).to.eq(MAX_GLOBAL_PERIOD_LENGTH)
+      expect(await withdrawHook.MAX_GLOBAL_PERIOD_LENGTH()).eq(MAX_GLOBAL_PERIOD_LENGTH)
+    })
+
+    it('sets min global withdraw limit percent per period', async () => {
+      expect(await withdrawHook.MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD
+      )
+    })
+
+    it('sets min global withdraw limit from base token decimals', async () => {
+      expect(await withdrawHook.MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD()).eq(
+        parseUnits(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_IN_UNITS.toString(), BASE_TOKEN_DECIMALS)
+      )
     })
 
     it('sets role constants to the correct hash', async () => {
@@ -97,15 +124,15 @@ describe('=> WithdrawHook', () => {
     snapshotter.setupSnapshotContext('WithdrawHook-hook')
     before(async () => {
       await withdrawHook.setCollateral(fakeCollateral.address)
-      await withdrawHook.connect(deployer).setGlobalPeriodLength(TEST_GLOBAL_PERIOD_LENGTH)
+      await withdrawHook.connect(deployer).setDepositRecord(mockDepositRecord.address)
       await withdrawHook
         .connect(deployer)
         .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
-      await withdrawHook.connect(deployer).setDepositRecord(mockDepositRecord.address)
+      await withdrawHook.connect(deployer).setGlobalPeriodLength(TEST_GLOBAL_PERIOD_LENGTH)
       await withdrawHook.connect(deployer).setTreasury(treasury.address)
       await withdrawHook.connect(deployer).setTokenSender(fakeTokenSender.address)
-      await mockTestToken.connect(deployer).mint(fakeCollateral.address, TEST_GLOBAL_DEPOSIT_CAP)
-      await mockTestToken.connect(deployer).mint(user.address, TEST_GLOBAL_DEPOSIT_CAP)
+      await mockTestToken.connect(deployer).mint(fakeCollateral.address, TEST_AMOUNT_BEFORE_FEE)
+      await mockTestToken.connect(deployer).mint(user.address, TEST_AMOUNT_BEFORE_FEE)
       await mockTestToken
         .connect(fakeCollateral.wallet)
         .approve(withdrawHook.address, ethers.constants.MaxUint256)
@@ -511,6 +538,11 @@ describe('=> WithdrawHook', () => {
   })
 
   describe('# setGlobalWithdrawLimitPerPeriod', () => {
+    snapshotter.setupSnapshotContext('WithdrawHook-setGlobalWithdrawLimitPerPeriod')
+    before(async () => {
+      await withdrawHook.connect(deployer).setDepositRecord(mockDepositRecord.address)
+    })
+
     it('reverts if not role holder', async () => {
       expect(
         await withdrawHook.hasRole(
@@ -526,45 +558,149 @@ describe('=> WithdrawHook', () => {
       )
     })
 
-    it('sets to zero', async () => {
-      await withdrawHook
-        .connect(deployer)
-        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.not.eq(0)
-
-      await withdrawHook.connect(deployer).setGlobalWithdrawLimitPerPeriod(0)
-
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.eq(0)
+    it('reverts if set to 0', async () => {
+      await expect(withdrawHook.connect(deployer).setGlobalWithdrawLimitPerPeriod(0)).revertedWith(
+        'Limit too low'
+      )
     })
 
-    it('sets to non-zero value', async () => {
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.not.eq(
-        TEST_GLOBAL_WITHDRAW_LIMIT
+    it('reverts if set to < raw min if raw min > percent min', async () => {
+      expect(await mockDepositRecord.getGlobalNetDepositAmount()).eq(0)
+
+      await expect(
+        withdrawHook
+          .connect(deployer)
+          .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.sub(1))
+      ).revertedWith('Limit too low')
+    })
+
+    it('reverts if set to < raw min if raw min = percent min', async () => {
+      const globalDepositAmountToReachMinLimit = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(
+        PERCENT_DENOMINATOR
+      ).div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToReachMinLimit)
+
+      await expect(
+        withdrawHook
+          .connect(deployer)
+          .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.sub(1))
+      ).revertedWith('Limit too low')
+    })
+
+    it('reverts if set to > raw min and < percent min if raw min < percent min', async () => {
+      const percentMinGreaterThanRawMin = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(2)
+      const globalDepositAmountToExceedMinLimit = percentMinGreaterThanRawMin
+        .mul(PERCENT_DENOMINATOR)
+        .div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToExceedMinLimit)
+
+      await expect(
+        withdrawHook
+          .connect(deployer)
+          .setGlobalWithdrawLimitPerPeriod(percentMinGreaterThanRawMin.sub(1))
+      ).revertedWith('Limit too low')
+    })
+
+    it('sets to > raw min if raw min > percent min', async () => {
+      expect(await mockDepositRecord.getGlobalNetDepositAmount()).eq(0)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).not.eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1)
       )
 
       await withdrawHook
         .connect(deployer)
-        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
+        .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1))
 
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.eq(TEST_GLOBAL_WITHDRAW_LIMIT)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1)
+      )
     })
 
-    it('is idempotent', async () => {
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.not.eq(
-        TEST_GLOBAL_WITHDRAW_LIMIT
+    it('sets to raw min if raw min > percent min', async () => {
+      expect(await mockDepositRecord.getGlobalNetDepositAmount()).eq(0)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).not.eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
       )
 
       await withdrawHook
         .connect(deployer)
-        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
+        .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD)
 
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.eq(TEST_GLOBAL_WITHDRAW_LIMIT)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+    })
+
+    it('sets to > raw min if raw min = percent min', async () => {
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).not.eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1)
+      )
+      const globalDepositAmountToReachMinLimit = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(
+        PERCENT_DENOMINATOR
+      ).div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToReachMinLimit)
 
       await withdrawHook
         .connect(deployer)
-        .setGlobalWithdrawLimitPerPeriod(TEST_GLOBAL_WITHDRAW_LIMIT)
+        .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1))
 
-      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).to.eq(TEST_GLOBAL_WITHDRAW_LIMIT)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1)
+      )
+    })
+
+    it('sets to raw min if raw min = percent min', async () => {
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).not.eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+      const globalDepositAmountToReachMinLimit = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(
+        PERCENT_DENOMINATOR
+      ).div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToReachMinLimit)
+
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD)
+
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+    })
+
+    it('sets to > percent min if raw min < percent min', async () => {
+      const percentMinGreaterThanRawMin = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(2)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).not.eq(
+        percentMinGreaterThanRawMin.add(1)
+      )
+      const globalDepositAmountToExceedMinLimit = percentMinGreaterThanRawMin
+        .mul(PERCENT_DENOMINATOR)
+        .div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToExceedMinLimit)
+
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(percentMinGreaterThanRawMin.add(1))
+
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).eq(
+        percentMinGreaterThanRawMin.add(1)
+      )
+    })
+
+    it('sets to percent min if raw min < percent min', async () => {
+      const percentMinGreaterThanRawMin = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(2)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).not.eq(
+        percentMinGreaterThanRawMin
+      )
+      const globalDepositAmountToExceedMinLimit = percentMinGreaterThanRawMin
+        .mul(PERCENT_DENOMINATOR)
+        .div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToExceedMinLimit)
+
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(percentMinGreaterThanRawMin)
+
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).eq(percentMinGreaterThanRawMin)
     })
 
     it('emits GlobalWithdrawLimitPerPeriodChange', async () => {
@@ -575,6 +711,10 @@ describe('=> WithdrawHook', () => {
       await expect(tx)
         .to.emit(withdrawHook, 'GlobalWithdrawLimitPerPeriodChange')
         .withArgs(TEST_GLOBAL_WITHDRAW_LIMIT)
+    })
+
+    afterEach(() => {
+      mockDepositRecord.getGlobalNetDepositAmount.reset()
     })
   })
 
@@ -615,6 +755,134 @@ describe('=> WithdrawHook', () => {
       ).to.eq(true)
 
       await withdrawHook.connect(deployer).setTokenSender(fakeTokenSender.address)
+    })
+  })
+
+  describe('# getEffectiveGlobalWithdrawLimitPerPeriod', () => {
+    snapshotter.setupSnapshotContext('WithdrawHook-getEffectiveGlobalWithdrawLimitPerPeriod')
+    before(async () => {
+      await withdrawHook.connect(deployer).setDepositRecord(mockDepositRecord.address)
+    })
+
+    it('returns set limit if set > min and raw min > percent min', async () => {
+      expect(await mockDepositRecord.getGlobalNetDepositAmount()).eq(0)
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1))
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1)
+      )
+    })
+
+    it('returns set limit if set > min and raw min = percent min', async () => {
+      const globalDepositAmountToReachMinLimit = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(
+        PERCENT_DENOMINATOR
+      ).div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToReachMinLimit)
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1))
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.add(1)
+      )
+    })
+
+    it('returns set limit if set > min and raw min < percent min', async () => {
+      const percentMinGreaterThanRawMin = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(2)
+      const globalDepositAmountToExceedMinLimit = percentMinGreaterThanRawMin
+        .mul(PERCENT_DENOMINATOR)
+        .div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToExceedMinLimit)
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(percentMinGreaterThanRawMin.add(1))
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        percentMinGreaterThanRawMin.add(1)
+      )
+    })
+
+    it('returns set limit if set = min and raw min > percent min', async () => {
+      expect(await mockDepositRecord.getGlobalNetDepositAmount()).eq(0)
+      await withdrawHook.setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD)
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+    })
+
+    it('returns set limit if set = min and raw min = percent min', async () => {
+      const globalDepositAmountToReachMinLimit = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(
+        PERCENT_DENOMINATOR
+      ).div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToReachMinLimit)
+      await withdrawHook.setGlobalWithdrawLimitPerPeriod(MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD)
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+    })
+
+    it('returns set limit if set = min and raw min < percent min', async () => {
+      const percentMinGreaterThanRawMin = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(2)
+      const globalDepositAmountToExceedMinLimit = percentMinGreaterThanRawMin
+        .mul(PERCENT_DENOMINATOR)
+        .div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToExceedMinLimit)
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(percentMinGreaterThanRawMin)
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        percentMinGreaterThanRawMin
+      )
+    })
+
+    it('returns min limit if set < min and raw min > percent min', async () => {
+      expect(await mockDepositRecord.getGlobalNetDepositAmount()).eq(0)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).lt(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+    })
+
+    it('returns min limit if set < min and raw min = percent min', async () => {
+      const globalDepositAmountToReachMinLimit = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(
+        PERCENT_DENOMINATOR
+      ).div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToReachMinLimit)
+      expect(await withdrawHook.getGlobalWithdrawLimitPerPeriod()).lt(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD
+      )
+    })
+
+    it('returns min limit if set < min and raw min < percent min', async () => {
+      const percentMinGreaterThanRawMin = MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD.mul(2)
+      await withdrawHook
+        .connect(deployer)
+        .setGlobalWithdrawLimitPerPeriod(percentMinGreaterThanRawMin.sub(1))
+      // Change globalNetDepositAmount to cause min limit to exceed set limit
+      const globalDepositAmountToExceedMinLimit = percentMinGreaterThanRawMin
+        .mul(PERCENT_DENOMINATOR)
+        .div(MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD)
+      mockDepositRecord.getGlobalNetDepositAmount.returns(globalDepositAmountToExceedMinLimit)
+
+      expect(await withdrawHook.getEffectiveGlobalWithdrawLimitPerPeriod()).eq(
+        percentMinGreaterThanRawMin
+      )
+    })
+
+    afterEach(() => {
+      mockDepositRecord.getGlobalNetDepositAmount.reset()
     })
   })
 })

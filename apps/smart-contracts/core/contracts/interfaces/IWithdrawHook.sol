@@ -25,5 +25,22 @@ interface IWithdrawHook is IHook {
     view
     returns (uint256);
 
+  function getEffectiveGlobalWithdrawLimitPerPeriod()
+    external
+    view
+    returns (uint256);
+
+  function PERCENT_DENOMINATOR() external pure returns (uint256);
+
   function MAX_GLOBAL_PERIOD_LENGTH() external pure returns (uint256);
+
+  function MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD()
+    external
+    pure
+    returns (uint256);
+
+  function MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD()
+    external
+    view
+    returns (uint256);
 }

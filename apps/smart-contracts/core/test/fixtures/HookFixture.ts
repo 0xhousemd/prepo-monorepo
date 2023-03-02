@@ -18,9 +18,9 @@ export async function depositHookFixture(): Promise<DepositHook> {
   return (await factory.deploy()) as DepositHook
 }
 
-export async function withdrawHookFixture(): Promise<WithdrawHook> {
+export async function withdrawHookFixture(baseTokenDecimals: number): Promise<WithdrawHook> {
   const factory = await ethers.getContractFactory('WithdrawHook')
-  return (await factory.deploy()) as WithdrawHook
+  return (await factory.deploy(baseTokenDecimals)) as WithdrawHook
 }
 
 export async function mintHookFixture(): Promise<MintHook> {
@@ -38,9 +38,11 @@ export async function smockDepositHookFixture(): Promise<MockContract<DepositHoo
   return mockFactory.deploy()
 }
 
-export async function smockWithdrawHookFixture(): Promise<MockContract<WithdrawHook>> {
+export async function smockWithdrawHookFixture(
+  baseTokenDecimals: number
+): Promise<MockContract<WithdrawHook>> {
   const mockFactory = await smock.mock<WithdrawHook__factory>('WithdrawHook')
-  return mockFactory.deploy()
+  return mockFactory.deploy(baseTokenDecimals)
 }
 
 export async function smockMintHookFixture(): Promise<MockContract<MintHook>> {

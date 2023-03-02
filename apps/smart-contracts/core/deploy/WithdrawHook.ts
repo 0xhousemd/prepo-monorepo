@@ -15,7 +15,7 @@ const deployFunction: DeployFunction = async function deployWithdrawHook(
   await deployNonUpgradeableContract(
     'WithdrawHook',
     DEPLOYMENT_NAMES.preUSDC.withdrawHook.name,
-    [],
+    [18],
     hre
   )
 }

@@ -98,7 +98,7 @@ export class MockCoreWithMockBaseToken extends MockCore {
       await this.baseToken.decimals()
     )
     this.collateral.depositHook = await smockDepositHookFixture()
-    this.collateral.withdrawHook = await smockWithdrawHookFixture()
+    this.collateral.withdrawHook = await smockWithdrawHookFixture(18)
     return this
   }
 }
@@ -129,7 +129,7 @@ export class MockCoreWithLiveBaseToken extends MockCore {
       await this.baseToken.decimals()
     )
     this.collateral.depositHook = await smockDepositHookFixture()
-    this.collateral.withdrawHook = await smockWithdrawHookFixture()
+    this.collateral.withdrawHook = await smockWithdrawHookFixture(18)
     return this
   }
 }

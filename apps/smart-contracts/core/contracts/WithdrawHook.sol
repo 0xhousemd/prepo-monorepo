@@ -21,7 +21,12 @@ contract WithdrawHook is
   uint256 private _lastGlobalPeriodReset;
   uint256 private _globalAmountWithdrawnThisPeriod;
 
+  uint256 public constant override PERCENT_DENOMINATOR = 1000000;
   uint256 public constant override MAX_GLOBAL_PERIOD_LENGTH = 7 days;
+  uint256
+    public constant
+    override MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD = 30000;
+  uint256 public immutable override MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD;
 
   bytes32 public constant SET_COLLATERAL_ROLE = keccak256("setCollateral");
   bytes32 public constant SET_DEPOSIT_RECORD_ROLE =
@@ -32,6 +37,10 @@ contract WithdrawHook is
     keccak256("setGlobalWithdrawLimitPerPeriod");
   bytes32 public constant SET_TREASURY_ROLE = keccak256("setTreasury");
   bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
+
+  constructor(uint256 baseTokenDecimals) {
+    MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD = 10**baseTokenDecimals * 15;
+  }
 
   /*
    * @dev While we could include the period length in the last reset
@@ -53,7 +62,7 @@ contract WithdrawHook is
     }
     require(
       _globalAmountWithdrawnThisPeriod + amountBeforeFee <=
-        _globalWithdrawLimitPerPeriod,
+        getEffectiveGlobalWithdrawLimitPerPeriod(),
       "Global withdraw limit exceeded"
     );
     _globalAmountWithdrawnThisPeriod += amountBeforeFee;
@@ -101,6 +110,10 @@ contract WithdrawHook is
   function setGlobalWithdrawLimitPerPeriod(
     uint256 globalWithdrawLimitPerPeriod
   ) external override onlyRole(SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE) {
+    require(
+      globalWithdrawLimitPerPeriod >= getMinGlobalWithdrawLimitPerPeriod(),
+      "Limit too low"
+    );
     _globalWithdrawLimitPerPeriod = globalWithdrawLimitPerPeriod;
     emit GlobalWithdrawLimitPerPeriodChange(globalWithdrawLimitPerPeriod);
   }
@@ -150,5 +163,34 @@ contract WithdrawHook is
     returns (uint256)
   {
     return _globalAmountWithdrawnThisPeriod;
+  }
+
+  function getEffectiveGlobalWithdrawLimitPerPeriod()
+    public
+    view
+    override
+    returns (uint256)
+  {
+    return
+      max(_globalWithdrawLimitPerPeriod, getMinGlobalWithdrawLimitPerPeriod());
+  }
+
+  function getMinGlobalWithdrawLimitPerPeriod()
+    internal
+    view
+    returns (uint256)
+  {
+    uint256 minWithdrawLimitPerPeriodFromPercent = (_depositRecord
+      .getGlobalNetDepositAmount() *
+      MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD) / PERCENT_DENOMINATOR;
+    return
+      max(
+        MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD,
+        minWithdrawLimitPerPeriodFromPercent
+      );
+  }
+
+  function max(uint256 a, uint256 b) internal pure returns (uint256) {
+    return a >= b ? a : b;
   }
 }
