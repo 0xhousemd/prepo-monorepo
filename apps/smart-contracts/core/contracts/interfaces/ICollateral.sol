@@ -28,11 +28,11 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
 
   event WithdrawHookChange(address hook);
 
-  function deposit(address recipient, uint256 amount)
+  function deposit(address recipient, uint256 baseTokenAmount)
     external
-    returns (uint256);
+    returns (uint256 collateralMintAmount);
 
-  function withdraw(address recipient, uint256 amount)
+  function withdraw(address recipient, uint256 collateralAmount)
     external
     returns (uint256 baseTokenAmountAfterFee);
 

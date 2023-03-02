@@ -48,48 +48,52 @@ contract Collateral is
    * (withdrawable by manager). Converts amount after fee from base token
    * units to collateral token units.
    */
-  function deposit(address recipient, uint256 amount)
+  function deposit(address recipient, uint256 baseTokenAmount)
     external
     override
     nonReentrant
-    returns (uint256)
+    returns (uint256 collateralMintAmount)
   {
-    uint256 fee = (amount * _depositFee) / PERCENT_DENOMINATOR;
+    uint256 fee = (baseTokenAmount * _depositFee) / PERCENT_DENOMINATOR;
     if (_depositFee > 0) {
       require(fee > 0, "fee = 0");
     } else {
-      require(amount > 0, "amount = 0");
+      require(baseTokenAmount > 0, "base token amount = 0");
     }
-    _baseToken.transferFrom(msg.sender, address(this), amount);
-    uint256 amountAfterFee = amount - fee;
+    _baseToken.transferFrom(msg.sender, address(this), baseTokenAmount);
+    uint256 baseTokenAmountAfterFee = baseTokenAmount - fee;
     if (address(_depositHook) != address(0)) {
       _baseToken.approve(address(_depositHook), fee);
-      _depositHook.hook(msg.sender, recipient, amount, amountAfterFee);
+      _depositHook.hook(
+        msg.sender,
+        recipient,
+        baseTokenAmount,
+        baseTokenAmountAfterFee
+      );
       _baseToken.approve(address(_depositHook), 0);
     }
-    /// Converts amount after fee from base token units to collateral token units.
-    uint256 collateralMintAmount = (amountAfterFee * 1e18) /
+    collateralMintAmount =
+      (baseTokenAmountAfterFee * 1e18) /
       _baseTokenDenominator;
     _mint(recipient, collateralMintAmount);
-    emit Deposit(recipient, amountAfterFee, fee);
-    return collateralMintAmount;
+    emit Deposit(recipient, baseTokenAmountAfterFee, fee);
   }
 
-  /// @dev Converts amount from collateral token units to base token units.
-  function withdraw(address recipient, uint256 amount)
+  function withdraw(address recipient, uint256 collateralAmount)
     external
     override
     nonReentrant
     returns (uint256 baseTokenAmountAfterFee)
   {
-    uint256 baseTokenAmount = (amount * _baseTokenDenominator) / 1e18;
+    uint256 baseTokenAmount = (collateralAmount * _baseTokenDenominator) /
+      1e18;
     uint256 fee = (baseTokenAmount * _withdrawFee) / PERCENT_DENOMINATOR;
     if (_withdrawFee > 0) {
       require(fee > 0, "fee = 0");
     } else {
-      require(baseTokenAmount > 0, "amount = 0");
+      require(baseTokenAmount > 0, "base token amount = 0");
     }
-    _burn(msg.sender, amount);
+    _burn(msg.sender, collateralAmount);
     baseTokenAmountAfterFee = baseTokenAmount - fee;
     if (address(_withdrawHook) != address(0)) {
       _baseToken.approve(address(_withdrawHook), fee);
