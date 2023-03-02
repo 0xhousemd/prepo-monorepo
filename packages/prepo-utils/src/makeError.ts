@@ -3,7 +3,7 @@ export const makeError = (errorObject: any, log = true): Error => {
   const errorMessage =
     typeof errorObject === 'string'
       ? errorObject
-      : errorObject?.error?.data?.originalError.message ??
+      : errorObject?.error?.data?.originalError?.message ??
         errorObject?.reason ??
         errorObject?.message ??
         JSON.stringify(errorObject)
