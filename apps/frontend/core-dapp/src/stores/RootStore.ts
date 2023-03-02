@@ -18,6 +18,7 @@ import { TokenSenderStore } from './TokenSenderStore'
 import { MediaQueryStore } from './MediaQueryStore'
 import { WithdrawHookStore } from './WithdrawHookStore'
 import { DebugStore } from './DebugStore'
+import { BalancerStore } from './BalancerStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
 import { AdvancedSettingsStore } from '../components/AdvancedSettingsModal/AdvancedSettingsStore'
@@ -77,6 +78,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   unstakeStore: UnstakeStore
   mediaQueryStore: MediaQueryStore
   debugStore: DebugStore
+  balancerStore: BalancerStore
 
   constructor() {
     super({
@@ -117,5 +119,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.unstakeStore = new UnstakeStore(this)
     this.mediaQueryStore = new MediaQueryStore()
     this.debugStore = new DebugStore()
+    this.balancerStore = new BalancerStore(this)
   }
 }
