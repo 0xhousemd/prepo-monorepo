@@ -17,13 +17,14 @@ contract DepositRecord is
   uint256 private _userDepositCap;
   mapping(address => uint256) private _userToDeposits;
 
-  bytes32 public constant SET_GLOBAL_NET_DEPOSIT_CAP_ROLE =
+  bytes32 public constant override SET_GLOBAL_NET_DEPOSIT_CAP_ROLE =
     keccak256("setGlobalNetDepositCap");
-  bytes32 public constant SET_USER_DEPOSIT_CAP_ROLE =
+  bytes32 public constant override SET_USER_DEPOSIT_CAP_ROLE =
     keccak256("setUserDepositCap");
-  bytes32 public constant SET_ALLOWED_MSG_SENDERS_ROLE =
+  bytes32 public constant override SET_ALLOWED_MSG_SENDERS_ROLE =
     keccak256("setAllowedMsgSenders");
-  bytes32 public constant SET_ACCOUNT_LIST_ROLE = keccak256("setAccountList");
+  bytes32 public constant override SET_ACCOUNT_LIST_ROLE =
+    keccak256("setAccountList");
 
   function recordDeposit(address user, uint256 amount)
     external

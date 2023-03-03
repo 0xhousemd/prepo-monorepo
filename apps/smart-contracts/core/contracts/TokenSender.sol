@@ -21,15 +21,16 @@ contract TokenSender is
   IERC20 private immutable _outputToken;
   uint256 private immutable _outputTokenDecimalsFactor;
 
-  uint256 public constant MULTIPLIER_DENOMINATOR = 10000;
-  bytes32 public constant SET_PRICE_ROLE = keccak256("setPrice");
-  bytes32 public constant SET_PRICE_MULTIPLIER_ROLE =
+  uint256 public constant override MULTIPLIER_DENOMINATOR = 10000;
+  bytes32 public constant override SET_PRICE_ROLE = keccak256("setPrice");
+  bytes32 public constant override SET_PRICE_MULTIPLIER_ROLE =
     keccak256("setPriceMultiplier");
-  bytes32 public constant SET_SCALED_PRICE_LOWER_BOUND_ROLE =
+  bytes32 public constant override SET_SCALED_PRICE_LOWER_BOUND_ROLE =
     keccak256("setScaledPriceLowerBound");
-  bytes32 public constant SET_ALLOWED_MSG_SENDERS_ROLE =
+  bytes32 public constant override SET_ALLOWED_MSG_SENDERS_ROLE =
     keccak256("setAllowedMsgSenders");
-  bytes32 public constant WITHDRAW_ERC20_ROLE = keccak256("withdrawERC20");
+  bytes32 public constant override WITHDRAW_ERC20_ROLE =
+    keccak256("withdrawERC20");
 
   constructor(IERC20 outputToken, uint256 outputTokenDecimals) {
     _outputToken = outputToken;

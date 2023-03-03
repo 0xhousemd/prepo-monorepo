@@ -57,4 +57,14 @@ interface ICollateral is IERC20Upgradeable, IERC20PermitUpgradeable {
   function getBaseTokenBalance() external view returns (uint256);
 
   function PERCENT_DENOMINATOR() external view returns (uint256);
+
+  function FEE_LIMIT() external view returns (uint256);
+
+  function SET_DEPOSIT_FEE_ROLE() external view returns (bytes32);
+
+  function SET_WITHDRAW_FEE_ROLE() external view returns (bytes32);
+
+  function SET_DEPOSIT_HOOK_ROLE() external view returns (bytes32);
+
+  function SET_WITHDRAW_HOOK_ROLE() external view returns (bytes32);
 }

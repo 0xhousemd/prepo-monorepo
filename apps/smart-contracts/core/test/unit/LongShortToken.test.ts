@@ -60,9 +60,7 @@ describe('=> LongShortToken', () => {
 
       const tx = await longShort.connect(deployer).burnFrom(user.address, TEST_AMOUNT)
 
-      expect(tx)
-        .emit(longShort.address, 'Transfer')
-        .withArgs(user.address, ZERO_ADDRESS, TEST_AMOUNT)
+      await expect(tx).emit(longShort, 'Transfer').withArgs(user.address, ZERO_ADDRESS, TEST_AMOUNT)
       expect(await longShort.balanceOf(user.address)).eq(userBalanceBefore.sub(TEST_AMOUNT))
       expect(await longShort.totalSupply()).eq(totalSupplyBefore.sub(TEST_AMOUNT))
     })

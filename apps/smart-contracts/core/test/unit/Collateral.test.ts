@@ -446,7 +446,7 @@ describe('=> Collateral', () => {
       await collateral.connect(deployer).setDepositFee(0)
 
       await expect(collateral.connect(sender).deposit(recipient.address, 0)).revertedWith(
-        'amount = 0'
+        'base token amount = 0'
       )
     })
 
@@ -761,7 +761,9 @@ describe('=> Collateral', () => {
     it('reverts if withdrawal = 0 and withdraw fee = 0%', async () => {
       await collateral.connect(deployer).setWithdrawFee(0)
 
-      await expect(collateral.connect(user).withdraw(user.address, 0)).revertedWith('amount = 0')
+      await expect(collateral.connect(user).withdraw(user.address, 0)).revertedWith(
+        'base token amount = 0'
+      )
     })
 
     it('reverts if withdrawal = 0 and withdraw fee > 0%', async () => {
@@ -796,7 +798,7 @@ describe('=> Collateral', () => {
       expect(baseTokenToReceive).to.eq(0)
 
       await expect(collateral.connect(user).withdraw(user.address, amountToWithdraw)).revertedWith(
-        'amount = 0'
+        'base token amount = 0'
       )
     })
 

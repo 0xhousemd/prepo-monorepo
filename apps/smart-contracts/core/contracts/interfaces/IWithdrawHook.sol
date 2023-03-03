@@ -43,4 +43,19 @@ interface IWithdrawHook is IHook {
     external
     view
     returns (uint256);
+
+  function SET_COLLATERAL_ROLE() external view returns (bytes32);
+
+  function SET_DEPOSIT_RECORD_ROLE() external view returns (bytes32);
+
+  function SET_GLOBAL_PERIOD_LENGTH_ROLE() external view returns (bytes32);
+
+  function SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE()
+    external
+    view
+    returns (bytes32);
+
+  function SET_TREASURY_ROLE() external view returns (bytes32);
+
+  function SET_TOKEN_SENDER_ROLE() external view returns (bytes32);
 }

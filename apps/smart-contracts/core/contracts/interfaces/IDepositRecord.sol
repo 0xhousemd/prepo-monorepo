@@ -86,4 +86,12 @@ interface IDepositRecord {
     external
     view
     returns (uint256);
+
+  function SET_GLOBAL_NET_DEPOSIT_CAP_ROLE() external view returns (bytes32);
+
+  function SET_USER_DEPOSIT_CAP_ROLE() external view returns (bytes32);
+
+  function SET_ALLOWED_MSG_SENDERS_ROLE() external view returns (bytes32);
+
+  function SET_ACCOUNT_LIST_ROLE() external view returns (bytes32);
 }

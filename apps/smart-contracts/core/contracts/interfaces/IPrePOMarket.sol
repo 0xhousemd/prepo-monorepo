@@ -179,24 +179,17 @@ interface IPrePOMarket {
    */
   function getExpiryTime() external view returns (uint256);
 
-  /**
-   * @notice Long payouts cannot exceed this value, equivalent to 1 ether
-   * unit of Collateral.
-   * @return Max Long token payout
-   */
-  function getMaxPayout() external pure returns (uint256);
+  function MAX_PAYOUT() external view returns (uint256);
 
-  /**
-   * @notice Returns the denominator for calculating fees from 4 decimal
-   * place percentage values e.g. 4.9999% = 49999.
-   * @return Denominator for calculating fees
-   */
-  function getFeeDenominator() external pure returns (uint256);
+  function FEE_DENOMINATOR() external view returns (uint256);
 
-  /**
-   * @notice Fee limit of 5% represented as 4 decimal place percentage
-   * value e.g. 4.9999% = 49999.
-   * @return Fee limit
-   */
-  function getFeeLimit() external pure returns (uint256);
+  function FEE_LIMIT() external view returns (uint256);
+
+  function SET_MINT_HOOK_ROLE() external view returns (bytes32);
+
+  function SET_REDEEM_HOOK_ROLE() external view returns (bytes32);
+
+  function SET_FINAL_LONG_PAYOUT_ROLE() external view returns (bytes32);
+
+  function SET_REDEMPTION_FEE_ROLE() external view returns (bytes32);
 }

@@ -17,8 +17,9 @@ contract PrePOMarketFactory is
   mapping(address => bool) private _validCollateral;
   mapping(bytes32 => address) private _deployedMarkets;
 
-  bytes32 public constant CREATE_MARKET_ROLE = keccak256("createMarket");
-  bytes32 public constant SET_COLLATERAL_VALIDITY_ROLE =
+  bytes32 public constant override CREATE_MARKET_ROLE =
+    keccak256("createMarket");
+  bytes32 public constant override SET_COLLATERAL_VALIDITY_ROLE =
     keccak256("setCollateralValidity");
 
   function initialize() public initializer {

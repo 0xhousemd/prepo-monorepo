@@ -21,11 +21,14 @@ contract Collateral is
   IHook private _withdrawHook;
 
   uint256 public constant override PERCENT_DENOMINATOR = 1000000;
-  uint256 public constant FEE_LIMIT = 100000;
-  bytes32 public constant SET_DEPOSIT_FEE_ROLE = keccak256("setDepositFee");
-  bytes32 public constant SET_WITHDRAW_FEE_ROLE = keccak256("setWithdrawFee");
-  bytes32 public constant SET_DEPOSIT_HOOK_ROLE = keccak256("setDepositHook");
-  bytes32 public constant SET_WITHDRAW_HOOK_ROLE =
+  uint256 public constant override FEE_LIMIT = 100000;
+  bytes32 public constant override SET_DEPOSIT_FEE_ROLE =
+    keccak256("setDepositFee");
+  bytes32 public constant override SET_WITHDRAW_FEE_ROLE =
+    keccak256("setWithdrawFee");
+  bytes32 public constant override SET_DEPOSIT_HOOK_ROLE =
+    keccak256("setDepositHook");
+  bytes32 public constant override SET_WITHDRAW_HOOK_ROLE =
     keccak256("setWithdrawHook");
 
   constructor(IERC20 baseToken, uint256 baseTokenDecimals) {

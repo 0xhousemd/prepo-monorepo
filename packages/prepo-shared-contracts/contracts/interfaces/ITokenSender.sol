@@ -28,4 +28,16 @@ interface ITokenSender {
   function getScaledPrice() external view returns (uint256);
 
   function getScaledPriceLowerBound() external view returns (uint256);
+
+  function MULTIPLIER_DENOMINATOR() external view returns (uint256);
+
+  function SET_PRICE_ROLE() external view returns (bytes32);
+
+  function SET_PRICE_MULTIPLIER_ROLE() external view returns (bytes32);
+
+  function SET_SCALED_PRICE_LOWER_BOUND_ROLE() external view returns (bytes32);
+
+  function SET_ALLOWED_MSG_SENDERS_ROLE() external view returns (bytes32);
+
+  function WITHDRAW_ERC20_ROLE() external view returns (bytes32);
 }

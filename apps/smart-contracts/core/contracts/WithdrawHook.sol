@@ -28,15 +28,18 @@ contract WithdrawHook is
     override MIN_GLOBAL_WITHDRAW_LIMIT_PERCENT_PER_PERIOD = 30000;
   uint256 public immutable override MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD;
 
-  bytes32 public constant SET_COLLATERAL_ROLE = keccak256("setCollateral");
-  bytes32 public constant SET_DEPOSIT_RECORD_ROLE =
+  bytes32 public constant override SET_COLLATERAL_ROLE =
+    keccak256("setCollateral");
+  bytes32 public constant override SET_DEPOSIT_RECORD_ROLE =
     keccak256("setDepositRecord");
-  bytes32 public constant SET_GLOBAL_PERIOD_LENGTH_ROLE =
+  bytes32 public constant override SET_GLOBAL_PERIOD_LENGTH_ROLE =
     keccak256("setGlobalPeriodLength");
-  bytes32 public constant SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE =
+  bytes32 public constant override SET_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD_ROLE =
     keccak256("setGlobalWithdrawLimitPerPeriod");
-  bytes32 public constant SET_TREASURY_ROLE = keccak256("setTreasury");
-  bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
+  bytes32 public constant override SET_TREASURY_ROLE =
+    keccak256("setTreasury");
+  bytes32 public constant override SET_TOKEN_SENDER_ROLE =
+    keccak256("setTokenSender");
 
   constructor(uint256 baseTokenDecimals) {
     MIN_GLOBAL_WITHDRAW_LIMIT_PER_PERIOD = 10**baseTokenDecimals * 15;

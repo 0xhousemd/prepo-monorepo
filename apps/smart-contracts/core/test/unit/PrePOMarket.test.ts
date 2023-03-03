@@ -108,9 +108,9 @@ describe('=> prePOMarket', () => {
       expect(await prePOMarket.getCeilingValuation()).to.eq(TEST_CEILING_VAL)
       expect(await prePOMarket.getRedemptionFee()).to.eq(0)
       expect(await prePOMarket.getExpiryTime()).to.eq(TEST_EXPIRY)
-      expect(await prePOMarket.getMaxPayout()).to.eq(MAX_PAYOUT)
-      expect(await prePOMarket.getFeeDenominator()).to.eq(FEE_DENOMINATOR)
-      expect(await prePOMarket.getFeeLimit()).to.eq(MARKET_FEE_LIMIT)
+      expect(await prePOMarket.MAX_PAYOUT()).to.eq(MAX_PAYOUT)
+      expect(await prePOMarket.FEE_DENOMINATOR()).to.eq(FEE_DENOMINATOR)
+      expect(await prePOMarket.FEE_LIMIT()).to.eq(MARKET_FEE_LIMIT)
     })
 
     it('sets role constants to correct hash', async () => {
@@ -894,7 +894,7 @@ describe('=> prePOMarket', () => {
 
       const tx = await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(tx)
+      await expect(tx)
         .to.emit(collateralToken, 'Approval')
         .withArgs(prePOMarket.address, redeemHook.address, redeemFee)
     })
@@ -909,10 +909,10 @@ describe('=> prePOMarket', () => {
 
       const tx = await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(tx)
+      await expect(tx)
         .to.emit(collateralToken, 'Approval')
         .withArgs(prePOMarket.address, redeemHook.address, redeemFee)
-      expect(tx)
+      await expect(tx)
         .to.emit(collateralToken, 'Approval')
         .withArgs(prePOMarket.address, redeemHook.address, 0)
       expect(await collateralToken.allowance(prePOMarket.address, redeemHook.address)).to.eq(0)
@@ -925,7 +925,7 @@ describe('=> prePOMarket', () => {
 
       const tx = await prePOMarket.connect(user).redeem(longToRedeem, shortToRedeem, user.address)
 
-      expect(tx).to.not.emit(collateralToken, 'Approval')
+      await expect(tx).to.not.emit(collateralToken, 'Approval')
       expect(await collateralToken.allowance(prePOMarket.address, redeemHook.address)).to.eq(0)
     })
 

@@ -32,15 +32,17 @@ contract PrePOMarket is
 
   uint256 private immutable _expiryTime;
 
-  uint256 private constant MAX_PAYOUT = 1e18;
-  uint256 private constant FEE_DENOMINATOR = 1000000;
-  uint256 private constant FEE_LIMIT = 100000;
+  uint256 public constant override MAX_PAYOUT = 1e18;
+  uint256 public constant override FEE_DENOMINATOR = 1000000;
+  uint256 public constant override FEE_LIMIT = 100000;
 
-  bytes32 public constant SET_MINT_HOOK_ROLE = keccak256("setMintHook");
-  bytes32 public constant SET_REDEEM_HOOK_ROLE = keccak256("setRedeemHook");
-  bytes32 public constant SET_FINAL_LONG_PAYOUT_ROLE =
+  bytes32 public constant override SET_MINT_HOOK_ROLE =
+    keccak256("setMintHook");
+  bytes32 public constant override SET_REDEEM_HOOK_ROLE =
+    keccak256("setRedeemHook");
+  bytes32 public constant override SET_FINAL_LONG_PAYOUT_ROLE =
     keccak256("setFinalLongPayout");
-  bytes32 public constant SET_REDEMPTION_FEE_ROLE =
+  bytes32 public constant override SET_REDEMPTION_FEE_ROLE =
     keccak256("setRedemptionFee");
 
   /**
@@ -267,17 +269,5 @@ contract PrePOMarket is
 
   function getExpiryTime() external view override returns (uint256) {
     return _expiryTime;
-  }
-
-  function getMaxPayout() external pure override returns (uint256) {
-    return MAX_PAYOUT;
-  }
-
-  function getFeeDenominator() external pure override returns (uint256) {
-    return FEE_DENOMINATOR;
-  }
-
-  function getFeeLimit() external pure override returns (uint256) {
-    return FEE_LIMIT;
   }
 }

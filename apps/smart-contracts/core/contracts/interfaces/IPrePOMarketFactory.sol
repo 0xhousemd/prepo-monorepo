@@ -86,4 +86,8 @@ interface IPrePOMarketFactory {
     external
     view
     returns (IPrePOMarket);
+
+  function CREATE_MARKET_ROLE() external view returns (bytes32);
+
+  function SET_COLLATERAL_VALIDITY_ROLE() external view returns (bytes32);
 }

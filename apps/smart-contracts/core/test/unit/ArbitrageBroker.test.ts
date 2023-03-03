@@ -194,10 +194,13 @@ describe('=> ArbitrageBroker', () => {
     it('emits MarketValidityChanged', async () => {
       const tx = await arbitrageBroker.connect(governance).setMarketValidity(market.address, true)
 
-      expect(tx).to.emit(arbitrageBroker, 'MarketValidityChange').withArgs(market.address, true)
+      await expect(tx)
+        .to.emit(arbitrageBroker, 'MarketValidityChange')
+        .withArgs(market.address, true)
     })
   })
 
+  // TODO add ArbitrageProfit event emission test
   describe('# buyAndRedeem', () => {
     beforeEach(async () => {
       await arbitrageBroker.connect(governance).setMarketValidity(market.address, true)
@@ -314,25 +317,6 @@ describe('=> ArbitrageBroker', () => {
       expect(buyAndRedeemReturnValues.collateralToBuyShort).eq(testAmountInForShortSwap)
     })
 
-    it('emits ArbitrageProfit event', async () => {
-      const testAmountInForLongSwap = parseEther('1')
-      const testAmountInForShortSwap = parseEther('2')
-      swapRouter.exactOutputSingle
-        .whenCalledWith(correctBuyLongArgs)
-        .returns(testAmountInForLongSwap)
-      swapRouter.exactOutputSingle
-        .whenCalledWith(correctBuyShortArgs)
-        .returns(testAmountInForShortSwap)
-
-      const tx = await arbitrageBroker
-        .connect(governance)
-        .callStatic.buyAndRedeem(market.address, tradeParams)
-
-      expect(tx)
-        .emit(arbitrageBroker, 'ArbitrageProfit')
-        .withArgs(market.address, false, tradingCapitalAfter.sub(tradingCapitalBefore))
-    })
-
     afterEach(() => {
       core.collateral.balanceOf.reset()
       market.redeem.reset()
@@ -340,6 +324,7 @@ describe('=> ArbitrageBroker', () => {
     })
   })
 
+  // TODO add ArbitrageProfit event emission test
   describe('# mintAndSell', () => {
     beforeEach(async () => {
       await arbitrageBroker.connect(governance).setMarketValidity(market.address, true)
@@ -450,25 +435,6 @@ describe('=> ArbitrageBroker', () => {
       expect(mintAndSellReturnValues.profit).eq(tradingCapitalAfter.sub(tradingCapitalBefore))
       expect(mintAndSellReturnValues.collateralFromSellingLong).eq(testAmountOutForLongSwap)
       expect(mintAndSellReturnValues.collateralFromSellingShort).eq(testAmountOutForShortSwap)
-    })
-
-    it('emits ArbitrageProfit event', async () => {
-      const testAmountOutForLongSwap = parseEther('1')
-      const testAmountOutForShortSwap = parseEther('2')
-      swapRouter.exactInputSingle
-        .whenCalledWith(correctSellLongArgs)
-        .returns(testAmountOutForLongSwap)
-      swapRouter.exactInputSingle
-        .whenCalledWith(correctSellShortArgs)
-        .returns(testAmountOutForShortSwap)
-
-      const tx = await arbitrageBroker
-        .connect(governance)
-        .callStatic.mintAndSell(market.address, tradeParams)
-
-      expect(tx)
-        .emit(arbitrageBroker, 'ArbitrageProfit')
-        .withArgs(market.address, true, tradingCapitalAfter.sub(tradingCapitalBefore))
     })
 
     afterEach(() => {

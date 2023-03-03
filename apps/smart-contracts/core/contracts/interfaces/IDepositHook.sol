@@ -9,4 +9,14 @@ interface IDepositHook is IHook {
   function setDepositsAllowed(bool allowed) external;
 
   function depositsAllowed() external view returns (bool);
+
+  function SET_COLLATERAL_ROLE() external view returns (bytes32);
+
+  function SET_DEPOSIT_RECORD_ROLE() external view returns (bytes32);
+
+  function SET_DEPOSITS_ALLOWED_ROLE() external view returns (bytes32);
+
+  function SET_TREASURY_ROLE() external view returns (bytes32);
+
+  function SET_TOKEN_SENDER_ROLE() external view returns (bytes32);
 }

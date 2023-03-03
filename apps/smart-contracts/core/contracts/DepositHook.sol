@@ -18,13 +18,16 @@ contract DepositHook is
 {
   bool private _depositsAllowed;
 
-  bytes32 public constant SET_COLLATERAL_ROLE = keccak256("setCollateral");
-  bytes32 public constant SET_DEPOSIT_RECORD_ROLE =
+  bytes32 public constant override SET_COLLATERAL_ROLE =
+    keccak256("setCollateral");
+  bytes32 public constant override SET_DEPOSIT_RECORD_ROLE =
     keccak256("setDepositRecord");
-  bytes32 public constant SET_DEPOSITS_ALLOWED_ROLE =
+  bytes32 public constant override SET_DEPOSITS_ALLOWED_ROLE =
     keccak256("setDepositsAllowed");
-  bytes32 public constant SET_TREASURY_ROLE = keccak256("setTreasury");
-  bytes32 public constant SET_TOKEN_SENDER_ROLE = keccak256("setTokenSender");
+  bytes32 public constant override SET_TREASURY_ROLE =
+    keccak256("setTreasury");
+  bytes32 public constant override SET_TOKEN_SENDER_ROLE =
+    keccak256("setTokenSender");
 
   function hook(
     address,

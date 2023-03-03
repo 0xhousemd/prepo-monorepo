@@ -191,11 +191,11 @@ describe('=> DepositTradeHelper', () => {
         )
         await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
-        const tx = await depositTradeHelper
+        await depositTradeHelper
           .connect(user)
           .depositAndTrade(baseTokenToDeposit, junkPermit, collateralPermit, junkTradeParams)
 
-        expect(tx).to.not.emit(core.baseToken, 'Approval')
+        expect(core.baseToken.permit).not.called
         expect(await core.baseToken.allowance(user.address, depositTradeHelper.address)).to.eq(0)
       })
 
@@ -213,11 +213,11 @@ describe('=> DepositTradeHelper', () => {
         )
         await setNextTimestamp(ethers.provider, TEST_TIMESTAMP)
 
-        const tx = await depositTradeHelper
+        await depositTradeHelper
           .connect(user)
           .depositAndTrade(baseTokenToDeposit, baseTokenPermit, junkPermit, junkTradeParams)
 
-        expect(tx).to.not.emit(core.collateral, 'Approval')
+        expect(core.collateral.permit).not.called
         expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).to.eq(0)
       })
 
@@ -228,12 +228,12 @@ describe('=> DepositTradeHelper', () => {
           .approve(depositTradeHelper.address, expectedCollateralMinted)
         expect(junkPermit.deadline).to.eq(0)
 
-        const tx = await depositTradeHelper
+        await depositTradeHelper
           .connect(user)
           .depositAndTrade(baseTokenToDeposit, junkPermit, junkPermit, junkTradeParams)
 
-        expect(tx).to.not.emit(core.baseToken, 'Approval')
-        expect(tx).to.not.emit(core.collateral, 'Approval')
+        expect(core.baseToken.permit).not.called
+        expect(core.collateral.permit).not.called
         expect(await core.baseToken.allowance(user.address, depositTradeHelper.address)).to.eq(0)
         expect(await core.collateral.allowance(user.address, depositTradeHelper.address)).to.eq(0)
       })
@@ -443,8 +443,10 @@ describe('=> DepositTradeHelper', () => {
     afterEach(() => {
       core.collateral.depositHook.hook.reset()
       core.baseToken.transferFrom.reset()
+      core.baseToken.permit.reset()
       core.collateral.deposit.reset()
       core.collateral.transferFrom.reset()
+      core.collateral.permit.reset()
       swapRouter.exactInputSingle.reset()
     })
   })
