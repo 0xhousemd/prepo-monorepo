@@ -1,6 +1,7 @@
 import deepEqual from 'fast-deep-equal'
 import cloneDeep from 'clone-deep'
 import { autorun, makeAutoObservable, runInAction, toJS } from 'mobx'
+import { SEC_IN_MS } from 'prepo-constants'
 import { Multicall, ContractCallContext, ContractCallReturnContext } from 'ethereum-multicall'
 import { CallContext } from 'ethereum-multicall/dist/esm/models'
 import { RootStore } from './RootStore'
@@ -25,6 +26,7 @@ export class MulticallStore {
   contractCallContexts: ContractCallContext<{ cb: (res: any) => void }>[] = []
   activeCalls: Set<string> = new Set()
   multicall?: Multicall
+  nextCall = 0
 
   constructor(root: RootStore<unknown>) {
     this.root = root
@@ -42,6 +44,10 @@ export class MulticallStore {
   }
 
   call(): void {
+    const now = new Date().getTime()
+    if (this.nextCall > now) return
+    this.nextCall = now + SEC_IN_MS
+
     runInAction(() => {
       try {
         if (!this.multicall) throw Error('multicall must be initialized')
@@ -74,7 +80,15 @@ export class MulticallStore {
           })
           // errors in here won't get caught by try catch
           .catch((error) => {
-            if (isImportantError(error)) throw this.root.captureError(error)
+            // potential rate limiting
+            if (error.code === 'CALL_EXCEPTION') {
+              runInAction(() => {
+                // cool off 10 seconds if we get rate limited
+                this.nextCall = new Date().getTime() + 10 * SEC_IN_MS
+              })
+            } else if (isImportantError(error)) {
+              throw this.root.captureError(error)
+            }
           })
       } catch (error) {
         if (isImportantError(error)) throw this.root.captureError(error)
