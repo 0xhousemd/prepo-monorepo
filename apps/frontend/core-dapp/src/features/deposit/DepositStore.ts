@@ -77,7 +77,12 @@ export class DepositStore {
     if (this.depositAmountBN === undefined || address === undefined) return
 
     this.depositing = true
-    const { error } = await this.root.preCTTokenStore.deposit(address, this.depositAmountBN)
+    if (this.depositAmountBN === undefined) return
+
+    const { error } =
+      this.depositToken.type === 'native'
+        ? await this.root.depositTradeHelperStore.wrapAndDeposit(address, this.depositAmountBN)
+        : await this.root.preCTTokenStore.deposit(address, this.depositAmountBN)
 
     if (error) {
       this.root.toastStore.errorToast('Deposit failed', error)

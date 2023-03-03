@@ -3,6 +3,7 @@ import { configure } from 'mobx'
 import { ThemeModes } from 'prepo-ui/src/themes/themes.types'
 import { initializeStore } from './src/context/initializeStore'
 
+jest.mock('antd/lib/notification')
 jest.mock('./src/stores/MarketStore')
 jest.mock('./src/stores/MediaQueryStore', () => ({
   MediaQueryStore: class {

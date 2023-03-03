@@ -53,15 +53,18 @@ describe('DepositStore tests', () => {
   describe('deposit', () => {
     const mock: any = (): jest.Mock<void> => jest.fn()
     let spyDeposit: jest.SpyInstance
+    let spyDepositAndWrap: jest.SpyInstance
     let spyAddress: jest.SpyInstance
 
     beforeEach(() => {
       rootStore.depositStore.setDepositAmount(amountToDeposit)
       spyDeposit = jest.spyOn(rootStore.preCTTokenStore, 'deposit')
+      spyDepositAndWrap = jest.spyOn(rootStore.depositTradeHelperStore, 'wrapAndDeposit')
       spyAddress = jest
         .spyOn(rootStore.web3Store, 'address', 'get')
         .mockReturnValue('0xdummyAddress')
 
+      spyDepositAndWrap.mockImplementation(mock)
       spyDeposit.mockImplementation(mock)
       rootStore.depositStore.deposit()
     })
@@ -69,14 +72,15 @@ describe('DepositStore tests', () => {
     afterEach(() => {
       spyDeposit.mockRestore()
       spyAddress.mockRestore()
+      spyDepositAndWrap.mockRestore()
     })
 
     it('should call deposit method on the collateral contract when depositing', () => {
-      expect(rootStore.preCTTokenStore.deposit).toHaveBeenCalledTimes(1)
+      expect(rootStore.depositTradeHelperStore.wrapAndDeposit).toHaveBeenCalledTimes(1)
     })
 
     it('should match same amount to deposit to the one sent to the collateral contract', () => {
-      const depositParameters = spyDeposit.mock.calls[0][1]
+      const depositParameters = spyDepositAndWrap.mock.calls[0][1]
       expect(utils.formatUnits(depositParameters, ERC20_UNITS)).toBe(amountToDeposit)
     })
   })

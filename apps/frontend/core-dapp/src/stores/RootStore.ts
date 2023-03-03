@@ -17,6 +17,7 @@ import { DepositRecordStore } from './DepositRecordStore'
 import { TokenSenderStore } from './TokenSenderStore'
 import { MediaQueryStore } from './MediaQueryStore'
 import { WithdrawHookStore } from './WithdrawHookStore'
+import { DepositTradeHelperStore } from './DepositTradeHelperStore'
 import { DebugStore } from './DebugStore'
 import { BalancerStore } from './BalancerStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
@@ -55,6 +56,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   timerStore: TimerStore
   depositStore: DepositStore
   depositRecordStore: DepositRecordStore
+  depositTradeHelperStore: DepositTradeHelperStore
   marketStore: MarketStore
   advancedSettingsStore: AdvancedSettingsStore
   baseTokenStore: Erc20Store
@@ -101,6 +103,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.portfolioStore = new PortfolioStore(this)
     this.depositStore = new DepositStore(this)
     this.depositRecordStore = new DepositRecordStore(this)
+    this.depositTradeHelperStore = new DepositTradeHelperStore(this)
     this.withdrawStore = new WithdrawStore(this)
     this.withdrawHookStore = new WithdrawHookStore(this)
     this.tradeStore = new TradeStore(this)
