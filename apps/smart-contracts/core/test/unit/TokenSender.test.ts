@@ -8,7 +8,7 @@ import { BigNumber } from 'ethers'
 import { FakeContract, smock } from '@defi-wonderland/smock'
 import { tokenSenderFixture } from '../fixtures/TokenSenderFixture'
 import { smockTestERC20Fixture } from '../fixtures/TestERC20Fixture'
-import { fakeTestUintValueFixture } from '../fixtures/TestUintValueFixture'
+import { fakeTestUintValueFixture } from '../fixtures/UintValueFixtures'
 import { fakeAccountListFixture } from '../fixtures/HookFixture'
 import { AccountList, TestERC20, TestUintValue, TokenSender } from '../../types/generated'
 
