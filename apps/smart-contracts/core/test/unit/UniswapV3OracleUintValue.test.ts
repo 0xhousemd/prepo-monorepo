@@ -18,11 +18,13 @@ describe('=> UniswapV3OracleUintValue', () => {
   let user: SignerWithAddress
   let fakeUniswapV3Oracle: FakeContract<IUniswapV3Oracle>
   let uniswapV3OracleUintValue: UniswapV3OracleUintValue
-  const BASE_TOKEN_DECIMALS = 18
+  const BASE_TOKEN_DECIMALS = 6
+  const QUOTE_TOKEN_DECIMALS = 18
   const USDC_ADDRESS = getPrePOAddressForNetwork('USDC', 'arbitrumOne')
   const WETH_ADDRESS = getPrePOAddressForNetwork('WETH', 'arbitrumOne')
   const TEST_OBSERVATION_PERIOD = 604800
   const TEST_BASE_AMOUNT = parseUnits('0.069', BASE_TOKEN_DECIMALS) // $0.069
+  const TEST_QUOTE_AMOUNT = parseUnits('0.0000414', QUOTE_TOKEN_DECIMALS) // $0.069 * 0.0006 ETH per USDC
 
   snapshotter.setupSnapshotContext('UniswapV3OracleUintValue')
   before(async () => {
@@ -141,6 +143,33 @@ describe('=> UniswapV3OracleUintValue', () => {
       const tx = await uniswapV3OracleUintValue.connect(deployer).setBaseAmount(TEST_BASE_AMOUNT)
 
       await expect(tx).emit(uniswapV3OracleUintValue, 'BaseAmountChange').withArgs(TEST_BASE_AMOUNT)
+    })
+  })
+
+  describe('# get', () => {
+    snapshotter.setupSnapshotContext('StaticOracleUintValue-get')
+    before(async () => {
+      fakeUniswapV3Oracle.quoteAllAvailablePoolsWithTimePeriod
+        .whenCalledWith(TEST_BASE_AMOUNT, USDC_ADDRESS, WETH_ADDRESS, TEST_OBSERVATION_PERIOD)
+        .returns([TEST_QUOTE_AMOUNT, []])
+      await uniswapV3OracleUintValue.setObservationPeriod(TEST_OBSERVATION_PERIOD)
+      await uniswapV3OracleUintValue.setBaseAmount(TEST_BASE_AMOUNT)
+      await snapshotter.saveSnapshot()
+    })
+
+    it("calls 'quoteAllAvailablePoolsWithTimePeriod' with correct parameters", async () => {
+      await uniswapV3OracleUintValue.get()
+
+      expect(fakeUniswapV3Oracle.quoteAllAvailablePoolsWithTimePeriod).calledWith(
+        TEST_BASE_AMOUNT,
+        USDC_ADDRESS,
+        WETH_ADDRESS,
+        TEST_OBSERVATION_PERIOD
+      )
+    })
+
+    it('returns quoted amount', async () => {
+      expect(await uniswapV3OracleUintValue.get()).eq(TEST_QUOTE_AMOUNT)
     })
   })
 })

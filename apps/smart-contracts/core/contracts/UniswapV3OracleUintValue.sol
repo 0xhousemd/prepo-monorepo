@@ -9,7 +9,7 @@ contract UniswapV3OracleUintValue is IUniswapV3OracleUintValue, SafeOwnable {
   address private immutable _baseToken;
   address private immutable _quoteToken;
   uint32 private _observationPeriod;
-  uint256 private _baseAmount;
+  uint128 private _baseAmount;
 
   constructor(
     IUniswapV3Oracle oracle,
@@ -30,12 +30,19 @@ contract UniswapV3OracleUintValue is IUniswapV3OracleUintValue, SafeOwnable {
     emit ObservationPeriodChange(observationPeriod);
   }
 
-  function setBaseAmount(uint256 baseAmount) external override onlyOwner {
+  function setBaseAmount(uint128 baseAmount) external override onlyOwner {
     _baseAmount = baseAmount;
     emit BaseAmountChange(baseAmount);
   }
 
-  function get() external view override returns (uint256) {}
+  function get() external view override returns (uint256 quoteAmount) {
+    (quoteAmount, ) = _oracle.quoteAllAvailablePoolsWithTimePeriod(
+      _baseAmount,
+      _baseToken,
+      _quoteToken,
+      _observationPeriod
+    );
+  }
 
   function getOracle() external view override returns (IUniswapV3Oracle) {
     return _oracle;
@@ -53,7 +60,7 @@ contract UniswapV3OracleUintValue is IUniswapV3OracleUintValue, SafeOwnable {
     return _observationPeriod;
   }
 
-  function getBaseAmount() external view override returns (uint256) {
+  function getBaseAmount() external view override returns (uint128) {
     return _baseAmount;
   }
 }

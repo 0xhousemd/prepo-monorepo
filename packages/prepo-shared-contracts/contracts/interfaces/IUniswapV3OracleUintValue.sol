@@ -7,11 +7,11 @@ import "../mean-finance/interfaces/IUniswapV3Oracle.sol";
 interface IUniswapV3OracleUintValue is IUintValue {
   event ObservationPeriodChange(uint32 period);
 
-  event BaseAmountChange(uint256 amount);
+  event BaseAmountChange(uint128 amount);
 
   function setObservationPeriod(uint32 observationPeriod) external;
 
-  function setBaseAmount(uint256 amount) external;
+  function setBaseAmount(uint128 amount) external;
 
   function getOracle() external view returns (IUniswapV3Oracle);
 
@@ -21,5 +21,5 @@ interface IUniswapV3OracleUintValue is IUintValue {
 
   function getObservationPeriod() external view returns (uint32);
 
-  function getBaseAmount() external view returns (uint256);
+  function getBaseAmount() external view returns (uint128);
 }
