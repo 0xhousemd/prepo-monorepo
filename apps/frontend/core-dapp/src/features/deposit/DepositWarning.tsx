@@ -1,9 +1,27 @@
 import { observer } from 'mobx-react-lite'
+import Link from 'next/link'
 import styled from 'styled-components'
 import { Alert as BaseAlert, Icon, spacingIncrement } from 'prepo-ui'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { compactNumber, displayEth } from '../../utils/number-utils'
 
+const Box = styled.div`
+  background-color: ${({ theme }): string => theme.color.accentInfo};
+  border-radius: ${({ theme }): string => theme.borderRadius.md};
+  color: ${({ theme }): string => theme.color.neutral2};
+  font-size: ${({ theme }): string => theme.fontSize.xs};
+  font-weight: ${({ theme }): number => theme.fontWeight.medium};
+  padding: ${spacingIncrement(10)} ${spacingIncrement(16)};
+  width: 100%;
+`
+
+const StyledLink = styled.a`
+  color: ${({ theme }): string => theme.color.primary};
+  text-decoration: underline;
+  :hover {
+    text-decoration: underline;
+  }
+`
 export const Alert = styled(BaseAlert).attrs({
   color: 'neutral1',
   icon: (
@@ -96,7 +114,17 @@ const DepositWarning: React.FC = () => {
       )
     }
     default: {
-      return null
+      // TODO: Update learn more link
+      return (
+        <Box>
+          <p>
+            Your ETH will be deposited as wstETH to earn you yield.{' '}
+            <Link href="/deposit" passHref>
+              <StyledLink href="/deposit">Learn more ↗</StyledLink>
+            </Link>
+          </p>
+        </Box>
+      )
     }
   }
 }
