@@ -6,6 +6,8 @@ const irrelevantErrors = [
   'missing revert data in call exception', // etherjs BaseProvider error
   'missing revert data in call exception; Transaction reverted without a reason string', // etherjs JsonRpcProvider error
   'failed to meet quorum', // fallback provider error
+  // Happens when the user leaves the tab and comes back after a while.
+  'network block skew detected',
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
