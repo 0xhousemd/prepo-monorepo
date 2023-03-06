@@ -9,6 +9,7 @@ export type ImportantKeywords =
   | 'GOVERNANCE'
   | 'USDC'
   | 'UNIV3_FACTORY'
+  | 'UNIV3_ORACLE'
   | 'UNIV3_POSITION_MANAGER'
   | 'UNIV3_SWAP_ROUTER'
   | 'PPO'
@@ -33,6 +34,9 @@ export const PREPO_ADDRESSES: ImportantAddresses = {
   UNIV3_FACTORY: {
     arbitrumTestnet: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
     arbitrumOne: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
+  },
+  UNIV3_ORACLE: {
+    arbitrumOne: '0xA8C2682a616cC8c5848d531793678D945388955f',
   },
   UNIV3_POSITION_MANAGER: {
     arbitrumTestnet: '0xC36442b4a4522E871399CD717aBDD847Ab11FE88',

@@ -80,6 +80,9 @@ export const DEPLOYMENT_NAMES = {
   prePOMarketFactory: {
     name: 'PrePOMarketFactory',
   },
+  uniswapV3Oracle: {
+    name: 'UniswapV3Oracle',
+  },
 } as const
 
 export type DeploymentNames = typeof DEPLOYMENT_NAMES
