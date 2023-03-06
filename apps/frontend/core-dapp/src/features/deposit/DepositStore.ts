@@ -149,9 +149,8 @@ export class DepositStore {
 
   get estimatedReceivedAmount(): number | undefined {
     if (this.depositFeesBN === undefined || this.depositAmountBN === undefined) return undefined
-    return (
-      +(this.root.preCTTokenStore.formatUnits(this.depositAmountBN.sub(this.depositFeesBN)) ?? 0) *
-      +this.depositAmount
+    return +(
+      this.root.preCTTokenStore.formatUnits(this.depositAmountBN.sub(this.depositFeesBN)) ?? 0
     )
   }
 
