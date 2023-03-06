@@ -2,7 +2,7 @@ import { ZERO_ADDRESS } from 'prepo-constants'
 import { ExternalContract } from './contract.types'
 
 export type CoreTokenContractNames =
-  | 'WETH'
+  | 'WSTETH'
   | 'preCT'
   | 'PPO'
   | 'PPO_STAKING'
@@ -50,7 +50,7 @@ export const DEPOSIT_TRADE_HELPER_ADDRESS: ExternalContract = {
 }
 
 export const coreContracts: CoreContracts = {
-  WETH: BASE_TOKEN_ADDRESS,
+  WSTETH: BASE_TOKEN_ADDRESS,
   preCT: COLLATERAL_TOKEN_ADDRESS,
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,
