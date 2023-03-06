@@ -21,6 +21,5 @@ export const fontWeight = {
 }
 
 export const fontFamily = {
-  primary: 'Euclid Circular A',
-  secondary: 'Euclid Circular B',
+  primary: "'Inter', sans-serif",
 }

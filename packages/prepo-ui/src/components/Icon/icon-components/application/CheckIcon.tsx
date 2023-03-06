@@ -13,9 +13,9 @@ const CheckIcon: React.FC<Props> = ({ width = '24', height = '24' }) => (
     <path
       d="M4 11.8667L8.77273 17L19 6"
       stroke="currentColor"
-      stroke-width="1.40788"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="1.40788"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 )

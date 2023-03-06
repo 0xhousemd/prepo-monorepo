@@ -38,10 +38,6 @@ export const primaryFontFamily = css`
   font-family: ${({ theme }): string => theme.fontFamily.primary};
 `
 
-export const secondaryFontFamily = css`
-  font-family: ${({ theme }): string => theme.fontFamily.secondary};
-`
-
 export const removeUserSelect = css`
   -khtml-user-select: none; /* iOS Safari */
   -moz-user-select: none; /* Safari */

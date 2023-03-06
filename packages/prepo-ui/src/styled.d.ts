@@ -187,7 +187,6 @@ declare module 'styled-components' {
     }
     fontFamily: {
       primary: string
-      secondary: string
     }
     fontWeight: Weight
     borderRadius: BorderRadius
