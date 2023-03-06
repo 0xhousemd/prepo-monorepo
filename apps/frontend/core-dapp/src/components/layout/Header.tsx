@@ -1,7 +1,6 @@
 import { Layout } from 'antd'
 import styled from 'styled-components'
 import { coreDappTheme, Flex, media, spacingIncrement } from 'prepo-ui'
-import Navigation from '../Navigation'
 import SettingsMenu from '../SettingsMenu'
 import PrePOLogo from '../PrePOLogo'
 import ConnectButton from '../../features/connect/ConnectButton'
@@ -34,8 +33,8 @@ const Header: React.FC = () => (
   <Wrapper>
     <AHeader>
       <Flex justifyContent="flex-start" gap={8}>
-        <PrePOLogo href={Routes.Trade} />
-        {!isProduction() && <Navigation />}
+        <PrePOLogo href={Routes.Deposit} />
+        {/* <Navigation /> */}
       </Flex>
       <Flex gap={8}>
         {!isProduction() && <ConnectButton size="sm" hideWhenConnected />}

@@ -13,7 +13,7 @@ const WithdrawPage: React.FC = () => {
   const { withdrawing, setWithdrawalAmount, withdrawalAmount } = withdrawStore
 
   return (
-    <PageCard backUrl={Routes.Portfolio} title="Withdraw">
+    <PageCard backUrl={Routes.Deposit} title="Withdraw">
       <CurrencyInput
         balance={tokenBalanceFormat}
         isBalanceZero={balanceOfSigner?.eq(0)}

@@ -1,4 +1,4 @@
-import { Icon, spacingIncrement } from 'prepo-ui'
+import { Icon, Tooltip, spacingIncrement } from 'prepo-ui'
 import styled from 'styled-components'
 import ACard from './Card'
 import Link from './Link'
@@ -6,6 +6,7 @@ import Link from './Link'
 type Props = {
   backUrl?: string
   title: string
+  titleTooltip?: React.ReactNode
   onClickSettings?: () => void
 }
 
@@ -61,6 +62,16 @@ const Title = styled.h2`
   font-weight: ${({ theme }): number => theme.fontWeight.semiBold};
 `
 
+const TitleWrapper = styled.div`
+  position: relative;
+`
+
+const TitleTooltipWrapper = styled.div`
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translate(100%, -50%);
+`
 const BackLink = styled(Link)`
   :hover {
     opacity: 0.7;
@@ -78,7 +89,7 @@ const SettingsButton = styled.button`
   }
 `
 
-const PageCard: React.FC<Props> = ({ backUrl, children, onClickSettings, title }) => (
+const PageCard: React.FC<Props> = ({ backUrl, children, onClickSettings, title, titleTooltip }) => (
   <Wrapper>
     <Card>
       <Header>
@@ -89,7 +100,16 @@ const PageCard: React.FC<Props> = ({ backUrl, children, onClickSettings, title }
             </BackLink>
           )}
         </IconWrapper>
-        <Title>{title}</Title>
+        <TitleWrapper>
+          <Title>{title}</Title>
+          {titleTooltip && (
+            <TitleTooltipWrapper>
+              <Tooltip overlay={titleTooltip}>
+                <Icon name="info" color="neutral5" height="14" width="14" />
+              </Tooltip>
+            </TitleTooltipWrapper>
+          )}
+        </TitleWrapper>
         <IconWrapper>
           {onClickSettings && (
             <SettingsButton>

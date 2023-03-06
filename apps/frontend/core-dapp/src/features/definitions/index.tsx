@@ -20,7 +20,10 @@ const Paragraph = styled.p`
 
 export const EstimatedReceivedAmount: React.FC = () => (
   <Paragraph>
-    <Trans>Estimated deposit amount after fees.</Trans>
+    <Trans>
+      The estimated ETH value that will be credited to your prePO account, after any conversion
+      costs, slippage, and fees.
+    </Trans>
   </Paragraph>
 )
 
