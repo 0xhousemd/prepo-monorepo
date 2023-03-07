@@ -21,8 +21,9 @@ export const BASE_TOKEN_ADDRESS: ExternalContract = {
   arbitrumOne: '0x5979D7b546E38E414F7E9822514be443A4800529',
 }
 
+// preWstETH
 export const COLLATERAL_TOKEN_ADDRESS: ExternalContract = {
-  arbitrumOne: '0xF7a34B67c01862fBf0FB72944a3473AAB8552cDE',
+  arbitrumOne: '0x67a5246e2DbbD51250b41128EA277674C65e8dee',
 }
 
 export const PPO_ADDRESS: ExternalContract = {
@@ -33,20 +34,24 @@ export const PPO_STAKING_ADDRESS: ExternalContract = {
   arbitrumOne: 'Not yet deployed',
 }
 
+// preWstETH-DepositHook
 export const DEPOSIT_HOOK_ADDRESS: ExternalContract = {
-  arbitrumOne: '0x633f8C1D573B7287F0771e4d80878fcE8efb2930',
+  arbitrumOne: '0x1Da0a54D7130DA06b7C41154A1ccBd98eEe9007E',
 }
 
+// preWstETH-DepositRecord
 export const DEPOSIT_RECORD_ADDRESS: ExternalContract = {
-  arbitrumOne: '0xEe9e151C51758531FA2A9C550eFEB4c77845988d',
+  arbitrumOne: '0x641F6b46b0E694Ebc4631284B3b0020Cb577daC7',
 }
 
+// PPOTokenSender-WstETH
 export const TOKEN_SENDER_ADDRESS: ExternalContract = {
-  arbitrumOne: '0x239EDBe7be361955b6fd20d36F036623594C9365',
+  arbitrumOne: '0xF6019b125580a3A06dd4eB023d5b03E063326c8A',
 }
 
+// preWstETH-WithdrawHook
 export const WITHDRAW_HOOK_ADDRESS: ExternalContract = {
-  arbitrumOne: '0x829E6c99445C012A536A95E2993Eb7A055D1269d',
+  arbitrumOne: '0x185b4eFC6D2Bf181142f1292A328C962926787c2',
 }
 
 export const DEPOSIT_TRADE_HELPER_ADDRESS: ExternalContract = {
