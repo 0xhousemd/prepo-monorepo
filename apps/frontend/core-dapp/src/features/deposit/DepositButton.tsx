@@ -5,7 +5,7 @@ import ConnectButton from '../connect/ConnectButton'
 import { useRootStore } from '../../context/RootStoreProvider'
 
 const DepositButton: React.FC = () => {
-  const { depositStore, web3Store } = useRootStore()
+  const { depositStore, depositHookStore, web3Store } = useRootStore()
   const {
     depositButtonInitialLoading,
     depositDisabled,
@@ -14,15 +14,23 @@ const DepositButton: React.FC = () => {
     depositLimit,
     needApproval,
   } = depositStore
+  const { depositsAllowed } = depositHookStore
   const { connected, isNetworkSupported } = web3Store
 
   const buttonText = useMemo(() => {
     if (depositButtonInitialLoading) return ''
+    if (!depositsAllowed) return 'Coming Soon'
     if (depositLimit.status === 'already-exceeded') return 'Deposit Cap Reached'
     if (insufficientBalance) return 'Insufficient Balance'
     if (needApproval) return 'Approve'
     return 'Deposit'
-  }, [depositButtonInitialLoading, depositLimit.status, insufficientBalance, needApproval])
+  }, [
+    depositButtonInitialLoading,
+    depositLimit.status,
+    depositsAllowed,
+    insufficientBalance,
+    needApproval,
+  ])
 
   if (!connected || !isNetworkSupported) return <ConnectButton block />
 

@@ -19,6 +19,7 @@ import { MediaQueryStore } from './MediaQueryStore'
 import { WithdrawHookStore } from './WithdrawHookStore'
 import { DepositTradeHelperStore } from './DepositTradeHelperStore'
 import { DebugStore } from './DebugStore'
+import { DepositHookStore } from './DepositHookStore'
 import { BalancerStore } from './BalancerStore'
 import { DelegateStore } from '../features/delegate/DelegateStore'
 import { TradeStore } from '../features/trade/TradeStore'
@@ -55,6 +56,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   tradeStore: TradeStore
   timerStore: TimerStore
   depositStore: DepositStore
+  depositHookStore: DepositHookStore
   depositRecordStore: DepositRecordStore
   depositTradeHelperStore: DepositTradeHelperStore
   marketStore: MarketStore
@@ -93,6 +95,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.timerStore = new TimerStore()
     this.uiStore = new UiStore(this)
     this.collateralStore = new CollateralStore(this)
+    this.depositHookStore = new DepositHookStore(this)
     this.baseTokenStore = new Erc20Store({
       root: this,
       tokenName: 'WSTETH',

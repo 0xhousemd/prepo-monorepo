@@ -6,6 +6,7 @@ export type CoreTokenContractNames =
   | 'COLLATERAL'
   | 'PPO'
   | 'PPO_STAKING'
+  | 'DEPOSIT_HOOK'
   | 'DEPOSIT_RECORD'
   | 'DEPOSIT_TRADE_HELPER'
   | 'TOKEN_SENDER'
@@ -32,6 +33,10 @@ export const PPO_STAKING_ADDRESS: ExternalContract = {
   arbitrumOne: 'Not yet deployed',
 }
 
+export const DEPOSIT_HOOK_ADDRESS: ExternalContract = {
+  arbitrumOne: '0x633f8C1D573B7287F0771e4d80878fcE8efb2930',
+}
+
 export const DEPOSIT_RECORD_ADDRESS: ExternalContract = {
   arbitrumOne: '0xEe9e151C51758531FA2A9C550eFEB4c77845988d',
 }
@@ -54,6 +59,7 @@ export const coreContracts: CoreContracts = {
   COLLATERAL: COLLATERAL_TOKEN_ADDRESS,
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,
+  DEPOSIT_HOOK: DEPOSIT_HOOK_ADDRESS,
   DEPOSIT_RECORD: DEPOSIT_RECORD_ADDRESS,
   DEPOSIT_TRADE_HELPER: DEPOSIT_TRADE_HELPER_ADDRESS,
   TOKEN_SENDER: TOKEN_SENDER_ADDRESS,

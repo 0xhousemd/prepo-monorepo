@@ -15,6 +15,8 @@ describe('DepositStore tests', () => {
   let spyGetTokenBalance: jest.SpyInstance
   let spyNeedApproval: jest.SpyInstance
   let spySuccessToast: jest.SpyInstance
+  let spyDepositsAllowed: jest.SpyInstance
+
   beforeAll(() => {
     spySuccessToast = jest.spyOn(rootStore.toastStore, 'successToast').mockImplementation(jest.fn())
 
@@ -27,12 +29,17 @@ describe('DepositStore tests', () => {
     spyGetTokenBalance = jest
       .spyOn(rootStore.tokensStore, 'getTokenBalanceBN')
       .mockImplementation(() => ethBalanceBN)
+
+    spyDepositsAllowed = jest
+      .spyOn(rootStore.depositHookStore, 'depositsAllowed', 'get')
+      .mockReturnValue(true)
   })
 
   afterAll(() => {
     spyGetTokenBalance.mockRestore()
     spyNeedApproval.mockRestore()
     spySuccessToast.mockRestore()
+    spyDepositsAllowed.mockRestore()
   })
 
   it('should set the amount', () => {

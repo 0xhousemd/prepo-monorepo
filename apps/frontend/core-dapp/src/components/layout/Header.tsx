@@ -6,6 +6,7 @@ import PrePOLogo from '../PrePOLogo'
 import ConnectButton from '../../features/connect/ConnectButton'
 import { Routes } from '../../lib/routes'
 import { isProduction } from '../../utils/isProduction'
+import Link from '../Link'
 
 const { Z_INDEX } = coreDappTheme
 
@@ -29,8 +30,24 @@ const Wrapper = styled.div`
   }
 `
 
+const Banner = styled.div`
+  background-color: ${({ theme }): string => theme.color.primary};
+  color: ${({ theme }): string => theme.color.white};
+  font-size: ${({ theme }): string => theme.fontSize.sm};
+  line-height: ${spacingIncrement(16)};
+  padding: ${spacingIncrement(8)};
+  text-align: center;
+  width: 100%;
+`
+
 const Header: React.FC = () => (
   <Wrapper>
+    <Banner>
+      Early deposits open this week.{' '}
+      <Link href="https://docs.prepo.io" target="_blank">
+        Learn more↗
+      </Link>
+    </Banner>
     <AHeader>
       <Flex justifyContent="flex-start" gap={8}>
         <PrePOLogo href={Routes.Deposit} />

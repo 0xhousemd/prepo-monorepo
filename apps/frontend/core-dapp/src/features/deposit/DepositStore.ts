@@ -95,7 +95,11 @@ export class DepositStore {
   }
 
   get depositButtonInitialLoading(): boolean {
-    return this.depositAmountBN === undefined || this.needApproval === undefined
+    return (
+      this.depositAmountBN === undefined ||
+      this.needApproval === undefined ||
+      this.root.depositHookStore.depositsAllowed === undefined
+    )
   }
 
   get depositButtonLoading(): boolean {
@@ -116,7 +120,8 @@ export class DepositStore {
         this.depositing ||
         this.insufficientBalance ||
         this.depositLimit.status === 'already-exceeded' ||
-        this.depositLimit.status === 'exceeded-after-transfer'
+        this.depositLimit.status === 'exceeded-after-transfer' ||
+        !this.root.depositHookStore.depositsAllowed
     )
   }
 
