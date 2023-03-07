@@ -61,7 +61,7 @@ const GreenColor = styled.span`
 const BalanceBox: React.FC<{ apr: unknown }> = ({ apr }) => {
   const { collateralStore, web3Store } = useRootStore()
   const { connected } = web3Store
-  const { tokenBalanceFormat } = collateralStore
+  const { tokenBalanceFormatInEth } = collateralStore
 
   const aprText = typeof apr === 'string' ? `${apr}%` : '~4.5%'
 
@@ -74,10 +74,10 @@ const BalanceBox: React.FC<{ apr: unknown }> = ({ apr }) => {
             <Icon name="eth" width="24" height="24" />
             <p>prePO Balance</p>
           </Flex>
-          {connected && tokenBalanceFormat === undefined ? (
+          {connected && tokenBalanceFormatInEth === undefined ? (
             <Skeleton height={20} width={60} />
           ) : (
-            <Value>{displayEth(+(tokenBalanceFormat ?? 0))}</Value>
+            <Value>{displayEth(+(tokenBalanceFormatInEth ?? 0))}</Value>
           )}
         </Row>
         <Row>
