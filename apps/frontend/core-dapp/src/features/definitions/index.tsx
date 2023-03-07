@@ -27,11 +27,9 @@ export const EstimatedReceivedAmount: React.FC = () => (
   </Paragraph>
 )
 
-export const EstimatedWithdrawalReceivedAmount: React.FC<{ fee?: number }> = ({ fee }) => (
+export const EstimatedWithdrawalReceivedAmount: React.FC = () => (
   <Paragraph>
-    <Trans>
-      Estimated USD amount withdrawn after {fee === undefined ? '...' : fee.toFixed(2)}% fee
-    </Trans>
+    <Trans>Estimated ETH amount received after any conversion costs, slippage, and fees.</Trans>
   </Paragraph>
 )
 
@@ -75,7 +73,10 @@ export const PayoutRange: React.FC = () => (
 
 export const PPOReward: React.FC = () => (
   <Paragraph>
-    <Trans>Reimbursement for fees in PPO sent to your wallet.</Trans>
+    <Trans>
+      The amount of PPO that you will receive immediately as a rebate incentive. PPO is prePO’s
+      governance and utility token.
+    </Trans>
   </Paragraph>
 )
 

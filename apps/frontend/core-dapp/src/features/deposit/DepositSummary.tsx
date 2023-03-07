@@ -16,7 +16,7 @@ const DepositSummary: React.FC = () => {
 
   return (
     <Flex flexDirection="column" gap={8} width="100%" px={12}>
-      <SummaryRecord label="Estimated Received Amount" tooltip={<EstimatedReceivedAmount />}>
+      <SummaryRecord label="Estimated Value" tooltip={<EstimatedReceivedAmount />}>
         {estimatedReceivedAmount === undefined ? (
           <Skeleton height="22px" width="64px" />
         ) : (

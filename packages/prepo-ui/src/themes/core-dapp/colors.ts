@@ -1,6 +1,6 @@
 export const colors = {
-  /** #FAFDFF */
-  blue1: '#FAFDFF',
+  /** #F4FBFF */
+  blue1: '#F4FBFF',
   /** #14154F */
   blue2: '#14154F',
   /** #47AFF8 */

@@ -138,10 +138,10 @@ export function compactNumber(value: number, options?: Partial<{ showUsdSign: bo
 }
 
 export const displayEth = (value: number): string => {
-  if (value === 0) return '0'
-  if (value < 0.0001) return '<0.0001'
-  return Intl.NumberFormat(undefined, {
+  if (value === 0) return '0 ETH'
+  if (value < 0.0001) return '<0.0001 ETH'
+  return `${Intl.NumberFormat(undefined, {
     minimumFractionDigits: 1,
     maximumFractionDigits: 4,
-  }).format(value)
+  }).format(value)} ETH`
 }

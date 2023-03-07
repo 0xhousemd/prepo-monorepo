@@ -6,12 +6,18 @@ import DepositCurrencyInput from './DepositCurrencyInput'
 import DepositSummary from './DepositSummary'
 import DepositWarning from './DepositWarning'
 import PageCard from '../../components/PageCard'
+import Link from '../../components/Link'
+import { Routes } from '../../lib/routes'
 
 const Wrapper = styled.div`
   align-items: center;
   display: flex;
   flex-direction: column;
   gap: ${spacingIncrement(16)};
+`
+
+const WithdrawText = styled.span`
+  font-weight: ${({ theme }): number => theme.fontWeight.medium};
 `
 
 const DepositPage: React.FC<{ apr: unknown }> = ({ apr }) => (
@@ -32,6 +38,9 @@ const DepositPage: React.FC<{ apr: unknown }> = ({ apr }) => (
       <DepositSummary />
     </PageCard>
     <BalanceBox apr={apr} />
+    <Link href={Routes.Withdraw} underline={false}>
+      <WithdrawText>Withdraw &rarr;</WithdrawText>
+    </Link>
   </Wrapper>
 )
 

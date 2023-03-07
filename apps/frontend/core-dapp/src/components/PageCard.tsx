@@ -73,6 +73,7 @@ const TitleTooltipWrapper = styled.div`
   transform: translate(100%, -50%);
 `
 const BackLink = styled(Link)`
+  color: ${({ theme }): string => theme.color.neutral2};
   :hover {
     opacity: 0.7;
   }

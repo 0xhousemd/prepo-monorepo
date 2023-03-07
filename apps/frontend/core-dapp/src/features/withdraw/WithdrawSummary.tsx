@@ -9,22 +9,14 @@ import { PPORewardSummaryRecord } from '../../components/PpoRewardSummaryRecord'
 const WithdrawSummary: React.FC = () => {
   const { baseTokenStore, withdrawStore } = useRootStore()
   const { symbolString } = baseTokenStore
-  const { withdrawalAmount, receivedAmount, withdrawalFee, withdrawalFeesAmount, ppoReward } =
-    withdrawStore
+  const { withdrawalAmount, receivedAmount, withdrawalFeesAmount, ppoReward } = withdrawStore
 
   // empty input or 0 input
   if (withdrawalAmount === '' || +withdrawalAmount === 0) return null
 
   return (
     <Flex flexDirection="column" gap={8} width="100%" px={12}>
-      <SummaryRecord
-        label="Received Amount"
-        tooltip={
-          withdrawalFee !== undefined && withdrawalFee > 0 ? (
-            <EstimatedWithdrawalReceivedAmount fee={withdrawalFee} />
-          ) : undefined
-        }
-      >
+      <SummaryRecord label="Received Amount" tooltip={<EstimatedWithdrawalReceivedAmount />}>
         {receivedAmount === undefined || symbolString === undefined ? (
           <Skeleton height="22px" width="64px" />
         ) : (

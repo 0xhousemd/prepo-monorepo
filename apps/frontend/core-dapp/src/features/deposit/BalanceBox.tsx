@@ -1,10 +1,11 @@
 import { observer } from 'mobx-react-lite'
-import { Flex, Icon, spacingIncrement } from 'prepo-ui'
+import { Flex, Icon, spacingIncrement, Tooltip } from 'prepo-ui'
 import styled from 'styled-components'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { displayEth } from '../../utils/number-utils'
 import Skeleton from '../../components/Skeleton'
 import SpecialPrePoLogo from '../../SpecialPrePOLogo'
+import Link from '../../components/Link'
 
 const Wrapper = styled.div`
   max-width: ${spacingIncrement(380)};
@@ -32,6 +33,7 @@ const LogoWrapper = styled.div`
   top: 50%;
   transform: translateY(-47%) translateX(-12%);
   width: 100%;
+  z-index: 0;
 `
 
 const Row = styled.div`
@@ -42,6 +44,7 @@ const Row = styled.div`
   justify-content: space-between;
   line-height: 1;
   width: 100%;
+  z-index: 1;
 `
 
 const Value = styled.p`
@@ -74,13 +77,37 @@ const BalanceBox: React.FC<{ apr: unknown }> = ({ apr }) => {
           {connected && tokenBalanceFormat === undefined ? (
             <Skeleton height={20} width={60} />
           ) : (
-            <Value>{displayEth(+(tokenBalanceFormat ?? 0))} ETH</Value>
+            <Value>{displayEth(+(tokenBalanceFormat ?? 0))}</Value>
           )}
         </Row>
         <Row>
           <Flex gap={8}>
             <Icon name="lidoETH" />
-            <p>ETH Yield</p>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacingIncrement(4),
+              }}
+            >
+              <p>ETH Yield</p>
+              <Tooltip
+                overlay={
+                  <p>
+                    Your ETH will be automatically converted into Lido Wrapped Staked ETH (wstETH)
+                    before being deposited, in order to earn staking yield.{' '}
+                    <Link href="https://lido.fi" target="_blank">
+                      Learn more ↗
+                    </Link>
+                  </p>
+                }
+              >
+                <div>
+                  <Icon name="info" width="14" height="14" color="neutral5" />
+                </div>
+              </Tooltip>
+            </div>
           </Flex>
           <Value>
             <GreenColor>{aprText}</GreenColor>
