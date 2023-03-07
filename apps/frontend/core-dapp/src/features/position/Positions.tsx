@@ -39,6 +39,7 @@ const Positions: React.FC = () => {
           <Position
             direction={position.direction}
             iconName={position.market.iconName}
+            marketResolved={position.market.resolved}
             marketUrlId={position.market.urlId}
             name={position.market.name}
             totalValue={position.totalValue}

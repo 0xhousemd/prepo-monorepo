@@ -45,11 +45,12 @@ export const MarketIcon = styled(Icon).attrs({
   }
 `
 
-const IconLink = styled.a`
+const ActionLink = styled.a`
   align-items: center;
   background: ${({ theme }): string => theme.color.accentPurple};
   border: none;
   border-radius: 0.375rem;
+  color: ${({ theme }): string => theme.color.primaryLight};
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -63,6 +64,7 @@ type PositionProps = {
   direction: PositionEntity['direction']
   growthPercentage: PositionEntity['positionGrowthPercentage']
   iconName: PositionEntity['market']['iconName']
+  marketResolved: PositionEntity['market']['resolved']
   marketUrlId: PositionEntity['market']['urlId']
   name: PositionEntity['market']['name']
   totalPnl: PositionEntity['totalPnl']
@@ -72,6 +74,7 @@ export const Position: React.FC<PositionProps> = ({
   direction,
   growthPercentage,
   iconName,
+  marketResolved,
   marketUrlId,
   name,
   totalPnl,
@@ -126,24 +129,9 @@ export const Position: React.FC<PositionProps> = ({
         </Tooltip>
       </Flex>
     </Flex>
-    <Flex flexDirection="column" ml="auto" gap={6}>
+    <Flex flexDirection="column" alignItems="end" ml="auto" gap={6}>
       <StyledPositionLabel positionType={direction} />
-      <Flex gap={8}>
-        <Link
-          href={{
-            pathname: '/trade',
-            query: {
-              action: 'open',
-              direction,
-              marketId: marketUrlId,
-            },
-          }}
-          passHref
-        >
-          <IconLink>
-            <Icon name="plus" color="primaryLight" width="12px" height="12px" />
-          </IconLink>
-        </Link>
+      {marketResolved ? (
         <Link
           href={{
             pathname: '/trade',
@@ -155,11 +143,42 @@ export const Position: React.FC<PositionProps> = ({
           }}
           passHref
         >
-          <IconLink>
-            <Icon name="minus" color="primaryLight" width="12px" height="12px" />
-          </IconLink>
+          <ActionLink>Redeem</ActionLink>
         </Link>
-      </Flex>
+      ) : (
+        <Flex gap={8}>
+          <Link
+            href={{
+              pathname: '/trade',
+              query: {
+                action: 'open',
+                direction,
+                marketId: marketUrlId,
+              },
+            }}
+            passHref
+          >
+            <ActionLink>
+              <Icon name="plus" color="primaryLight" width="12px" height="12px" />
+            </ActionLink>
+          </Link>
+          <Link
+            href={{
+              pathname: '/trade',
+              query: {
+                action: 'close',
+                direction,
+                marketId: marketUrlId,
+              },
+            }}
+            passHref
+          >
+            <ActionLink>
+              <Icon name="minus" color="primaryLight" width="12px" height="12px" />
+            </ActionLink>
+          </Link>
+        </Flex>
+      )}
     </Flex>
   </Flex>
 )
