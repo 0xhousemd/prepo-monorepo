@@ -5,25 +5,24 @@ import SummaryRecord from '../../components/SummaryRecord'
 import { useRootStore } from '../../context/RootStoreProvider'
 import { EstimatedWithdrawalReceivedAmount } from '../definitions'
 import { PPORewardSummaryRecord } from '../../components/PpoRewardSummaryRecord'
+import { displayEth } from '../../utils/number-utils'
 
 const WithdrawSummary: React.FC = () => {
   const { baseTokenStore, withdrawStore } = useRootStore()
   const { symbolString } = baseTokenStore
-  const { withdrawalAmount, receivedAmount, withdrawalFeesAmount, ppoReward } = withdrawStore
+  const { withdrawalAmountInEth, receivedAmountInEth, withdrawalFeesAmount, ppoReward } =
+    withdrawStore
 
   // empty input or 0 input
-  if (withdrawalAmount === '' || +withdrawalAmount === 0) return null
+  if (withdrawalAmountInEth === '' || +withdrawalAmountInEth === 0) return null
 
   return (
     <Flex flexDirection="column" gap={8} width="100%" px={12}>
       <SummaryRecord label="Received Amount" tooltip={<EstimatedWithdrawalReceivedAmount />}>
-        {receivedAmount === undefined || symbolString === undefined ? (
+        {receivedAmountInEth === undefined || symbolString === undefined ? (
           <Skeleton height="22px" width="64px" />
         ) : (
-          `${Intl.NumberFormat(undefined, {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: 2,
-          }).format(receivedAmount)} ${symbolString}`
+          displayEth(receivedAmountInEth)
         )}
       </SummaryRecord>
 

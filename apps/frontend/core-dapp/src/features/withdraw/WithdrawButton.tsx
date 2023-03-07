@@ -9,6 +9,7 @@ const WithdrawButton: React.FC = () => {
   const { connected, isNetworkSupported } = web3Store
   const {
     insufficientBalance,
+    insufficientLiquidity,
     withdrawButtonInitialLoading,
     withdrawUILoading,
     withdrawalDisabled,
@@ -16,9 +17,10 @@ const WithdrawButton: React.FC = () => {
 
   const buttonText = useMemo(() => {
     if (withdrawButtonInitialLoading) return ''
+    if (insufficientLiquidity) return 'Insufficient Liquidity'
     if (insufficientBalance) return 'Insufficient Balance'
     return 'Withdraw'
-  }, [insufficientBalance, withdrawButtonInitialLoading])
+  }, [insufficientBalance, insufficientLiquidity, withdrawButtonInitialLoading])
 
   if (!connected || !isNetworkSupported) return <ConnectButton block />
 

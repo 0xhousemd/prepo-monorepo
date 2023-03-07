@@ -10,7 +10,7 @@ const Wrapper = styled.div`
 
 const WithdrawInput: React.FC = () => {
   const { collateralStore, withdrawStore } = useRootStore()
-  const { setWithdrawalAmount, withdrawalAmount } = withdrawStore
+  const { setWithdrawalAmount, withdrawalAmountInEth } = withdrawStore
   const { balanceOfSigner, tokenBalanceFormat } = collateralStore
 
   return (
@@ -20,7 +20,7 @@ const WithdrawInput: React.FC = () => {
         isBalanceZero={balanceOfSigner?.eq(0)}
         currency={{ icon: 'cash', text: 'USD' }}
         onChange={setWithdrawalAmount}
-        value={withdrawalAmount}
+        value={withdrawalAmountInEth}
         showBalance
       />
     </Wrapper>

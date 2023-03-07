@@ -9,18 +9,18 @@ import { Routes } from '../../lib/routes'
 
 const WithdrawPage: React.FC = () => {
   const { collateralStore, withdrawStore } = useRootStore()
-  const { balanceOfSigner, tokenBalanceFormat } = collateralStore
-  const { withdrawing, setWithdrawalAmount, withdrawalAmount } = withdrawStore
+  const { balanceOfSignerInEth, tokenBalanceFormatInEth } = collateralStore
+  const { withdrawing, setWithdrawalAmount, withdrawalAmountInEth } = withdrawStore
 
   return (
     <PageCard backUrl={Routes.Deposit} title="Withdraw">
       <CurrencyInput
-        balance={tokenBalanceFormat}
-        isBalanceZero={balanceOfSigner?.eq(0)}
-        currency={{ icon: 'cash', text: 'USD' }}
+        balance={tokenBalanceFormatInEth}
+        isBalanceZero={balanceOfSignerInEth?.eq(0)}
+        currency={{ icon: 'eth', text: 'ETH' }}
         disabled={withdrawing}
         onChange={setWithdrawalAmount}
-        value={withdrawalAmount}
+        value={withdrawalAmountInEth}
         showBalance
       />
       <WithdrawButton />

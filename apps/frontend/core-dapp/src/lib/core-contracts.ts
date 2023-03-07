@@ -2,6 +2,7 @@ import { ZERO_ADDRESS } from 'prepo-constants'
 import { ExternalContract } from './contract.types'
 
 export type CoreTokenContractNames =
+  | 'WETH'
   | 'WSTETH'
   | 'COLLATERAL'
   | 'PPO'
@@ -19,6 +20,11 @@ export type CoreContracts = {
 // wstETH
 export const BASE_TOKEN_ADDRESS: ExternalContract = {
   arbitrumOne: '0x5979D7b546E38E414F7E9822514be443A4800529',
+}
+
+// WETH
+export const WETH_ADDRESS: ExternalContract = {
+  arbitrumOne: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
 }
 
 // preWstETH
@@ -61,6 +67,7 @@ export const DEPOSIT_TRADE_HELPER_ADDRESS: ExternalContract = {
 
 export const coreContracts: CoreContracts = {
   WSTETH: BASE_TOKEN_ADDRESS,
+  WETH: WETH_ADDRESS,
   COLLATERAL: COLLATERAL_TOKEN_ADDRESS,
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,

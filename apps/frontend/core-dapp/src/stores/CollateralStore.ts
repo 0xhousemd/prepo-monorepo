@@ -1,5 +1,5 @@
 import { action, makeObservable, observable, runInAction } from 'mobx'
-import { BigNumber } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 import { ContractReturn, Factory } from 'prepo-stores'
 import { ChainId, Token } from '@uniswap/sdk'
 import { getContractAddress } from 'prepo-utils'
@@ -121,6 +121,19 @@ export class CollateralStore extends Erc20Store {
 
   get withdrawFee(): BigNumber | undefined {
     return getContractCall(this.getWithdrawFee())
+  }
+
+  get balanceOfSignerInEth(): BigNumber | undefined {
+    const { balanceOfSigner } = this
+    if (balanceOfSigner === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(balanceOfSigner)
+  }
+
+  get tokenBalanceFormatInEth(): string | undefined {
+    const { balanceOfSignerInEth } = this
+    const { decimalsNumber: wethDecimals } = this.root.wethStore
+    if (balanceOfSignerInEth === undefined || wethDecimals === undefined) return undefined
+    return utils.formatUnits(balanceOfSignerInEth, wethDecimals)
   }
 
   // setters

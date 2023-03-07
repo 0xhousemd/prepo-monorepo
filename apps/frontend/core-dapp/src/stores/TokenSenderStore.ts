@@ -30,13 +30,13 @@ export class TokenSenderStore extends ContractStore<RootStore, SupportedContract
     return scaledPrice.lte(scaledPriceLowerBound) ? BigNumber.from(0) : scaledPrice
   }
 
-  calculateReward(feeInUsd: BigNumber): BigNumber | undefined {
+  calculateReward(feeInEth: BigNumber): BigNumber | undefined {
     const { scaledPrice } = this
     const { decimalsNumber: ppoDecimals } = this.root.ppoTokenStore
 
     if (ppoDecimals === undefined || scaledPrice === undefined) return undefined
     if (scaledPrice.eq(0)) return scaledPrice
 
-    return feeInUsd.mul(BigNumber.from(10).pow(ppoDecimals)).div(scaledPrice)
+    return feeInEth.mul(BigNumber.from(10).pow(ppoDecimals)).div(scaledPrice)
   }
 }

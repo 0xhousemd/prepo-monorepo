@@ -48,6 +48,12 @@ export class WithdrawHookStore extends ContractStore<RootStore, SupportedContrac
     return this.getGlobalAmountWithdrawnThisPeriod()?.[0]
   }
 
+  get globalAmountWithdrawnThisPeriodInEth(): BigNumber | undefined {
+    const { globalAmountWithdrawnThisPeriod } = this
+    if (globalAmountWithdrawnThisPeriod === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(globalAmountWithdrawnThisPeriod)
+  }
+
   get globalPeriodLength(): DurationInMs | undefined {
     const length = this.getGlobalPeriodLength()?.[0]
     if (length === undefined) return undefined
@@ -56,6 +62,12 @@ export class WithdrawHookStore extends ContractStore<RootStore, SupportedContrac
 
   get globalWithdrawLimitPerPeriod(): BigNumber | undefined {
     return this.getGlobalWithdrawLimitPerPeriod()?.[0]
+  }
+
+  get globalWithdrawLimitPerPeriodInEth(): BigNumber | undefined {
+    const { globalWithdrawLimitPerPeriod } = this
+    if (globalWithdrawLimitPerPeriod === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(globalWithdrawLimitPerPeriod)
   }
 
   get lastGlobalPeriodReset(): DateTimeInMs | undefined {

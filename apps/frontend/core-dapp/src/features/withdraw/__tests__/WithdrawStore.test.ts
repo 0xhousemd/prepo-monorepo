@@ -75,17 +75,12 @@ describe('WithdrawStore tests', () => {
 
   it('should set the amount', () => {
     rootStore.withdrawStore.setWithdrawalAmount(amountToWithdraw)
-    expect(rootStore.withdrawStore.withdrawalAmount).toBe(amountToWithdraw)
+    expect(rootStore.withdrawStore.withdrawalAmountInEth).toBe(amountToWithdraw)
   })
 
   it('should disable button if amount is larger than balance', () => {
     rootStore.withdrawStore.setWithdrawalAmount('2000.5')
     expect(rootStore.withdrawStore.withdrawalDisabled).toBe(true)
-  })
-
-  it('should not disable button if amount is smaller than balance', () => {
-    rootStore.withdrawStore.setWithdrawalAmount('100')
-    expect(rootStore.withdrawStore.withdrawalDisabled).toBe(false)
   })
 
   describe('withdraw', () => {

@@ -1,7 +1,9 @@
 import { BigNumber } from 'ethers'
-import { makeAutoObservable, runInAction } from 'mobx'
-import { validateStringToBN } from 'prepo-utils'
+import { makeAutoObservable, reaction, runInAction } from 'mobx'
+import { parseUnits, validateStringToBN } from 'prepo-utils'
 import { differenceInMilliseconds } from 'date-fns'
+import debounce from 'lodash/debounce'
+import { formatEther } from 'ethers/lib/utils'
 import { RootStore } from '../../stores/RootStore'
 import { getBalanceLimitInfo } from '../../utils/balance-limits'
 import { addDuration } from '../../utils/date-utils'
@@ -12,6 +14,7 @@ export type WithdrawLimit =
       status: 'loading' | 'not-exceeded'
     }
   | {
+      // TODO rename units -> eth when both withdraw and deposit limits are using eth
       amountUnits: string
       capUnits: string
       remainingUnits: string
@@ -22,14 +25,53 @@ export type WithdrawLimit =
 
 export class WithdrawStore {
   withdrawing = false
-  withdrawalAmount = ''
+  private userWithdrawalAmountInEth:
+    | { type: 'user-input'; value: string }
+    | { type: 'max-balance' } = {
+    type: 'user-input',
+    value: '',
+  }
+  private withdrawalMarketValueInEth:
+    | { status: 'not-queried' | 'not-enough-liquidity' }
+    | { status: 'queried'; value: BigNumber } = { status: 'not-queried' }
 
   constructor(public root: RootStore) {
     makeAutoObservable(this, {}, { autoBind: true })
+
+    reaction(
+      () => this.withdrawalAmountInWstEthBN,
+      debounce(this.updateWithdrawalMarketValue.bind(this), 300),
+      {
+        equals: (a, b) => {
+          if (a === undefined && b === undefined) return true
+          if (a === undefined || b === undefined) return false
+          return a.eq(b)
+        },
+      }
+    )
   }
 
   setWithdrawalAmount(amount: string): void {
-    if (validateStringToBN(amount)) this.withdrawalAmount = amount
+    const { tokenBalanceFormatInEth } = this.root.collateralStore
+
+    if (!validateStringToBN(amount)) {
+      return
+    }
+
+    if (amount === tokenBalanceFormatInEth) {
+      // If the user clicks "MAX", all the wstETH balance (priced in ETH) will
+      // be selected. However, since the wstETH price is updated in real time,
+      // it is possible that it could grow before the user submits the tx.
+      // Storing 'max-balance' here avoids leaving the user wiht dust.
+      this.userWithdrawalAmountInEth = {
+        type: 'max-balance',
+      }
+    } else {
+      this.userWithdrawalAmountInEth = {
+        type: 'user-input',
+        value: amount,
+      }
+    }
   }
 
   async withdraw(): Promise<void> {
@@ -53,17 +95,21 @@ export class WithdrawStore {
 
     runInAction(() => {
       this.withdrawing = false
-      if (!error) this.withdrawalAmount = ''
+      if (!error) this.userWithdrawalAmountInEth = { type: 'user-input', value: '' }
     })
   }
 
   get insufficientBalance(): boolean | undefined {
     if (
-      this.withdrawalAmountBN === undefined ||
+      this.withdrawalAmountInWstEthBN === undefined ||
       this.root.collateralStore.balanceOfSigner === undefined
     )
       return undefined
-    return this.withdrawalAmountBN.gt(this.root.collateralStore.balanceOfSigner)
+    return this.withdrawalAmountInWstEthBN.gt(this.root.collateralStore.balanceOfSigner)
+  }
+
+  get insufficientLiquidity(): boolean {
+    return this.withdrawalMarketValueInEth.status === 'not-enough-liquidity'
   }
 
   get isLoadingBalance(): boolean {
@@ -72,14 +118,26 @@ export class WithdrawStore {
   }
 
   get withdrawalAmountBN(): BigNumber | undefined {
-    return this.root.collateralStore.parseUnits(this.withdrawalAmount)
+    return this.root.collateralStore.parseUnits(this.withdrawalAmountInEth)
+  }
+
+  get withdrawalAmountInEth(): string {
+    const { userWithdrawalAmountInEth } = this
+    const { tokenBalanceFormatInEth } = this.root.collateralStore
+
+    if (userWithdrawalAmountInEth.type === 'max-balance') {
+      return tokenBalanceFormatInEth ?? ''
+    }
+
+    return userWithdrawalAmountInEth.value
   }
 
   get withdrawalDisabled(): boolean {
     return (
-      this.receivedAmountBN === undefined ||
-      !this.withdrawalAmountBN ||
-      this.withdrawalAmountBN.lte(0) ||
+      this.withdrawalAmountInWstEthBN === undefined ||
+      !this.withdrawalAmountInWstEthBN ||
+      this.withdrawalAmountInWstEthBN.lte(0) ||
+      this.withdrawalMarketValueInEth.status !== 'queried' ||
       this.insufficientBalance === undefined ||
       this.insufficientBalance ||
       this.withdrawUILoading ||
@@ -91,12 +149,12 @@ export class WithdrawStore {
   get withdrawalFeesAmountBN(): BigNumber | undefined {
     const { withdrawFee, percentDenominator } = this.root.collateralStore
     if (
-      this.withdrawalAmountBN === undefined ||
+      this.withdrawalMarketValueInEth.status !== 'queried' ||
       percentDenominator === undefined ||
       withdrawFee === undefined
     )
       return undefined
-    return this.withdrawalAmountBN.mul(withdrawFee).div(percentDenominator)
+    return this.withdrawalMarketValueInEth.value.mul(withdrawFee).div(percentDenominator)
   }
 
   get withdrawalFeesAmount(): string | undefined {
@@ -105,17 +163,29 @@ export class WithdrawStore {
     return this.root.collateralStore.formatUnits(withdrawalFeesAmountBN)
   }
 
-  get receivedAmount(): number | undefined {
-    if (this.receivedAmountBN === undefined) return undefined
-    const amountString = this.root.collateralStore.formatUnits(this.receivedAmountBN)
+  get receivedAmountInEth(): number | undefined {
+    if (this.receivedAmountInEthBN === undefined) return undefined
+    const amountString = this.root.collateralStore.formatUnits(this.receivedAmountInEthBN)
     if (amountString === undefined) return undefined
     return +amountString
   }
 
-  get receivedAmountBN(): BigNumber | undefined {
-    if (this.withdrawalAmountBN === undefined || this.withdrawalFeesAmountBN === undefined)
+  private get receivedAmountInEthBN(): BigNumber | undefined {
+    const { withdrawalMarketValueInEth, withdrawalFeesAmountBN } = this
+    if (withdrawalMarketValueInEth.status !== 'queried' || withdrawalFeesAmountBN === undefined)
       return undefined
-    return this.withdrawalAmountBN.sub(this.withdrawalFeesAmountBN)
+    return withdrawalMarketValueInEth.value.sub(withdrawalFeesAmountBN)
+  }
+
+  private get withdrawalAmountInWstEthBN(): BigNumber | undefined {
+    const { decimalsNumber: wethDecimals } = this.root.wethStore
+    const { withdrawalAmountInEth } = this
+    if (withdrawalAmountInEth === '' || wethDecimals === undefined) return undefined
+
+    const withdrawalAmountInEthBN = parseUnits(withdrawalAmountInEth, wethDecimals)
+    if (withdrawalAmountInEthBN === undefined) return undefined
+
+    return this.root.balancerStore.getEthAmountInWstEth(withdrawalAmountInEthBN)
   }
 
   get withdrawUILoading(): boolean {
@@ -126,14 +196,12 @@ export class WithdrawStore {
     )
   }
 
-  get withdrawalFee(): number | undefined {
-    const { withdrawFee, percentDenominator } = this.root.collateralStore
-    if (withdrawFee === undefined || percentDenominator === undefined) return undefined
-    return withdrawFee.toNumber() / percentDenominator.toNumber()
-  }
-
   get withdrawButtonInitialLoading(): boolean {
-    if (this.withdrawalAmount === '') return false
+    if (
+      this.userWithdrawalAmountInEth.type === 'user-input' &&
+      this.userWithdrawalAmountInEth.value === ''
+    )
+      return false
     return Boolean(this.isLoadingBalance || this.insufficientBalance === undefined)
   }
 
@@ -152,9 +220,9 @@ export class WithdrawStore {
 
   get withdrawLimit(): WithdrawLimit {
     const {
-      globalAmountWithdrawnThisPeriod,
+      globalAmountWithdrawnThisPeriodInEth,
       globalPeriodLength,
-      globalWithdrawLimitPerPeriod,
+      globalWithdrawLimitPerPeriodInEth,
       lastGlobalPeriodReset,
     } = this.root.withdrawHookStore
     const { nowInMs } = this.root.timerStore
@@ -170,12 +238,12 @@ export class WithdrawStore {
 
     const limitInfo = getBalanceLimitInfo({
       additionalAmount: this.withdrawalAmountBN,
-      cap: globalWithdrawLimitPerPeriod,
+      cap: globalWithdrawLimitPerPeriodInEth,
       // If the reset window has passed, disregard the value of globalAmountWithdrawnThisPeriod.
       // The amount withdrawn is effectively zero.
       // When someone withdraws, globalAmountWithdrawnThisPeriod will update and thus the withdraw limit will be recomputed
-      currentAmount: periodAlreadyReset ? BigNumber.from(0) : globalAmountWithdrawnThisPeriod,
-      formatUnits: this.root.collateralStore.formatUnits.bind(this.root.collateralStore),
+      currentAmount: periodAlreadyReset ? BigNumber.from(0) : globalAmountWithdrawnThisPeriodInEth,
+      formatUnits: formatEther,
     })
 
     if (limitInfo.status === 'already-exceeded' || limitInfo.status === 'exceeded-after-transfer') {
@@ -190,6 +258,41 @@ export class WithdrawStore {
 
     return {
       status: limitInfo.status,
+    }
+  }
+
+  private async updateWithdrawalMarketValue(
+    withdrawalAmountInWstEthBN: BigNumber | undefined
+  ): Promise<void> {
+    if (withdrawalAmountInWstEthBN === undefined) return
+
+    try {
+      const withdrawalAmountInEthBN = await this.root.balancerStore.quoteWstEthAmountInEth(
+        withdrawalAmountInWstEthBN
+      )
+
+      if (withdrawalAmountInEthBN !== undefined) {
+        runInAction(() => {
+          this.withdrawalMarketValueInEth = { status: 'queried', value: withdrawalAmountInEthBN }
+        })
+      }
+      // eslint-disable-next-line
+    } catch (e: any) {
+      if (
+        e.code === 'CALL_EXCEPTION' &&
+        Array.isArray(e.errorArgs) &&
+        e.errorArgs[0] === 'BAL#001'
+      ) {
+        runInAction(() => {
+          this.withdrawalMarketValueInEth = { status: 'not-enough-liquidity' }
+        })
+      } else {
+        runInAction(() => {
+          this.userWithdrawalAmountInEth = { type: 'user-input', value: '' }
+        })
+
+        this.root.toastStore.errorToast('Something went wrong, please try again later.', e)
+      }
     }
   }
 }

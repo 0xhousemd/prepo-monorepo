@@ -83,6 +83,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   mediaQueryStore: MediaQueryStore
   debugStore: DebugStore
   balancerStore: BalancerStore
+  wethStore: Erc20Store
 
   constructor() {
     super({
@@ -94,13 +95,19 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.localStorageStore = new LocalStorageStore(this, `prepo.${PROJECT_NAME}`, initLocalStorage)
     this.timerStore = new TimerStore()
     this.uiStore = new UiStore(this)
-    this.collateralStore = new CollateralStore(this)
+    this.wethStore = new Erc20Store({
+      root: this,
+      tokenName: 'WETH',
+      symbolOverride: 'WETH',
+    })
     this.depositHookStore = new DepositHookStore(this)
     this.baseTokenStore = new Erc20Store({
       root: this,
       tokenName: 'WSTETH',
       symbolOverride: 'wstETH',
     })
+    this.balancerStore = new BalancerStore(this)
+    this.collateralStore = new CollateralStore(this)
     this.tokensStore = new TokensStore(this)
     this.marketStore = new MarketStore(this)
     this.portfolioStore = new PortfolioStore(this)
@@ -125,6 +132,5 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.unstakeStore = new UnstakeStore(this)
     this.mediaQueryStore = new MediaQueryStore()
     this.debugStore = new DebugStore()
-    this.balancerStore = new BalancerStore(this)
   }
 }

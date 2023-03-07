@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { Flex } from 'prepo-ui'
 import { useRootStore } from '../../context/RootStoreProvider'
-import { compactNumber, formatUsd } from '../../utils/number-utils'
+import { displayEth } from '../../utils/number-utils'
 import { Alert, InlineTextButton } from '../deposit/DepositWarning'
 import { formatDuration } from '../../utils/date-utils'
 
@@ -12,7 +12,7 @@ const WithdrawWarning: React.FC = () => {
 
   switch (withdrawLimit.status) {
     case 'already-exceeded': {
-      const cap = compactNumber(+withdrawLimit.capUnits, { showUsdSign: true })
+      const cap = displayEth(+withdrawLimit.capUnits)
 
       return (
         <Alert
@@ -29,7 +29,7 @@ const WithdrawWarning: React.FC = () => {
       )
     }
     case 'exceeded-after-transfer': {
-      const formattedRemainingAmount = formatUsd(+withdrawLimit.remainingUnits)
+      const formattedRemainingAmount = displayEth(+withdrawLimit.remainingUnits)
 
       return (
         <Alert
