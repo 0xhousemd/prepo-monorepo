@@ -40,13 +40,17 @@ const Banner = styled.div`
   width: 100%;
 `
 
+const StyledLink = styled(Link)`
+  color: ${({ theme }): string => theme.color.white};
+`
+
 const Header: React.FC = () => (
   <Wrapper>
     <Banner>
       Early deposits open this week.{' '}
-      <Link href="https://docs.prepo.io" target="_blank">
+      <StyledLink href="https://docs.prepo.io" target="_blank">
         Learn more↗
-      </Link>
+      </StyledLink>
     </Banner>
     <AHeader>
       <Flex justifyContent="flex-start" gap={8}>

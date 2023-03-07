@@ -1,7 +1,7 @@
-import { formatEther, parseEther } from 'ethers/lib/utils'
+import { formatEther } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { makeAutoObservable, runInAction, reaction } from 'mobx'
-import { validateStringToBN } from 'prepo-utils'
+import { parseUnits, validateStringToBN } from 'prepo-utils'
 import minBy from 'lodash/minBy'
 import { RootStore } from '../../stores/RootStore'
 import { isProduction } from '../../utils/isProduction'
@@ -127,7 +127,7 @@ export class DepositStore {
 
   get depositAmountBN(): BigNumber | undefined {
     if (this.depositAmount === '') return BigNumber.from(0)
-    if (this.depositToken.type === 'native') return parseEther(this.depositAmount)
+    if (this.depositToken.type === 'native') return parseUnits(this.depositAmount, 18)
     return this.depositToken.erc20.parseUnits(this.depositAmount)
   }
 
