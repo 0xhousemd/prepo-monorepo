@@ -46,12 +46,12 @@ const StyledLink = styled(Link)`
 
 const Header: React.FC = () => (
   <Wrapper>
-    <Banner>
+    {/* <Banner>
       Early deposits open this week.{' '}
       <StyledLink href="https://docs.prepo.io" target="_blank">
         Learn more↗
       </StyledLink>
-    </Banner>
+    </Banner> */}
     <AHeader>
       <Flex justifyContent="flex-start" gap={8}>
         <PrePOLogo href={Routes.Deposit} />
