@@ -38,7 +38,7 @@ export class TokensStore {
         iconName: 'cash',
         name: 'Cash Balance',
         shortName: 'USD',
-        erc20: this.root.preCTTokenStore,
+        erc20: this.root.collateralStore,
       },
       {
         type: 'erc20',

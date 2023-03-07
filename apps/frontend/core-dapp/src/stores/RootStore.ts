@@ -61,7 +61,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
   advancedSettingsStore: AdvancedSettingsStore
   baseTokenStore: Erc20Store
   portfolioStore: PortfolioStore
-  preCTTokenStore: CollateralStore
+  collateralStore: CollateralStore
   uniswapRouterStore: UniswapRouterStore
   filterStore: FilterStore
   coreGraphStore: CoreGraphStore
@@ -92,7 +92,7 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.localStorageStore = new LocalStorageStore(this, `prepo.${PROJECT_NAME}`, initLocalStorage)
     this.timerStore = new TimerStore()
     this.uiStore = new UiStore(this)
-    this.preCTTokenStore = new CollateralStore(this)
+    this.collateralStore = new CollateralStore(this)
     this.baseTokenStore = new Erc20Store({
       root: this,
       tokenName: 'WSTETH',

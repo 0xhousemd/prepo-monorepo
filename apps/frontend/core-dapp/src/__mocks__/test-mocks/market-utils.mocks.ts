@@ -13,7 +13,7 @@ export const mockPayoutRange: Range = [0.2, 0.8]
 export const mockValuationRange: Range = [10000, 50000]
 export const mockLongTokenAddress = '0xLongTokenAddress'
 export const mockShortTokenAddress = '0xShortTokenAddress'
-export const mockPreCTTokenAddress = '0xPreCTTokenAddress'
+export const mockCollateralAddress = '0xCollateralAddress'
 export const mockMarketDatas: { longTokenPrice: number; valuation: number }[] = [
   { longTokenPrice: 0.8, valuation: 50000 },
   { longTokenPrice: 0.5, valuation: 30000 },
@@ -23,13 +23,13 @@ export const mockMarketDatas: { longTokenPrice: number; valuation: number }[] = 
 export const mockLongTokenPool = {
   pool: {
     token0: { id: mockLongTokenAddress },
-    token1: { id: mockPreCTTokenAddress },
+    token1: { id: mockCollateralAddress },
   },
 }
 // reverse the positions to make sure calculations will always work
 export const mockShortTokenPool = {
   pool: {
-    token0: { id: mockPreCTTokenAddress },
+    token0: { id: mockCollateralAddress },
     token1: { id: mockShortTokenAddress },
   },
 }
@@ -152,7 +152,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       sqrtPrice: 100,
       timestamp: 1640217600,
       token0: { id: '0xLongTokenAddress', price: 2, volume: 200, totalValueLocked: 0 },
-      token1: { id: '0xPreCTTokenAddress', price: 0.5, volume: 100, totalValueLocked: 0 },
+      token1: { id: '0xCollateralAddress', price: 0.5, volume: 100, totalValueLocked: 0 },
     },
     {
       id: '2',
@@ -160,7 +160,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       sqrtPrice: 100,
       timestamp: 1640476800,
       token0: { id: '0xLongTokenAddress', price: 1.25, volume: 300, totalValueLocked: 0 },
-      token1: { id: '0xPreCTTokenAddress', price: 0.8, volume: 150, totalValueLocked: 0 },
+      token1: { id: '0xCollateralAddress', price: 0.8, volume: 150, totalValueLocked: 0 },
     },
     {
       id: '3',
@@ -168,7 +168,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       sqrtPrice: 100,
       timestamp: 1640563200,
       token0: { id: '0xLongTokenAddress', price: 1.66, volume: 400, totalValueLocked: 0 },
-      token1: { id: '0xPreCTTokenAddress', price: 0.6, volume: 200, totalValueLocked: 0 },
+      token1: { id: '0xCollateralAddress', price: 0.6, volume: 200, totalValueLocked: 0 },
     },
     {
       id: '4',
@@ -176,7 +176,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       sqrtPrice: 100,
       timestamp: 1640736000,
       token0: { id: '0xLongTokenAddress', price: 1.4285, volume: 400, totalValueLocked: 0 },
-      token1: { id: '0xPreCTTokenAddress', price: 0.7, volume: 200, totalValueLocked: 0 },
+      token1: { id: '0xCollateralAddress', price: 0.7, volume: 200, totalValueLocked: 0 },
     },
   ],
   shortTokenPool: [
@@ -185,7 +185,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       liquidity: 100,
       sqrtPrice: 100,
       timestamp: 1640217600,
-      token0: { id: '0xPreCTTokenAddress', price: 0.5, volume: 100, totalValueLocked: 0 },
+      token0: { id: '0xCollateralAddress', price: 0.5, volume: 100, totalValueLocked: 0 },
       token1: { id: '0xShortTokenAddress', price: 2, volume: 200, totalValueLocked: 0 },
     },
     {
@@ -193,7 +193,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       liquidity: 100,
       sqrtPrice: 100,
       timestamp: 1640390400,
-      token0: { id: '0xPreCTTokenAddress', price: 0.2, volume: 150, totalValueLocked: 0 },
+      token0: { id: '0xCollateralAddress', price: 0.2, volume: 150, totalValueLocked: 0 },
       token1: { id: '0xShortTokenAddress', price: 5, volume: 300, totalValueLocked: 0 },
     },
     {
@@ -201,7 +201,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       liquidity: 200,
       sqrtPrice: 100,
       timestamp: 1640649600,
-      token0: { id: '0xPreCTTokenAddress', price: 0.4, volume: 200, totalValueLocked: 0 },
+      token0: { id: '0xCollateralAddress', price: 0.4, volume: 200, totalValueLocked: 0 },
       token1: { id: '0xShortTokenAddress', price: 2.5, volume: 400, totalValueLocked: 0 },
     },
     {
@@ -209,7 +209,7 @@ export const mockNormalizedPoolsDayDatas: NormalizedMarketHistoricalData = {
       liquidity: 200,
       sqrtPrice: 100,
       timestamp: 1640736000,
-      token0: { id: '0xPreCTTokenAddress', price: 0.3, volume: 200, totalValueLocked: 0 },
+      token0: { id: '0xCollateralAddress', price: 0.3, volume: 200, totalValueLocked: 0 },
       token1: { id: '0xShortTokenAddress', price: 3.33, volume: 400, totalValueLocked: 0 },
     },
   ],

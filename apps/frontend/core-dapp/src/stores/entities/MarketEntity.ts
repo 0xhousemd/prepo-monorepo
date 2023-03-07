@@ -385,7 +385,7 @@ export class MarketEntity
   get liquidity(): NumberData | undefined {
     if (
       this.poolsData === undefined ||
-      this.root.preCTTokenStore.address === undefined ||
+      this.root.collateralStore.address === undefined ||
       this.payoutRange === undefined
     )
       return undefined
@@ -393,12 +393,12 @@ export class MarketEntity
     const longLiquidity = getTotalValueLockedUSD(
       longTokenPool,
       this.payoutRange,
-      this.root.preCTTokenStore.address
+      this.root.collateralStore.address
     )
     const shortLiquidity = getTotalValueLockedUSD(
       shortTokenPool,
       this.payoutRange,
-      this.root.preCTTokenStore.address
+      this.root.collateralStore.address
     )
     const value = longLiquidity + shortLiquidity
     return { value }

@@ -56,9 +56,9 @@ const GreenColor = styled.span`
 `
 
 const BalanceBox: React.FC<{ apr: unknown }> = ({ apr }) => {
-  const { preCTTokenStore, web3Store } = useRootStore()
+  const { collateralStore, web3Store } = useRootStore()
   const { connected } = web3Store
-  const { tokenBalanceFormat } = preCTTokenStore
+  const { tokenBalanceFormat } = collateralStore
 
   const aprText = typeof apr === 'string' ? `${apr}%` : '~4.5%'
 

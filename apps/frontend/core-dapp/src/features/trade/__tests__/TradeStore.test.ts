@@ -17,34 +17,34 @@ configure({ safeDescriptors: false })
 const { rootStore } = global
 const selectedMarket = new MarketEntity(rootStore, fakestock)
 const amountToTrade = '100'
-const PRECT_BALANCE = '2000'
-const PRECT_DECIMALS = 18
+const COLLATERAL_BALANCE = '2000'
+const COLLATERAL_DECIMALS = 18
 
 // eslint-disable-next-line jest/no-disabled-tests
 describe.skip('TradeStore tests', () => {
-  let spyPreCTTokenBalance: jest.SpyInstance
-  let spyPreCTDecimalsNumber: jest.SpyInstance
-  let spyPreCTBalanceOfSigner: jest.SpyInstance
+  let spyCollateralTokenBalance: jest.SpyInstance
+  let spyCollateralDecimalsNumber: jest.SpyInstance
+  let spyCollateralBalanceOfSigner: jest.SpyInstance
   beforeAll(() => {
-    spyPreCTTokenBalance = jest
-      .spyOn(rootStore.preCTTokenStore, 'tokenBalanceFormat', 'get')
-      .mockReturnValue(PRECT_BALANCE)
+    spyCollateralTokenBalance = jest
+      .spyOn(rootStore.collateralStore, 'tokenBalanceFormat', 'get')
+      .mockReturnValue(COLLATERAL_BALANCE)
 
-    spyPreCTDecimalsNumber = jest
-      .spyOn(rootStore.preCTTokenStore, 'decimalsNumber', 'get')
-      .mockReturnValue(PRECT_DECIMALS)
+    spyCollateralDecimalsNumber = jest
+      .spyOn(rootStore.collateralStore, 'decimalsNumber', 'get')
+      .mockReturnValue(COLLATERAL_DECIMALS)
 
-    const PRECT_BALANCE_BIGNUMBER = parseUnits(PRECT_BALANCE, PRECT_DECIMALS)
+    const COLLATERAL_BALANCE_BN = parseUnits(COLLATERAL_BALANCE, COLLATERAL_DECIMALS)
 
-    spyPreCTBalanceOfSigner = jest
-      .spyOn(rootStore.preCTTokenStore, 'balanceOfSigner', 'get')
-      .mockReturnValue(PRECT_BALANCE_BIGNUMBER)
+    spyCollateralBalanceOfSigner = jest
+      .spyOn(rootStore.collateralStore, 'balanceOfSigner', 'get')
+      .mockReturnValue(COLLATERAL_BALANCE_BN)
   })
 
   afterAll(() => {
-    spyPreCTTokenBalance.mockRestore()
-    spyPreCTBalanceOfSigner.mockRestore()
-    spyPreCTDecimalsNumber.mockRestore()
+    spyCollateralTokenBalance.mockRestore()
+    spyCollateralBalanceOfSigner.mockRestore()
+    spyCollateralDecimalsNumber.mockRestore()
   })
 
   it('should initialize trade with long direction as default', () => {

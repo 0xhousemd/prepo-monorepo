@@ -43,7 +43,7 @@ export const getTradingVolume = (
   },
   tokenAddress: string
 ): number => {
-  // the opposite one is preCT volume, which can be used as USD volume
+  // the opposite one is preETH volume, which can be used as ETH volume
   if (token0.id.toLowerCase() === tokenAddress.toLowerCase()) return +(token1.volume ?? 0)
   if (token1.id.toLowerCase() === tokenAddress.toLowerCase()) return +(token0.volume ?? 0)
   return 0

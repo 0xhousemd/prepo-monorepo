@@ -27,7 +27,7 @@ jest.spyOn(rootStore.web3Store, 'signerState', 'get').mockReturnValue({
   balance: signerBalance,
 })
 
-jest.spyOn(rootStore.preCTTokenStore, 'decimals').mockReturnValue([18])
+jest.spyOn(rootStore.collateralStore, 'decimals').mockReturnValue([18])
 jest.spyOn(rootStore.baseTokenStore, 'decimals').mockReturnValue([18])
 
 global.rootStore = rootStore

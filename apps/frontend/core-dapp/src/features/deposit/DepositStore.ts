@@ -65,7 +65,7 @@ export class DepositStore {
     this.approving = true
     // native eth dont require approval
     if (this.depositToken.type === 'native') return
-    await this.depositToken.erc20.unlockPermanently('preCT')
+    await this.depositToken.erc20.unlockPermanently('COLLATERAL')
     runInAction(() => {
       this.approving = false
     })
@@ -77,12 +77,11 @@ export class DepositStore {
     if (this.depositAmountBN === undefined || address === undefined) return
 
     this.depositing = true
-    if (this.depositAmountBN === undefined) return
 
     const { error } =
       this.depositToken.type === 'native'
         ? await this.root.depositTradeHelperStore.wrapAndDeposit(address, this.depositAmountBN)
-        : await this.root.preCTTokenStore.deposit(address, this.depositAmountBN)
+        : await this.root.collateralStore.deposit(address, this.depositAmountBN)
 
     if (error) {
       this.root.toastStore.errorToast('Deposit failed', error)
@@ -128,8 +127,8 @@ export class DepositStore {
   }
 
   private get depositFeesBN(): BigNumber | undefined {
-    const { preCTTokenStore } = this.root
-    const { percentDenominator, depositFee } = preCTTokenStore
+    const { collateralStore } = this.root
+    const { percentDenominator, depositFee } = collateralStore
     if (
       depositFee === undefined ||
       this.depositAmountBN === undefined ||
@@ -150,7 +149,7 @@ export class DepositStore {
   get estimatedReceivedAmount(): number | undefined {
     if (this.depositFeesBN === undefined || this.depositAmountBN === undefined) return undefined
     return +(
-      this.root.preCTTokenStore.formatUnits(this.depositAmountBN.sub(this.depositFeesBN)) ?? 0
+      this.root.collateralStore.formatUnits(this.depositAmountBN.sub(this.depositFeesBN)) ?? 0
     )
   }
 
@@ -172,7 +171,7 @@ export class DepositStore {
   get needApproval(): boolean | undefined {
     if (!this.root.web3Store.connected) return false
     if (this.depositToken.type === 'native') return false
-    return this.depositToken.erc20.needToAllowFor(this.depositAmount, 'preCT')
+    return this.depositToken.erc20.needToAllowFor(this.depositAmount, 'COLLATERAL')
   }
 
   get depositToken(): Token {

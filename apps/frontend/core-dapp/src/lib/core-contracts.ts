@@ -3,7 +3,7 @@ import { ExternalContract } from './contract.types'
 
 export type CoreTokenContractNames =
   | 'WSTETH'
-  | 'preCT'
+  | 'COLLATERAL'
   | 'PPO'
   | 'PPO_STAKING'
   | 'DEPOSIT_RECORD'
@@ -51,7 +51,7 @@ export const DEPOSIT_TRADE_HELPER_ADDRESS: ExternalContract = {
 
 export const coreContracts: CoreContracts = {
   WSTETH: BASE_TOKEN_ADDRESS,
-  preCT: COLLATERAL_TOKEN_ADDRESS,
+  COLLATERAL: COLLATERAL_TOKEN_ADDRESS,
   PPO: PPO_ADDRESS,
   PPO_STAKING: PPO_STAKING_ADDRESS,
   DEPOSIT_RECORD: DEPOSIT_RECORD_ADDRESS,

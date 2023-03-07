@@ -16,7 +16,7 @@ type GetDepositFee = CollateralAbi['functions']['getDepositFee']
 type GetWithdrawFee = CollateralAbi['functions']['getWithdrawFee']
 type Withdraw = CollateralAbi['functions']['withdraw']
 
-const TOKEN_SYMBOL = 'preCT'
+const TOKEN_SYMBOL = 'preETH'
 const TOKEN_DECIMALS = 18
 
 export class CollateralStore extends Erc20Store {
@@ -26,13 +26,13 @@ export class CollateralStore extends Erc20Store {
   uniswapToken: Token
 
   constructor(root: RootStore) {
-    super({ root, tokenName: TOKEN_SYMBOL, factory: CollateralAbi__factory as unknown as Factory })
+    super({ root, tokenName: 'COLLATERAL', factory: CollateralAbi__factory as unknown as Factory })
     const chainId = this.root.web3Store.network.chainId as unknown as ChainId
     const network = this.root.web3Store.network.name
     this.symbolOverride = TOKEN_SYMBOL
     this.uniswapToken = new Token(
       chainId,
-      getContractAddress<SupportedContracts>(TOKEN_SYMBOL, network, supportedContracts) ?? '',
+      getContractAddress<SupportedContracts>('COLLATERAL', network, supportedContracts) ?? '',
       TOKEN_DECIMALS,
       TOKEN_SYMBOL,
       TOKEN_SYMBOL

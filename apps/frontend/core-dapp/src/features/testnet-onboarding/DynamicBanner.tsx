@@ -6,7 +6,7 @@ import { FAKEUSD_AIRDROPPED_ON_TESTNET } from '../../lib/constants'
 
 const DynamicBanner: React.FC = () => {
   const {
-    preCTTokenStore,
+    collateralStore,
     baseTokenStore,
     portfolioStore,
     web3Store: {
@@ -24,7 +24,7 @@ const DynamicBanner: React.FC = () => {
   const userHasNotUsedAirdroppedTokens = baseTokenStore.balanceOfSigner?.eq(amountFakeUSD)
   const userHasBeenOnboarded =
     (portfolioStore.userPositions !== undefined && portfolioStore.userPositions.length > 0) ||
-    preCTTokenStore.balanceOfSigner?.gt(0)
+    collateralStore.balanceOfSigner?.gt(0)
 
   if (userHasBeenOnboarded) return null
   if (testNetwork && userHasNotUsedAirdroppedTokens) return <OnboardUserBanner />

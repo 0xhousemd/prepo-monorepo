@@ -91,14 +91,14 @@ export class PortfolioStore {
   }
 
   get portfolioValue(): string | undefined {
-    const { preCTTokenStore } = this.root
+    const { collateralStore } = this.root
     if (
       this.tradingPositionsValue === undefined ||
-      preCTTokenStore.tokenBalanceFormat === undefined
+      collateralStore.tokenBalanceFormat === undefined
     )
       return undefined
 
-    const tokenBalance = Number(preCTTokenStore.tokenBalanceFormat)
+    const tokenBalance = Number(collateralStore.tokenBalanceFormat)
     const tradingPositionsAndBalance = Number(this.tradingPositionsValue) + tokenBalance
 
     if (Number.isNaN(tradingPositionsAndBalance)) return undefined

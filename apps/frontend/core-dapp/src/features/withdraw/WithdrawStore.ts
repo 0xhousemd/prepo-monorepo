@@ -43,7 +43,7 @@ export class WithdrawStore {
       return
 
     this.withdrawing = true
-    const { error } = await this.root.preCTTokenStore.withdraw(address, this.withdrawalAmountBN)
+    const { error } = await this.root.collateralStore.withdraw(address, this.withdrawalAmountBN)
 
     if (error) {
       this.root.toastStore.errorToast('Withdrawal failed', error)
@@ -60,19 +60,19 @@ export class WithdrawStore {
   get insufficientBalance(): boolean | undefined {
     if (
       this.withdrawalAmountBN === undefined ||
-      this.root.preCTTokenStore.balanceOfSigner === undefined
+      this.root.collateralStore.balanceOfSigner === undefined
     )
       return undefined
-    return this.withdrawalAmountBN.gt(this.root.preCTTokenStore.balanceOfSigner)
+    return this.withdrawalAmountBN.gt(this.root.collateralStore.balanceOfSigner)
   }
 
   get isLoadingBalance(): boolean {
     if (!this.root.web3Store.connected) return false
-    return this.root.preCTTokenStore.balanceOfSigner === undefined
+    return this.root.collateralStore.balanceOfSigner === undefined
   }
 
   get withdrawalAmountBN(): BigNumber | undefined {
-    return this.root.preCTTokenStore.parseUnits(this.withdrawalAmount)
+    return this.root.collateralStore.parseUnits(this.withdrawalAmount)
   }
 
   get withdrawalDisabled(): boolean {
@@ -89,7 +89,7 @@ export class WithdrawStore {
   }
 
   get withdrawalFeesAmountBN(): BigNumber | undefined {
-    const { withdrawFee, percentDenominator } = this.root.preCTTokenStore
+    const { withdrawFee, percentDenominator } = this.root.collateralStore
     if (
       this.withdrawalAmountBN === undefined ||
       percentDenominator === undefined ||
@@ -102,12 +102,12 @@ export class WithdrawStore {
   get withdrawalFeesAmount(): string | undefined {
     const { withdrawalFeesAmountBN } = this
     if (withdrawalFeesAmountBN === undefined) return undefined
-    return this.root.preCTTokenStore.formatUnits(withdrawalFeesAmountBN)
+    return this.root.collateralStore.formatUnits(withdrawalFeesAmountBN)
   }
 
   get receivedAmount(): number | undefined {
     if (this.receivedAmountBN === undefined) return undefined
-    const amountString = this.root.preCTTokenStore.formatUnits(this.receivedAmountBN)
+    const amountString = this.root.collateralStore.formatUnits(this.receivedAmountBN)
     if (amountString === undefined) return undefined
     return +amountString
   }
@@ -127,7 +127,7 @@ export class WithdrawStore {
   }
 
   get withdrawalFee(): number | undefined {
-    const { withdrawFee, percentDenominator } = this.root.preCTTokenStore
+    const { withdrawFee, percentDenominator } = this.root.collateralStore
     if (withdrawFee === undefined || percentDenominator === undefined) return undefined
     return withdrawFee.toNumber() / percentDenominator.toNumber()
   }
@@ -175,7 +175,7 @@ export class WithdrawStore {
       // The amount withdrawn is effectively zero.
       // When someone withdraws, globalAmountWithdrawnThisPeriod will update and thus the withdraw limit will be recomputed
       currentAmount: periodAlreadyReset ? BigNumber.from(0) : globalAmountWithdrawnThisPeriod,
-      formatUnits: this.root.preCTTokenStore.formatUnits.bind(this.root.preCTTokenStore),
+      formatUnits: this.root.collateralStore.formatUnits.bind(this.root.collateralStore),
     })
 
     if (limitInfo.status === 'already-exceeded' || limitInfo.status === 'exceeded-after-transfer') {

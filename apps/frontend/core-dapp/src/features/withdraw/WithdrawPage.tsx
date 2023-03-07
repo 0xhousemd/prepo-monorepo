@@ -8,8 +8,8 @@ import PageCard from '../../components/PageCard'
 import { Routes } from '../../lib/routes'
 
 const WithdrawPage: React.FC = () => {
-  const { preCTTokenStore, withdrawStore } = useRootStore()
-  const { balanceOfSigner, tokenBalanceFormat } = preCTTokenStore
+  const { collateralStore, withdrawStore } = useRootStore()
+  const { balanceOfSigner, tokenBalanceFormat } = collateralStore
   const { withdrawing, setWithdrawalAmount, withdrawalAmount } = withdrawStore
 
   return (

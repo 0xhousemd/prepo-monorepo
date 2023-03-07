@@ -54,11 +54,11 @@ export class TradeStore {
       async ({ closePositionAmountBN, selectedPosition }) => {
         this.closePositionMarketAmountOutBN = undefined
 
-        const { address: preCTAddress } = this.root.preCTTokenStore
+        const { address: collateralAddress } = this.root.collateralStore
 
         if (
           closePositionAmountBN === undefined ||
-          !preCTAddress ||
+          !collateralAddress ||
           !selectedPosition?.token.address ||
           selectedPosition.pool.poolImmutables?.fee === undefined
         )
@@ -69,7 +69,7 @@ export class TradeStore {
         const output = await this.root.swapStore.quoteExactInput({
           amountBN: closePositionAmountBN,
           fromAddress: selectedPosition.token.address,
-          toAddress: preCTAddress,
+          toAddress: collateralAddress,
           fee,
         })
 
@@ -96,11 +96,11 @@ export class TradeStore {
       async ({ openTradeAmountBN, selectedPosition }) => {
         this.openTradeAmountOutBN = undefined // clean up while new amountOut gets loaded
 
-        const { address: preCTAddress } = this.root.preCTTokenStore
+        const { address: collateralAddress } = this.root.collateralStore
 
         if (
           openTradeAmountBN === undefined ||
-          !preCTAddress ||
+          !collateralAddress ||
           !selectedPosition ||
           !selectedPosition.token.address ||
           selectedPosition.pool.poolImmutables?.fee === undefined
@@ -111,7 +111,7 @@ export class TradeStore {
 
         const output = await this.root.swapStore.quoteExactInput({
           amountBN: openTradeAmountBN,
-          fromAddress: preCTAddress,
+          fromAddress: collateralAddress,
           toAddress: selectedPosition.token.address,
           fee,
         })
@@ -131,7 +131,7 @@ export class TradeStore {
 
   get insufficientBalanceForOpenTrade(): boolean | undefined {
     if (!this.root.web3Store.connected) return false
-    const { balanceOfSigner } = this.root.preCTTokenStore
+    const { balanceOfSigner } = this.root.collateralStore
     if (balanceOfSigner === undefined || this.openTradeAmountBN === undefined) return undefined
     return this.openTradeAmountBN.gt(balanceOfSigner)
   }
@@ -168,7 +168,7 @@ export class TradeStore {
     return this.openTradeButtonInitialLoading
   }
 
-  // payment token will default to preCT incase autoselect fails (e.g. has 0 balance in everything)
+  // payment token will default to preETH incase autoselect fails (e.g. has 0 balance in everything)
   get paymentToken(): Token {
     return (
       this.paymentTokenOverride ?? {
@@ -176,7 +176,7 @@ export class TradeStore {
         name: 'Cash Balance',
         type: 'erc20',
         shortName: 'USD',
-        erc20: this.root.preCTTokenStore,
+        erc20: this.root.collateralStore,
       }
     )
   }
@@ -387,7 +387,7 @@ export class TradeStore {
 
   get needApproval(): boolean | undefined {
     if (!this.root.web3Store.connected) return false
-    return this.root.preCTTokenStore.needToAllowFor(this.openTradeAmount, 'UNISWAP_SWAP_ROUTER')
+    return this.root.collateralStore.needToAllowFor(this.openTradeAmount, 'UNISWAP_SWAP_ROUTER')
   }
 
   get openTradeAmountOut(): string | undefined {
@@ -399,7 +399,7 @@ export class TradeStore {
   }
 
   get openTradeAmountBN(): BigNumber | undefined {
-    return this.root.preCTTokenStore.parseUnits(this.openTradeAmount)
+    return this.root.collateralStore.parseUnits(this.openTradeAmount)
   }
 
   get tradeUrl(): string {
@@ -456,7 +456,7 @@ export class TradeStore {
 
   async approve(): Promise<void> {
     this.approving = true
-    await this.root.preCTTokenStore.unlockPermanently('UNISWAP_SWAP_ROUTER')
+    await this.root.collateralStore.unlockPermanently('UNISWAP_SWAP_ROUTER')
     runInAction(() => {
       this.approving = false
     })
@@ -470,7 +470,7 @@ export class TradeStore {
     const price = this.selectedMarket[`${this.direction}TokenPrice`]
     const fee = this.selectedMarket[`${this.direction}Pool`]?.poolImmutables?.fee
     const { swap } = this.root.swapStore
-    const { uniswapToken } = this.root.preCTTokenStore
+    const { uniswapToken } = this.root.collateralStore
 
     if (
       !selectedToken?.address ||
@@ -527,7 +527,7 @@ export class TradeStore {
 
     const fee = selectedMarket[`${this.direction}Pool`]?.poolImmutables?.fee
     const { swap } = this.root.swapStore
-    const { uniswapToken } = this.root.preCTTokenStore
+    const { uniswapToken } = this.root.collateralStore
     if (!token.address || !uniswapToken.address || fee === undefined)
       return { success: false, error: 'Please try again later.' }
 
@@ -551,7 +551,7 @@ export class TradeStore {
   }
 
   private async closePosition(): Promise<void> {
-    const { address: preCTAddress } = this.root.preCTTokenStore
+    const { address: collateralAddress } = this.root.collateralStore
 
     if (
       !this.selectedPosition ||
@@ -559,7 +559,7 @@ export class TradeStore {
       this.selectedPosition.token.address === undefined ||
       this.closePositionAmountBN === undefined ||
       this.closePositionValueBN === undefined ||
-      preCTAddress === undefined
+      collateralAddress === undefined
     )
       return
 
@@ -573,7 +573,7 @@ export class TradeStore {
       fromAmount: this.closePositionAmountBN,
       fromTokenAddress: address,
       toAmount: this.closePositionValueBN,
-      toTokenAddress: preCTAddress,
+      toTokenAddress: collateralAddress,
       type: TradeType.EXACT_INPUT,
     })
 

@@ -55,9 +55,9 @@ const ActionButton = styled(Button).attrs({
 `
 
 const PortfolioValue: React.FC = () => {
-  const { portfolioStore, preCTTokenStore, web3Store } = useRootStore()
+  const { portfolioStore, collateralStore, web3Store } = useRootStore()
   const { portfolioValue, tradingPositionsValue } = portfolioStore
-  const { tokenBalanceFormat } = preCTTokenStore
+  const { tokenBalanceFormat } = collateralStore
   const { connected } = web3Store
 
   return (

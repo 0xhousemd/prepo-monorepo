@@ -58,7 +58,7 @@ describe('DepositStore tests', () => {
 
     beforeEach(() => {
       rootStore.depositStore.setDepositAmount(amountToDeposit)
-      spyDeposit = jest.spyOn(rootStore.preCTTokenStore, 'deposit')
+      spyDeposit = jest.spyOn(rootStore.collateralStore, 'deposit')
       spyDepositAndWrap = jest.spyOn(rootStore.depositTradeHelperStore, 'wrapAndDeposit')
       spyAddress = jest
         .spyOn(rootStore.web3Store, 'address', 'get')

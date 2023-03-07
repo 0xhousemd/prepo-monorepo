@@ -10,13 +10,13 @@ configure({ safeDescriptors: false })
 
 const { rootStore } = global
 const amountToWithdraw = '1000.0'
-const PRECT_BALANCE = '2000'
-const PRECT_DECIMALS = 18
+const COLLATERAL_BALANCE = '2000'
+const COLLATERAL_DECIMALS = 18
 
 describe('WithdrawStore tests', () => {
-  let spyPreCTTokenBalance: jest.SpyInstance
-  let spyPreCTBalanceOfSigner: jest.SpyInstance
-  let spyPreCTDecimalsNumber: jest.SpyInstance
+  let spyCollateralBalance: jest.SpyInstance
+  let spyCollateralBalanceOfSigner: jest.SpyInstance
+  let spyCollateralDecimalsNumber: jest.SpyInstance
   let spyWithdrawalFeesAmountBN: jest.SpyInstance
   let spySuccessToast: jest.SpyInstance
   let spyGlobalAmountWithdrawnThisPeriod: jest.SpyInstance
@@ -26,19 +26,19 @@ describe('WithdrawStore tests', () => {
   beforeAll(() => {
     spySuccessToast = jest.spyOn(rootStore.toastStore, 'successToast').mockImplementation(jest.fn())
 
-    spyPreCTTokenBalance = jest
-      .spyOn(rootStore.preCTTokenStore, 'tokenBalanceFormat', 'get')
-      .mockReturnValue(PRECT_BALANCE)
+    spyCollateralBalance = jest
+      .spyOn(rootStore.collateralStore, 'tokenBalanceFormat', 'get')
+      .mockReturnValue(COLLATERAL_BALANCE)
 
-    const PRECT_BALANCE_BIGNUMBER = parseUnits(`${PRECT_BALANCE}`, PRECT_DECIMALS)
+    const COLLATERAL_BALANCE_BIGNUMBER = parseUnits(`${COLLATERAL_BALANCE}`, COLLATERAL_DECIMALS)
 
-    spyPreCTBalanceOfSigner = jest
-      .spyOn(rootStore.preCTTokenStore, 'balanceOfSigner', 'get')
-      .mockReturnValue(PRECT_BALANCE_BIGNUMBER)
+    spyCollateralBalanceOfSigner = jest
+      .spyOn(rootStore.collateralStore, 'balanceOfSigner', 'get')
+      .mockReturnValue(COLLATERAL_BALANCE_BIGNUMBER)
 
-    spyPreCTDecimalsNumber = jest
-      .spyOn(rootStore.preCTTokenStore, 'decimalsNumber', 'get')
-      .mockReturnValue(PRECT_DECIMALS)
+    spyCollateralDecimalsNumber = jest
+      .spyOn(rootStore.collateralStore, 'decimalsNumber', 'get')
+      .mockReturnValue(COLLATERAL_DECIMALS)
 
     spyWithdrawalFeesAmountBN = jest
       .spyOn(rootStore.withdrawStore, 'withdrawalFeesAmountBN', 'get')
@@ -62,9 +62,9 @@ describe('WithdrawStore tests', () => {
   })
 
   afterAll(() => {
-    spyPreCTTokenBalance.mockRestore()
-    spyPreCTBalanceOfSigner.mockRestore()
-    spyPreCTDecimalsNumber.mockRestore()
+    spyCollateralBalance.mockRestore()
+    spyCollateralBalanceOfSigner.mockRestore()
+    spyCollateralDecimalsNumber.mockRestore()
     spySuccessToast.mockRestore()
     spyWithdrawalFeesAmountBN.mockRestore()
     spyGlobalAmountWithdrawnThisPeriod.mockRestore()
@@ -94,7 +94,7 @@ describe('WithdrawStore tests', () => {
     let spyAddress: jest.SpyInstance
 
     beforeEach(() => {
-      spyWithdraw = jest.spyOn(rootStore.preCTTokenStore, 'withdraw')
+      spyWithdraw = jest.spyOn(rootStore.collateralStore, 'withdraw')
       spyAddress = jest
         .spyOn(rootStore.web3Store, 'address', 'get')
         .mockReturnValue('0xdummycontract')
@@ -109,7 +109,7 @@ describe('WithdrawStore tests', () => {
     })
 
     it('should call withdraw method on the collateral contract when withdrawing', () => {
-      expect(rootStore.preCTTokenStore.withdraw).toHaveBeenCalledTimes(1)
+      expect(rootStore.collateralStore.withdraw).toHaveBeenCalledTimes(1)
     })
 
     it('should match same amount to withdraw to the one sent to the collateral contract', () => {

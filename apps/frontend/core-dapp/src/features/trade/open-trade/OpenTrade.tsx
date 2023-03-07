@@ -36,9 +36,9 @@ const Message = styled.div`
 `
 
 const OpenTrade: React.FC = () => {
-  const { tradeStore, preCTTokenStore } = useRootStore()
+  const { tradeStore, collateralStore } = useRootStore()
   const { openTradeAmountBN } = tradeStore
-  const { balanceOfSigner } = preCTTokenStore
+  const { balanceOfSigner } = collateralStore
 
   return (
     <Wrapper>

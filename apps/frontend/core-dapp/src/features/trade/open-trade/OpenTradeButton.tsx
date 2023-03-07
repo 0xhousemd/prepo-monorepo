@@ -5,8 +5,8 @@ import { useRootStore } from '../../../context/RootStoreProvider'
 import ConnectButton from '../../connect/ConnectButton'
 
 const OpenTradeButton: React.FC = () => {
-  const { preCTTokenStore, tradeStore, web3Store } = useRootStore()
-  const { balanceOfSigner } = preCTTokenStore
+  const { collateralStore, tradeStore, web3Store } = useRootStore()
+  const { balanceOfSigner } = collateralStore
   const { connected, isNetworkSupported } = web3Store
   const {
     insufficientBalanceForOpenTrade,

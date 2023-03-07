@@ -9,9 +9,9 @@ const Wrapper = styled.div`
 `
 
 const WithdrawInput: React.FC = () => {
-  const { preCTTokenStore, withdrawStore } = useRootStore()
+  const { collateralStore, withdrawStore } = useRootStore()
   const { setWithdrawalAmount, withdrawalAmount } = withdrawStore
-  const { balanceOfSigner, tokenBalanceFormat } = preCTTokenStore
+  const { balanceOfSigner, tokenBalanceFormat } = collateralStore
 
   return (
     <Wrapper>
