@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers'
+import { BigNumber, utils } from 'ethers'
 
 export type BalanceLimitInfo =
   | {
@@ -6,33 +6,33 @@ export type BalanceLimitInfo =
     }
   | {
       status: 'not-exceeded' | 'already-exceeded' | 'exceeded-after-transfer'
-      amountUnits: string
-      capUnits: string
-      remainingUnits: string
+      amountEth: string
+      capEth: string
+      remainingEth: string
     }
 
 export function getBalanceLimitInfo({
   additionalAmount,
   cap,
   currentAmount,
-  formatUnits,
 }: {
   additionalAmount: BigNumber | undefined
   cap: BigNumber | undefined
   currentAmount: BigNumber | undefined
-  formatUnits: (value: BigNumber) => string | undefined
 }): BalanceLimitInfo {
   if (currentAmount === undefined || cap === undefined || additionalAmount === undefined) {
     return { status: 'loading' }
   }
 
-  const amountUnits = formatUnits(currentAmount)
-  const capUnits = formatUnits(cap)
+  const amountEth = utils.formatEther(currentAmount)
+  const capEth = utils.formatEther(cap)
 
   const remainingAmount = cap.sub(currentAmount)
-  const remainingUnits = formatUnits(remainingAmount.gte(0) ? remainingAmount : BigNumber.from(0))
+  const remainingEth = utils.formatEther(
+    remainingAmount.gte(0) ? remainingAmount : BigNumber.from(0)
+  )
 
-  if (amountUnits === undefined || capUnits === undefined || remainingUnits === undefined) {
+  if (amountEth === undefined || capEth === undefined || remainingEth === undefined) {
     return { status: 'loading' }
   }
 
@@ -47,9 +47,9 @@ export function getBalanceLimitInfo({
   }
 
   return {
-    amountUnits,
-    capUnits,
-    remainingUnits,
+    amountEth,
+    capEth,
+    remainingEth,
     status,
   }
 }

@@ -4,7 +4,6 @@ import { makeAutoObservable, runInAction, reaction } from 'mobx'
 import { parseUnits, validateStringToBN } from 'prepo-utils'
 import minBy from 'lodash/minBy'
 import { RootStore } from '../../stores/RootStore'
-import { isProduction } from '../../utils/isProduction'
 import { BalanceLimitInfo, getBalanceLimitInfo } from '../../utils/balance-limits'
 import { Token } from '../../stores/TokensStore'
 
@@ -13,9 +12,9 @@ export type DepositLimit =
       status: 'loading' | 'web3-not-ready' | 'not-exceeded'
     }
   | {
-      amountUnits: string
-      capUnits: string
-      remainingUnits: string
+      amountEth: string
+      capEth: string
+      remainingEth: string
       status: 'already-exceeded' | 'exceeded-after-transfer'
       type: 'user-limit' | 'global-limit'
     }
@@ -193,23 +192,10 @@ export class DepositStore {
   }
 
   private get globalDepositLimitInfo(): BalanceLimitInfo {
-    // TODO: remove this when contract is updated
-    if (process.env.NODE_ENV === 'test' || isProduction())
-      return {
-        amountUnits: '0',
-        capUnits: '0',
-        remainingUnits: '0',
-        status: 'not-exceeded',
-      }
-
     return getBalanceLimitInfo({
       additionalAmount: this.depositAmountBN,
-      cap: this.root.depositRecordStore.globalNetDepositCap,
-      currentAmount: this.root.depositRecordStore.globalNetDepositAmount,
-      formatUnits:
-        this.depositToken.type === 'native'
-          ? formatEther
-          : this.depositToken.erc20.formatUnits.bind(this.depositToken.erc20),
+      cap: this.root.depositRecordStore.globalNetDepositCapInEth,
+      currentAmount: this.root.depositRecordStore.globalNetDepositAmountInEth,
     })
   }
 
@@ -218,23 +204,10 @@ export class DepositStore {
       return { status: 'web3-not-ready' }
     }
 
-    // TODO: remove this when contract is updated
-    if (process.env.NODE_ENV === 'test' || isProduction())
-      return {
-        amountUnits: '0',
-        capUnits: '0',
-        remainingUnits: '0',
-        status: 'not-exceeded',
-      }
-
     return getBalanceLimitInfo({
       additionalAmount: this.depositAmountBN,
-      cap: this.root.depositRecordStore.userDepositCap,
-      currentAmount: this.root.depositRecordStore.userDepositAmountOfSigner,
-      formatUnits:
-        this.depositToken.type === 'native'
-          ? formatEther
-          : this.depositToken.erc20.formatUnits.bind(this.depositToken.erc20),
+      cap: this.root.depositRecordStore.userDepositCapInEth,
+      currentAmount: this.root.depositRecordStore.userDepositAmountOfSignerInEth,
     })
   }
 
@@ -261,7 +234,7 @@ export class DepositStore {
 
     const lowestLimit = minBy(
       [globalDepositLimitInfo, userDepositLimitInfo].filter(isExceededAfterTransfer),
-      (limit) => +limit.remainingUnits
+      (limit) => +limit.remainingEth
     )
 
     if (lowestLimit) {

@@ -38,21 +38,45 @@ export class DepositRecordStore extends ContractStore<RootStore, SupportedContra
     return this.call<GetUserDepositCap>('getUserDepositCap', params)
   }
 
-  get globalNetDepositAmount(): BigNumber | undefined {
+  private get globalNetDepositAmountInWstEth(): BigNumber | undefined {
     return this.getGlobalNetDepositAmount()?.[0]
   }
 
-  get globalNetDepositCap(): BigNumber | undefined {
+  get globalNetDepositAmountInEth(): BigNumber | undefined {
+    const { globalNetDepositAmountInWstEth } = this
+    if (globalNetDepositAmountInWstEth === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(globalNetDepositAmountInWstEth)
+  }
+
+  private get globalNetDepositCapInWstEth(): BigNumber | undefined {
     return this.getGlobalNetDepositCap()?.[0]
   }
 
-  get userDepositAmountOfSigner(): BigNumber | undefined {
+  get globalNetDepositCapInEth(): BigNumber | undefined {
+    const { globalNetDepositCapInWstEth } = this
+    if (globalNetDepositCapInWstEth === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(globalNetDepositCapInWstEth)
+  }
+
+  private get userDepositAmountOfSignerInWstEth(): BigNumber | undefined {
     const { address } = this.root.web3Store.signerState
     if (!address) return undefined
     return this.getUserDepositAmount(address)?.[0]
   }
 
-  get userDepositCap(): BigNumber | undefined {
+  get userDepositAmountOfSignerInEth(): BigNumber | undefined {
+    const { userDepositAmountOfSignerInWstEth } = this
+    if (userDepositAmountOfSignerInWstEth === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(userDepositAmountOfSignerInWstEth)
+  }
+
+  private get userDepositCapInWstEth(): BigNumber | undefined {
     return this.getUserDepositCap()?.[0]
+  }
+
+  get userDepositCapInEth(): BigNumber | undefined {
+    const { userDepositCapInWstEth } = this
+    if (userDepositCapInWstEth === undefined) return undefined
+    return this.root.balancerStore.getWstEthAmountInEth(userDepositCapInWstEth)
   }
 }

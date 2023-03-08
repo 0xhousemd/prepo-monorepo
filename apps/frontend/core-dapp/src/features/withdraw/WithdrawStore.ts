@@ -3,7 +3,6 @@ import { makeAutoObservable, reaction, runInAction } from 'mobx'
 import { parseUnits, validateStringToBN } from 'prepo-utils'
 import { differenceInMilliseconds } from 'date-fns'
 import debounce from 'lodash/debounce'
-import { formatEther } from 'ethers/lib/utils'
 import { RootStore } from '../../stores/RootStore'
 import { getBalanceLimitInfo } from '../../utils/balance-limits'
 import { addDuration } from '../../utils/date-utils'
@@ -14,10 +13,9 @@ export type WithdrawLimit =
       status: 'loading' | 'not-exceeded'
     }
   | {
-      // TODO rename units -> eth when both withdraw and deposit limits are using eth
-      amountUnits: string
-      capUnits: string
-      remainingUnits: string
+      amountEth: string
+      capEth: string
+      remainingEth: string
       // If undefined, withdrawal period was reset already
       resetsIn: DurationInMs | undefined
       status: 'already-exceeded' | 'exceeded-after-transfer'
@@ -243,7 +241,6 @@ export class WithdrawStore {
       // The amount withdrawn is effectively zero.
       // When someone withdraws, globalAmountWithdrawnThisPeriod will update and thus the withdraw limit will be recomputed
       currentAmount: periodAlreadyReset ? BigNumber.from(0) : globalAmountWithdrawnThisPeriodInEth,
-      formatUnits: formatEther,
     })
 
     if (limitInfo.status === 'already-exceeded' || limitInfo.status === 'exceeded-after-transfer') {

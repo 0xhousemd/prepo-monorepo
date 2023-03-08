@@ -69,7 +69,7 @@ const DepositWarning: React.FC = () => {
 
   switch (depositLimit.status) {
     case 'already-exceeded': {
-      const cap = compactNumber(+depositLimit.capUnits, { showUsdSign: true })
+      const cap = compactNumber(+depositLimit.capEth, { showUsdSign: true })
 
       return (
         <Alert
@@ -85,7 +85,7 @@ const DepositWarning: React.FC = () => {
       )
     }
     case 'exceeded-after-transfer': {
-      const formattedRemainingAmount = displayEth(+depositLimit.remainingUnits)
+      const formattedRemainingAmount = displayEth(+depositLimit.remainingEth)
 
       return (
         <Alert
@@ -95,7 +95,7 @@ const DepositWarning: React.FC = () => {
               Only{' '}
               <InlineTextButton
                 onClick={(): void => {
-                  setDepositAmount(depositLimit.remainingUnits)
+                  setDepositAmount(depositLimit.remainingEth)
                 }}
                 title={`Deposit ${formattedRemainingAmount} instead`}
               >

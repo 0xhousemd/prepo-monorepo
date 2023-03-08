@@ -12,7 +12,7 @@ const WithdrawWarning: React.FC = () => {
 
   switch (withdrawLimit.status) {
     case 'already-exceeded': {
-      const cap = displayEth(+withdrawLimit.capUnits)
+      const cap = displayEth(+withdrawLimit.capEth)
 
       return (
         <Alert
@@ -29,7 +29,7 @@ const WithdrawWarning: React.FC = () => {
       )
     }
     case 'exceeded-after-transfer': {
-      const formattedRemainingAmount = displayEth(+withdrawLimit.remainingUnits)
+      const formattedRemainingAmount = displayEth(+withdrawLimit.remainingEth)
 
       return (
         <Alert
@@ -39,7 +39,7 @@ const WithdrawWarning: React.FC = () => {
                 Withdrawal limit exceeded. <br />(
                 <InlineTextButton
                   onClick={(): void => {
-                    setWithdrawalAmount(withdrawLimit.remainingUnits)
+                    setWithdrawalAmount(withdrawLimit.remainingEth)
                   }}
                   title={`Withdraw ${formattedRemainingAmount} instead`}
                 >
