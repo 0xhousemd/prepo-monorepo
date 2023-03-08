@@ -153,9 +153,12 @@ export class DepositStore {
 
   get estimatedReceivedAmount(): number | undefined {
     if (this.depositFeesBN === undefined || this.depositAmountBN === undefined) return undefined
-    return +(
-      this.root.collateralStore.formatUnits(this.depositAmountBN.sub(this.depositFeesBN)) ?? 0
-    )
+
+    const amountAfterFees = this.depositAmountBN.sub(this.depositFeesBN)
+    const amountAfterSlippage =
+      this.root.advancedSettingsStore.getAmountAfterSlippage(amountAfterFees)
+
+    return +(this.root.collateralStore.formatUnits(amountAfterSlippage) ?? 0)
   }
 
   get insufficientBalance(): boolean | undefined {

@@ -61,8 +61,7 @@ export const WITHDRAW_HOOK_ADDRESS: ExternalContract = {
 }
 
 export const DEPOSIT_TRADE_HELPER_ADDRESS: ExternalContract = {
-  // TODO: update to actual contract address, not ready on arbitrum yet
-  arbitrumOne: ZERO_ADDRESS,
+  arbitrumOne: '0xE33175Df39F739db937E62198b67263F9d2Dd1C0',
 }
 
 export const coreContracts: CoreContracts = {

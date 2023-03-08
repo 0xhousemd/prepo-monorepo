@@ -1,16 +1,11 @@
 import { makeAutoObservable } from 'mobx'
+import { BigNumber } from 'ethers'
+import { parseUnits } from 'prepo-utils'
 import { RootStore } from '../../stores/RootStore'
-
-const ONE_POINT_FIVE_PERCENT = 0.015
-
-export const SLIPPAGE_SETTINGS = {
-  INITIAL_SLIPPAGE: ONE_POINT_FIVE_PERCENT,
-}
 
 export class AdvancedSettingsStore {
   root: RootStore
-  savedSlippage = SLIPPAGE_SETTINGS.INITIAL_SLIPPAGE
-  unsavedSlippage?: number
+  private readonly _slippage = 0.05 / 100
 
   constructor(root: RootStore) {
     this.root = root
@@ -18,6 +13,21 @@ export class AdvancedSettingsStore {
   }
 
   get slippage(): number {
-    return this.unsavedSlippage ?? this.savedSlippage
+    return this._slippage
+  }
+
+  /*
+   * Given an amount, returns the minimum amount to be received when accounting
+   * for slippage. This is the amount that is sent to the blockchain. The user
+   * may receive more than this amount, but if they receive less, the trade
+   * reverts.
+   */
+  getAmountAfterSlippage(amount: BigNumber): BigNumber {
+    const { slippage } = this
+
+    const percent = parseUnits((1 - slippage).toString(), 18)
+    if (percent === undefined) return amount
+
+    return amount.mul(percent).div(BigNumber.from(10).pow(18))
   }
 }

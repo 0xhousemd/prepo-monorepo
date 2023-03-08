@@ -2,9 +2,9 @@ import { BigNumber } from 'ethers'
 import { SupportedNetworks } from 'prepo-constants'
 import { getContractAddress } from 'prepo-utils'
 import { makeAutoObservable, reaction, runInAction } from 'mobx'
+import addDays from 'date-fns/fp/addDays'
 import addSeconds from 'date-fns/fp/addSeconds'
 import isBefore from 'date-fns/isBefore'
-import { formatEther } from 'ethers/lib/utils'
 import { RootStore } from './RootStore'
 import { SupportedContracts } from '../lib/contract.types'
 import { BalancerQueriesAbi__factory } from '../../generated/typechain'
@@ -16,6 +16,7 @@ const wstEthWethBalancerPoolIdByNetwork: Partial<Record<SupportedNetworks, strin
 }
 
 const getNextCallMinimumTime = addSeconds(3)
+const getTradeDeadlineFromDate = addDays(1)
 
 export class BalancerStore {
   private readonly balancerQueriesInterface = BalancerQueriesAbi__factory.createInterface()
@@ -77,11 +78,18 @@ export class BalancerStore {
    * Converts a ETH amount to wstETH using the base rate from Balancer, which
    * is updated periodically. This function is useful for processing a user
    * input, which is entered in ETH, and operating with it.
+   *
+   * Unlike {@link quoteEthAmountInWstEth}, this function doesn't account for
+   * price impact. For example, the value of 1,000 ETH may be 800 wstETH.
+   * However, if there's not enough liquidity in balancer, the actual swap will
+   * net less than 800 wstETH. If we want to show an accurate estimate of how
+   * much tokens will the user receive when depositing, we should use
+   * {@link quoteEthAmountInWstEth} instead.
    */
-  getEthAmountInWstEth(wethAmount: BigNumber): BigNumber | undefined {
+  getEthAmountInWstEth(ethAmount: BigNumber): BigNumber | undefined {
     const { wstEthDecimals, wstEthPriceInEthBN } = this
     if (wstEthDecimals === undefined || wstEthPriceInEthBN === undefined) return undefined
-    return wethAmount.mul(BigNumber.from(10).pow(wstEthDecimals)).div(wstEthPriceInEthBN)
+    return ethAmount.mul(BigNumber.from(10).pow(wstEthDecimals)).div(wstEthPriceInEthBN)
   }
 
   /**
@@ -90,35 +98,63 @@ export class BalancerStore {
    *
    * Since this function makes an asynchronous call, it is not practical to use
    * it to show every balance. To estimate the value of a wstETH balance without
-   * accounting form price impact, use {@link getWstEthAmountInEth}.
+   * accounting for price impact, use {@link getWstEthAmountInEth}.
    */
-  async quoteWstEthAmountInEth(wstEthAmount: BigNumber): Promise<BigNumber | undefined> {
-    if (wstEthAmount.eq(0)) {
-      return BigNumber.from(0)
+  quoteWstEthAmountInEth(wstEthAmount: BigNumber): Promise<BigNumber | undefined> {
+    const { wethAddress, wstEthAddress } = this
+
+    if (wethAddress === undefined || wstEthAddress === undefined) return Promise.resolve(undefined)
+
+    return this.quote({
+      amount: wstEthAmount,
+      assetIn: wstEthAddress,
+      assetOut: wethAddress,
+    })
+  }
+
+  /**
+   * Makes a call to the wstETH/ETH Balancer pool to determine how much wstETH
+   * will be received for the given ETH.
+   *
+   * Since this function makes an asynchronous call, it is not practical to use
+   * it to parse user inputs. To estimate the value of a ETH balance without
+   * accounting for price impact, use {@link getEthAmountInWstEth}.
+   */
+  quoteEthAmountInWstEth(ethAmount: BigNumber): Promise<BigNumber | undefined> {
+    const { wethAddress, wstEthAddress } = this
+
+    if (wethAddress === undefined || wstEthAddress === undefined) return Promise.resolve(undefined)
+
+    return this.quote({
+      amount: ethAmount,
+      assetIn: wethAddress,
+      assetOut: wstEthAddress,
+    })
+  }
+
+  private async quote({
+    amount,
+    assetIn,
+    assetOut,
+  }: {
+    amount: BigNumber
+    assetIn: string
+    assetOut: string
+  }): Promise<BigNumber | undefined> {
+    if (amount.eq(0)) {
+      return Promise.resolve(BigNumber.from(0))
     }
 
-    const {
-      balancerQueriesInterface,
-      balancerQueriesAddress,
-      wethAddress,
-      wstEthAddress,
-      wstEthWethBalancerPoolId,
-    } = this
+    const { balancerQueriesInterface, balancerQueriesAddress, wstEthWethBalancerPoolId } = this
     const { coreProvider } = this.root.web3Store
 
-    if (
-      balancerQueriesAddress === undefined ||
-      wethAddress === undefined ||
-      wstEthAddress === undefined ||
-      wstEthWethBalancerPoolId === undefined
-    )
-      return undefined
+    if (wstEthWethBalancerPoolId === undefined) return undefined
 
     const data = balancerQueriesInterface.encodeFunctionData('querySwap', [
       {
-        amount: wstEthAmount,
-        assetIn: wstEthAddress,
-        assetOut: wethAddress,
+        amount,
+        assetIn,
+        assetOut,
         kind: 0, // Given in (amount = assetIn)
         poolId: wstEthWethBalancerPoolId,
         userData: [],
@@ -170,5 +206,14 @@ export class BalancerStore {
   private get wstEthWethBalancerPoolId(): string | undefined {
     const { network } = this.root.web3Store
     return wstEthWethBalancerPoolIdByNetwork[network.name]
+  }
+
+  /*
+   * Generates a timestamp to mark the deadline of a trade. This timestamp is
+   * submitted to the blockchain, and if the transaction confirms after it, the
+   * trade reverts.
+   */
+  static getTradeDeadline(): BigNumber {
+    return BigNumber.from(getTradeDeadlineFromDate(Date.now()).getTime()).div(1000)
   }
 }

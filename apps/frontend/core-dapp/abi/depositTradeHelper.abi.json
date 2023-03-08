@@ -10,6 +10,11 @@
         "internalType": "contract ISwapRouter",
         "name": "swapRouter",
         "type": "address"
+      },
+      {
+        "internalType": "contract IVault",
+        "name": "wstethVault",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -51,6 +56,19 @@
       }
     ],
     "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "wstethPoolId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "WstethPoolIdChange",
     "type": "event"
   },
   {
@@ -221,6 +239,32 @@
   },
   {
     "inputs": [],
+    "name": "getWstethPoolId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getWstethVault",
+    "outputs": [
+      {
+        "internalType": "contract IVault",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "owner",
     "outputs": [
       {
@@ -235,6 +279,19 @@
   {
     "inputs": [],
     "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "wstethPoolId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setWstethPoolId",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -263,6 +320,50 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct IDepositTradeHelper.Permit",
+        "name": "collateralPermit",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amountOutMinimum",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IDepositTradeHelper.OffChainBalancerParams",
+        "name": "balancerParams",
+        "type": "tuple"
       }
     ],
     "name": "withdrawAndUnwrap",
@@ -276,6 +377,23 @@
         "internalType": "address",
         "name": "recipient",
         "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "amountOutMinimum",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IDepositTradeHelper.OffChainBalancerParams",
+        "name": "balancerParams",
+        "type": "tuple"
       }
     ],
     "name": "wrapAndDeposit",
