@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers'
 import { makeAutoObservable, reaction, runInAction } from 'mobx'
-import { parseUnits, validateStringToBN } from 'prepo-utils'
+import { validateStringToBN } from 'prepo-utils'
 import { differenceInMilliseconds } from 'date-fns'
 import debounce from 'lodash/debounce'
 import { RootStore } from '../../stores/RootStore'
@@ -37,7 +37,7 @@ export class WithdrawStore {
     makeAutoObservable(this, {}, { autoBind: true })
 
     reaction(
-      () => this.withdrawalAmountInWstEthBN,
+      () => this.withdrawalAmountAfterFeeInWstEthBN,
       debounce(this.updateWithdrawalMarketValue.bind(this), 300),
       {
         equals: (a, b) => {
@@ -56,6 +56,7 @@ export class WithdrawStore {
       return
     }
 
+    this.withdrawalMarketValueInEth = { status: 'not-queried' }
     if (amount === tokenBalanceFormatInEth) {
       // If the user clicks "MAX", all the wstETH balance (priced in ETH) will
       // be selected. However, since the wstETH price is updated in real time,
@@ -76,14 +77,19 @@ export class WithdrawStore {
     const { address } = this.root.web3Store
     if (
       this.insufficientBalance ||
-      this.withdrawalAmountBN === undefined ||
-      this.withdrawalAmountBN.eq(0) ||
+      this.withdrawalAmountInWstEthBN === undefined ||
+      this.withdrawalAmountInWstEthBN.eq(0) ||
+      this.withdrawalMarketValueInEth.status !== 'queried' ||
       address === undefined
     )
       return
 
     this.withdrawing = true
-    const { error } = await this.root.collateralStore.withdraw(address, this.withdrawalAmountBN)
+    const { error } = await this.root.depositTradeHelperStore.withdrawAndUnwrap(
+      address,
+      this.withdrawalAmountInWstEthBN,
+      this.withdrawalMarketValueInEth.value
+    )
 
     if (error) {
       this.root.toastStore.errorToast('Withdrawal failed', error)
@@ -147,12 +153,12 @@ export class WithdrawStore {
   get withdrawalFeesAmountBN(): BigNumber | undefined {
     const { withdrawFee, percentDenominator } = this.root.collateralStore
     if (
-      this.withdrawalMarketValueInEth.status !== 'queried' ||
+      this.withdrawalAmountBN === undefined ||
       percentDenominator === undefined ||
       withdrawFee === undefined
     )
       return undefined
-    return this.withdrawalMarketValueInEth.value.mul(withdrawFee).div(percentDenominator)
+    return this.withdrawalAmountBN.mul(withdrawFee).div(percentDenominator)
   }
 
   get withdrawalFeesAmount(): string | undefined {
@@ -169,25 +175,34 @@ export class WithdrawStore {
   }
 
   private get receivedAmountInEthBN(): BigNumber | undefined {
-    const { withdrawalMarketValueInEth, withdrawalFeesAmountBN } = this
-    if (withdrawalMarketValueInEth.status !== 'queried' || withdrawalFeesAmountBN === undefined)
-      return undefined
-    return withdrawalMarketValueInEth.value.sub(withdrawalFeesAmountBN)
+    const { withdrawalMarketValueInEth } = this
+    if (withdrawalMarketValueInEth.status !== 'queried') return undefined
+    return withdrawalMarketValueInEth.value
   }
 
   private get withdrawalAmountInWstEthBN(): BigNumber | undefined {
-    const { decimalsNumber: wethDecimals } = this.root.wethStore
-    const { withdrawalAmountInEth } = this
-    if (withdrawalAmountInEth === '' || wethDecimals === undefined) return undefined
+    if (this.withdrawalAmountBN === undefined) return undefined
+    return this.root.balancerStore.getEthAmountInWstEth(this.withdrawalAmountBN)
+  }
 
-    const withdrawalAmountInEthBN = parseUnits(withdrawalAmountInEth, wethDecimals)
-    if (withdrawalAmountInEthBN === undefined) return undefined
+  private get withdrawalAmountAfterFeeInEthBN(): BigNumber | undefined {
+    if (this.withdrawalAmountBN === undefined || this.withdrawalFeesAmountBN === undefined)
+      return undefined
+    return this.withdrawalAmountBN.sub(this.withdrawalFeesAmountBN)
+  }
 
-    return this.root.balancerStore.getEthAmountInWstEth(withdrawalAmountInEthBN)
+  private get withdrawalAmountAfterFeeInWstEthBN(): BigNumber | undefined {
+    if (this.withdrawalAmountAfterFeeInEthBN === undefined) return undefined
+    return this.root.balancerStore.getEthAmountInWstEth(this.withdrawalAmountAfterFeeInEthBN)
   }
 
   get withdrawUILoading(): boolean {
+    const { signerNonces, name } = this.root.collateralStore
+    const { needPermitForWithdrawAndUnwrap } = this.root.depositTradeHelperStore
     return (
+      signerNonces === undefined ||
+      !name ||
+      needPermitForWithdrawAndUnwrap === undefined ||
       this.withdrawing ||
       this.withdrawButtonInitialLoading ||
       this.withdrawLimit.status === 'loading'
@@ -258,21 +273,20 @@ export class WithdrawStore {
     }
   }
 
-  private async updateWithdrawalMarketValue(
-    withdrawalAmountInWstEthBN: BigNumber | undefined
-  ): Promise<void> {
-    if (withdrawalAmountInWstEthBN === undefined) return
+  private async updateWithdrawalMarketValue(value: BigNumber | undefined): Promise<void> {
+    if (value === undefined) return
 
     try {
-      const withdrawalAmountInEthBN = await this.root.balancerStore.quoteWstEthAmountInEth(
-        withdrawalAmountInWstEthBN
-      )
+      const withdrawalAmountInEthBN = await this.root.balancerStore.quoteWstEthAmountInEth(value)
 
-      if (withdrawalAmountInEthBN !== undefined) {
-        runInAction(() => {
+      runInAction(() => {
+        if (
+          withdrawalAmountInEthBN !== undefined &&
+          this.withdrawalAmountAfterFeeInWstEthBN?.eq(value)
+        ) {
           this.withdrawalMarketValueInEth = { status: 'queried', value: withdrawalAmountInEthBN }
-        })
-      }
+        }
+      })
       // eslint-disable-next-line
     } catch (e: any) {
       if (
@@ -291,5 +305,15 @@ export class WithdrawStore {
         this.root.toastStore.errorToast('Something went wrong, please try again later.', e)
       }
     }
+  }
+
+  // only for testing
+  setWithdrawalMarketValueInEth(
+    value:
+      | { status: 'not-queried' | 'not-enough-liquidity' }
+      | { status: 'queried'; value: BigNumber } = { status: 'not-queried' }
+  ): void {
+    if (process.env.NODE_ENV !== 'test') return
+    this.withdrawalMarketValueInEth = value
   }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { utils } from 'ethers'
+import { utils, BigNumber } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { configure } from 'mobx'
 import { ERC20_UNITS } from '../../../lib/constants'
@@ -60,6 +60,7 @@ describe('DepositStore tests', () => {
   describe('deposit', () => {
     const mock: any = (): jest.Mock<void> => jest.fn()
     let spyDeposit: jest.SpyInstance
+    let spyDepositFeesBN: jest.SpyInstance
     let spyDepositAndWrap: jest.SpyInstance
     let spyAddress: jest.SpyInstance
 
@@ -70,6 +71,9 @@ describe('DepositStore tests', () => {
       spyAddress = jest
         .spyOn(rootStore.web3Store, 'address', 'get')
         .mockReturnValue('0xdummyAddress')
+      spyDepositFeesBN = jest
+        .spyOn(rootStore.depositStore, 'depositFeesBN', 'get')
+        .mockReturnValue(BigNumber.from(0))
 
       spyDepositAndWrap.mockImplementation(mock)
       spyDeposit.mockImplementation(mock)
@@ -80,9 +84,10 @@ describe('DepositStore tests', () => {
       spyDeposit.mockRestore()
       spyAddress.mockRestore()
       spyDepositAndWrap.mockRestore()
+      spyDepositFeesBN.mockRestore()
     })
 
-    it('should call deposit method on the collateral contract when depositing', () => {
+    it('should call wrapAndDeposit method on the collateral contract when depositing', () => {
       expect(rootStore.depositTradeHelperStore.wrapAndDeposit).toHaveBeenCalledTimes(1)
     })
 

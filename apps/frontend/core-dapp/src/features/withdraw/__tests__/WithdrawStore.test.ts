@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { configure } from 'mobx'
-import { parseUnits } from 'ethers/lib/utils'
+import { parseUnits, parseEther } from 'ethers/lib/utils'
 import { utils, BigNumber } from 'ethers'
 import { ERC20_UNITS } from '../../../lib/constants'
 import { DateTimeInMs, DurationInMs } from '../../../utils/date-types'
@@ -85,30 +85,51 @@ describe('WithdrawStore tests', () => {
 
   describe('withdraw', () => {
     const mock: any = (): jest.Mock<void> => jest.fn()
-    let spyWithdraw: jest.SpyInstance
+    let spyWithdrawAndUnwrap: jest.SpyInstance
     let spyAddress: jest.SpyInstance
+    let spyWithdrawalAmountInWstEthBN: jest.SpyInstance
+    let spyGetEthAmountInWstEth: jest.SpyInstance
 
     beforeEach(() => {
-      spyWithdraw = jest.spyOn(rootStore.collateralStore, 'withdraw')
+      spyWithdrawAndUnwrap = jest.spyOn(rootStore.depositTradeHelperStore, 'withdrawAndUnwrap')
+
       spyAddress = jest
         .spyOn(rootStore.web3Store, 'address', 'get')
         .mockReturnValue('0xdummycontract')
-      spyWithdraw.mockImplementation(mock)
+
+      spyWithdrawalAmountInWstEthBN = jest
+        .spyOn(rootStore.withdrawStore, 'withdrawalAmountBN', 'get')
+        .mockReturnValue(parseEther(amountToWithdraw))
+
+      spyGetEthAmountInWstEth = jest
+        .spyOn(rootStore.balancerStore, 'getEthAmountInWstEth')
+        .mockImplementation((amount: BigNumber) => amount)
+
+      spyWithdrawAndUnwrap.mockImplementation(mock)
       rootStore.withdrawStore.setWithdrawalAmount(amountToWithdraw)
+      rootStore.withdrawStore.setWithdrawalMarketValueInEth({
+        status: 'queried',
+        value: parseEther('999'),
+      })
       rootStore.withdrawStore.withdraw()
     })
 
     afterEach(() => {
-      spyWithdraw.mockRestore()
+      spyWithdrawAndUnwrap.mockRestore()
+      spyWithdrawalAmountInWstEthBN.mockRestore()
+      spyGetEthAmountInWstEth.mockRestore()
+      rootStore.withdrawStore.setWithdrawalMarketValueInEth({
+        status: 'not-queried',
+      })
       spyAddress.mockRestore()
     })
 
     it('should call withdraw method on the collateral contract when withdrawing', () => {
-      expect(rootStore.collateralStore.withdraw).toHaveBeenCalledTimes(1)
+      expect(rootStore.depositTradeHelperStore.withdrawAndUnwrap).toHaveBeenCalledTimes(1)
     })
 
     it('should match same amount to withdraw to the one sent to the collateral contract', () => {
-      const withdrawParameters = spyWithdraw.mock.calls[0][1]
+      const withdrawParameters = spyWithdrawAndUnwrap.mock.calls[0][1]
       expect(utils.formatUnits(withdrawParameters, ERC20_UNITS)).toBe(amountToWithdraw)
     })
   })

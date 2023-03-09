@@ -73,13 +73,22 @@ export class DepositStore {
   // eslint-disable-next-line require-await
   async deposit(): Promise<void> {
     const { address } = this.root.web3Store
-    if (this.depositAmountBN === undefined || address === undefined) return
+    if (
+      this.depositAmountBN === undefined ||
+      address === undefined ||
+      this.depositFeesBN === undefined
+    )
+      return
 
     this.depositing = true
 
     const { error } =
       this.depositToken.type === 'native'
-        ? await this.root.depositTradeHelperStore.wrapAndDeposit(address, this.depositAmountBN)
+        ? await this.root.depositTradeHelperStore.wrapAndDeposit(
+            address,
+            this.depositAmountBN,
+            this.depositFeesBN
+          )
         : await this.root.collateralStore.deposit(address, this.depositAmountBN)
 
     if (error) {
@@ -130,7 +139,7 @@ export class DepositStore {
     return this.depositToken.erc20.parseUnits(this.depositAmount)
   }
 
-  private get depositFeesBN(): BigNumber | undefined {
+  get depositFeesBN(): BigNumber | undefined {
     const { collateralStore } = this.root
     const { percentDenominator, depositFee } = collateralStore
     if (

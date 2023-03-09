@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, runInAction } from 'mobx'
-import { BigNumber, utils } from 'ethers'
+import { BigNumber, Signature, utils } from 'ethers'
+import { splitSignature } from 'ethers/lib/utils'
 import { ContractReturn, Factory } from 'prepo-stores'
 import { ChainId, Token } from '@uniswap/sdk'
 import { getContractAddress } from 'prepo-utils'
@@ -9,11 +10,14 @@ import { getContractCall } from './utils/web3-store-utils'
 import { CollateralAbi, CollateralAbi__factory } from '../../generated/typechain'
 import { SupportedContracts } from '../lib/contract.types'
 import { supportedContracts } from '../lib/supported-contracts'
+import { Permit } from '../lib/other-interfaces'
 
 type Deposit = CollateralAbi['functions']['deposit']
 type GetPercentDenominator = CollateralAbi['functions']['PERCENT_DENOMINATOR']
 type GetDepositFee = CollateralAbi['functions']['getDepositFee']
 type GetWithdrawFee = CollateralAbi['functions']['getWithdrawFee']
+type Name = CollateralAbi['functions']['name']
+type Nonces = CollateralAbi['functions']['nonces']
 type Withdraw = CollateralAbi['functions']['withdraw']
 
 const TOKEN_SYMBOL = 'preETH'
@@ -66,6 +70,14 @@ export class CollateralStore extends Erc20Store {
     return this.call<GetWithdrawFee>('getWithdrawFee', params)
   }
 
+  getName(...params: Parameters<Name>): ContractReturn<Name> {
+    return this.call<Name>('name', params)
+  }
+
+  nonces(...params: Parameters<Nonces>): ContractReturn<Nonces> {
+    return this.call<Nonces>('nonces', params)
+  }
+
   async deposit(...params: Parameters<Deposit>): Promise<{ success: boolean; error?: string }> {
     try {
       this.depositing = true
@@ -109,6 +121,12 @@ export class CollateralStore extends Erc20Store {
     }
   }
 
+  get signerNonces(): BigNumber | undefined {
+    const { address } = this.root.web3Store
+    if (!address) return undefined
+    return this.nonces(address)?.[0]
+  }
+
   get percentDenominator(): BigNumber | undefined {
     const percentDenominatorRaw = this.getPercentDenominator()
     if (percentDenominatorRaw === undefined) return undefined
@@ -117,6 +135,10 @@ export class CollateralStore extends Erc20Store {
 
   get depositFee(): BigNumber | undefined {
     return getContractCall(this.getDepositFee())
+  }
+
+  get name(): string | undefined {
+    return this.getName()?.[0]
   }
 
   get withdrawFee(): BigNumber | undefined {
@@ -148,5 +170,35 @@ export class CollateralStore extends Erc20Store {
 
   setWithdrawHash(hash?: string): void {
     this.withdrawHash = hash
+  }
+
+  async getPermitSignature(
+    spender: string,
+    value: BigNumber,
+    deadline: number
+  ): Promise<Signature | string> {
+    const { address: verifyingContract, name, signerNonces: nonce } = this
+    const { address: owner, signer, network } = this.root.web3Store
+    if (nonce === undefined || !verifyingContract || !name || !owner || !signer)
+      return 'Please try again shortly.'
+
+    return splitSignature(
+      await signer?._signTypedData(
+        {
+          name,
+          version: '1',
+          chainId: network.chainId,
+          verifyingContract,
+        },
+        { Permit },
+        {
+          owner,
+          spender,
+          value,
+          nonce,
+          deadline,
+        }
+      )
+    )
   }
 }
