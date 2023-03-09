@@ -3,7 +3,7 @@ export enum Routes {
   Buy = '/ppo/buy',
   Delegate = '/ppo/delegate',
   Delegate_Custom_Address = '/ppo/delegate/address',
-  Deposit = '/portfolio/deposit',
+  Deposit = '/deposit',
   Govern = '/ppo/govern',
   History = '/ppo/history',
   Home = '/',
@@ -13,5 +13,5 @@ export enum Routes {
   Profile = '/profile',
   Stake = '/ppo/stake',
   Trade = '/trade',
-  Withdraw = '/portfolio/withdraw',
+  Withdraw = '/withdraw',
 }

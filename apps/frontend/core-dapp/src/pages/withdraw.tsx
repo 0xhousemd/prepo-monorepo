@@ -1,6 +1,6 @@
 import { NextPage } from 'next'
-import SEO from '../../components/SEO'
-import WithdrawPage from '../../features/withdraw/WithdrawPage'
+import SEO from '../components/SEO'
+import WithdrawPage from '../features/withdraw/WithdrawPage'
 
 const Withdraw: NextPage = () => (
   <>

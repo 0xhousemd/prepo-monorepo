@@ -1,6 +1,6 @@
 import { GetStaticProps, NextPage } from 'next'
-import SEO from '../../components/SEO'
-import DepositPage from '../../features/deposit/DepositPage'
+import SEO from '../components/SEO'
+import DepositPage from '../features/deposit/DepositPage'
 
 const Deposit: NextPage<{ apr: unknown }> = ({ apr }) => (
   <>
