@@ -1,5 +1,6 @@
 import { SEC_IN_MS } from 'prepo-constants'
 import getUnixTime from 'date-fns/getUnixTime'
+import { BigNumber, utils } from 'ethers'
 import { getEndOfHour, getMilisecondsByHours, getUTCEndOfDay } from './date-utils'
 import { getMultiplier } from './mafs-utils'
 import {
@@ -334,4 +335,28 @@ export const syncLatestData = (
   }
 
   return newHistoricalDatas
+}
+
+export const calculatePriceImpact = ({
+  decimals,
+  fairValue: _fairValue,
+  receivedValue,
+}: {
+  decimals: number
+  fairValue: BigNumber | undefined
+  receivedValue: BigNumber
+}): number => {
+  // If we're requesting the quote for the first time, the fair value will
+  // be undefined, in which case it's OK to default to the quoted value
+  // (which results in price impact = 0) because we don't need it.
+  const fairValue = _fairValue ?? receivedValue
+
+  if (fairValue.eq(0)) {
+    return 0
+  }
+
+  const percentageReceived = +utils.formatUnits(
+    receivedValue.mul(BigNumber.from(10).pow(decimals)).div(fairValue)
+  )
+  return Math.max(1 - percentageReceived, 0)
 }

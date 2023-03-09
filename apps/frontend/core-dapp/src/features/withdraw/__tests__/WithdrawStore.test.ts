@@ -108,7 +108,7 @@ describe('WithdrawStore tests', () => {
       spyWithdrawAndUnwrap.mockImplementation(mock)
       rootStore.withdrawStore.setWithdrawalAmount(amountToWithdraw)
       rootStore.withdrawStore.setWithdrawalMarketValueInEth({
-        status: 'queried',
+        status: 'trade-valid',
         value: parseEther('999'),
       })
       rootStore.withdrawStore.withdraw()

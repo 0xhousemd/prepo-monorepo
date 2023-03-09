@@ -5,6 +5,7 @@ import { RootStore } from '../../stores/RootStore'
 
 export class AdvancedSettingsStore {
   root: RootStore
+  private readonly _priceImpactTolerance = 1 / 100
   private readonly _slippage = 0.05 / 100
 
   constructor(root: RootStore) {
@@ -14,6 +15,10 @@ export class AdvancedSettingsStore {
 
   get slippage(): number {
     return this._slippage
+  }
+
+  isPriceImpactTooHigh(priceImpact: number): boolean {
+    return priceImpact >= this._priceImpactTolerance
   }
 
   /*

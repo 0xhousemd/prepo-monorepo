@@ -30,8 +30,12 @@ export class WithdrawStore {
     value: '',
   }
   private withdrawalMarketValueInEth:
-    | { status: 'not-queried' | 'not-enough-liquidity' }
-    | { status: 'queried'; value: BigNumber } = { status: 'not-queried' }
+    | { status: 'not-queried' }
+    | { status: 'not-enough-liquidity' }
+    | { status: 'trade-valid'; value: BigNumber }
+    | { status: 'price-impact-too-high'; value: BigNumber } = {
+    status: 'not-queried',
+  }
 
   constructor(public root: RootStore) {
     makeAutoObservable(this, {}, { autoBind: true })
@@ -79,7 +83,7 @@ export class WithdrawStore {
       this.insufficientBalance ||
       this.withdrawalAmountInWstEthBN === undefined ||
       this.withdrawalAmountInWstEthBN.eq(0) ||
-      this.withdrawalMarketValueInEth.status !== 'queried' ||
+      this.withdrawalMarketValueInEth.status !== 'trade-valid' ||
       address === undefined
     )
       return
@@ -116,6 +120,10 @@ export class WithdrawStore {
     return this.withdrawalMarketValueInEth.status === 'not-enough-liquidity'
   }
 
+  get priceImpactTooHigh(): boolean {
+    return this.withdrawalMarketValueInEth.status === 'price-impact-too-high'
+  }
+
   get isLoadingBalance(): boolean {
     if (!this.root.web3Store.connected) return false
     return this.root.collateralStore.balanceOfSigner === undefined
@@ -141,7 +149,7 @@ export class WithdrawStore {
       this.withdrawalAmountInWstEthBN === undefined ||
       !this.withdrawalAmountInWstEthBN ||
       this.withdrawalAmountInWstEthBN.lte(0) ||
-      this.withdrawalMarketValueInEth.status !== 'queried' ||
+      this.withdrawalMarketValueInEth.status !== 'trade-valid' ||
       this.insufficientBalance === undefined ||
       this.insufficientBalance ||
       this.withdrawUILoading ||
@@ -176,7 +184,11 @@ export class WithdrawStore {
 
   private get receivedAmountInEthBN(): BigNumber | undefined {
     const { withdrawalMarketValueInEth } = this
-    if (withdrawalMarketValueInEth.status !== 'queried') return undefined
+    if (
+      withdrawalMarketValueInEth.status === 'not-queried' ||
+      withdrawalMarketValueInEth.status === 'not-enough-liquidity'
+    )
+      return undefined
     return withdrawalMarketValueInEth.value
   }
 
@@ -277,14 +289,21 @@ export class WithdrawStore {
     if (value === undefined) return
 
     try {
-      const withdrawalAmountInEthBN = await this.root.balancerStore.quoteWstEthAmountInEth(value)
+      const withdrawalAmountInEth = await this.root.balancerStore.quoteWstEthAmountInEth(value)
 
       runInAction(() => {
         if (
-          withdrawalAmountInEthBN !== undefined &&
+          withdrawalAmountInEth !== undefined &&
           this.withdrawalAmountAfterFeeInWstEthBN?.eq(value)
         ) {
-          this.withdrawalMarketValueInEth = { status: 'queried', value: withdrawalAmountInEthBN }
+          this.withdrawalMarketValueInEth = {
+            status: this.root.advancedSettingsStore.isPriceImpactTooHigh(
+              withdrawalAmountInEth.priceImpact
+            )
+              ? 'price-impact-too-high'
+              : 'trade-valid',
+            value: withdrawalAmountInEth.value,
+          }
         }
       })
       // eslint-disable-next-line
@@ -292,7 +311,8 @@ export class WithdrawStore {
       if (
         e.code === 'CALL_EXCEPTION' &&
         Array.isArray(e.errorArgs) &&
-        e.errorArgs[0] === 'BAL#001'
+        // ref: https://docs.balancer.fi/reference/contracts/error-codes.html
+        (e.errorArgs[0] === 'BAL#001' || e.errorArgs[0] === 'BAL#526')
       ) {
         runInAction(() => {
           this.withdrawalMarketValueInEth = { status: 'not-enough-liquidity' }
@@ -308,11 +328,7 @@ export class WithdrawStore {
   }
 
   // only for testing
-  setWithdrawalMarketValueInEth(
-    value:
-      | { status: 'not-queried' | 'not-enough-liquidity' }
-      | { status: 'queried'; value: BigNumber } = { status: 'not-queried' }
-  ): void {
+  setWithdrawalMarketValueInEth(value: WithdrawStore['withdrawalMarketValueInEth']): void {
     if (process.env.NODE_ENV !== 'test') return
     this.withdrawalMarketValueInEth = value
   }

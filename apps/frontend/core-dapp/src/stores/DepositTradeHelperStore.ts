@@ -37,8 +37,16 @@ export class DepositTradeHelperStore extends ContractStore<RootStore, SupportedC
         }
       }
 
-      const wstEthAfterSlippage =
-        this.root.advancedSettingsStore.getAmountAfterSlippage(amountInWstEth)
+      if (this.root.advancedSettingsStore.isPriceImpactTooHigh(amountInWstEth.priceImpact)) {
+        return {
+          success: false,
+          error: "Can't swap to wstETH: price impact too high. Try a smaller amount.",
+        }
+      }
+
+      const wstEthAfterSlippage = this.root.advancedSettingsStore.getAmountAfterSlippage(
+        amountInWstEth.value
+      )
 
       const tx = await this.sendTransaction<WrapAndDeposit>(
         'wrapAndDeposit',

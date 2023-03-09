@@ -10,6 +10,12 @@ import { SupportedContracts } from '../lib/contract.types'
 import { BalancerQueriesAbi__factory } from '../../generated/typechain'
 import { supportedContracts } from '../lib/supported-contracts'
 import { DateTimeInMs } from '../utils/date-types'
+import { calculatePriceImpact } from '../utils/market-utils'
+
+type Quote = {
+  priceImpact: number
+  value: BigNumber
+}
 
 const wstEthWethBalancerPoolIdByNetwork: Partial<Record<SupportedNetworks, string>> = {
   arbitrumOne: '0x36bf227d6bac96e2ab1ebb5492ecec69c691943f000200000000000000000316',
@@ -46,7 +52,7 @@ export class BalancerStore {
           const wstEthPriceInEth = await this.quoteWstEthAmountInEth(oneWstEth)
           if (wstEthPriceInEth !== undefined) {
             runInAction(() => {
-              this.wstEthPriceInEthBN = wstEthPriceInEth
+              this.wstEthPriceInEthBN = wstEthPriceInEth.value
             })
           }
         } catch (e: unknown) {
@@ -100,16 +106,28 @@ export class BalancerStore {
    * it to show every balance. To estimate the value of a wstETH balance without
    * accounting for price impact, use {@link getWstEthAmountInEth}.
    */
-  quoteWstEthAmountInEth(wstEthAmount: BigNumber): Promise<BigNumber | undefined> {
-    const { wethAddress, wstEthAddress } = this
+  async quoteWstEthAmountInEth(wstEthAmount: BigNumber): Promise<Quote | undefined> {
+    const { wethAddress, wstEthAddress, wstEthDecimals } = this
 
-    if (wethAddress === undefined || wstEthAddress === undefined) return Promise.resolve(undefined)
+    if (wethAddress === undefined || wstEthAddress === undefined || wstEthDecimals === undefined)
+      return undefined
 
-    return this.quote({
+    const value = await this.quote({
       amount: wstEthAmount,
       assetIn: wstEthAddress,
       assetOut: wethAddress,
     })
+
+    if (value === undefined) return undefined
+
+    return {
+      priceImpact: calculatePriceImpact({
+        decimals: wstEthDecimals,
+        fairValue: this.getWstEthAmountInEth(wstEthAmount),
+        receivedValue: value,
+      }),
+      value,
+    }
   }
 
   /**
@@ -120,16 +138,29 @@ export class BalancerStore {
    * it to parse user inputs. To estimate the value of a ETH balance without
    * accounting for price impact, use {@link getEthAmountInWstEth}.
    */
-  quoteEthAmountInWstEth(ethAmount: BigNumber): Promise<BigNumber | undefined> {
+  async quoteEthAmountInWstEth(ethAmount: BigNumber): Promise<Quote | undefined> {
     const { wethAddress, wstEthAddress } = this
+    const { decimalsNumber: wethDecimals } = this.root.wethStore
 
-    if (wethAddress === undefined || wstEthAddress === undefined) return Promise.resolve(undefined)
+    if (wethAddress === undefined || wstEthAddress === undefined || wethDecimals === undefined)
+      return undefined
 
-    return this.quote({
+    const value = await this.quote({
       amount: ethAmount,
       assetIn: wethAddress,
       assetOut: wstEthAddress,
     })
+
+    if (value === undefined) return undefined
+
+    return {
+      priceImpact: calculatePriceImpact({
+        decimals: wethDecimals,
+        fairValue: this.getEthAmountInWstEth(ethAmount),
+        receivedValue: value,
+      }),
+      value,
+    }
   }
 
   private async quote({

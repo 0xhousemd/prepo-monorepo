@@ -10,11 +10,17 @@ import { displayEth } from '../../utils/number-utils'
 const WithdrawSummary: React.FC = () => {
   const { baseTokenStore, withdrawStore } = useRootStore()
   const { symbolString } = baseTokenStore
-  const { withdrawalAmountInEth, receivedAmountInEth, withdrawalFeesAmount, ppoReward } =
-    withdrawStore
+  const {
+    insufficientLiquidity,
+    ppoReward,
+    receivedAmountInEth,
+    withdrawalAmountInEth,
+    withdrawalFeesAmount,
+  } = withdrawStore
 
   // empty input or 0 input
-  if (withdrawalAmountInEth === '' || +withdrawalAmountInEth === 0) return null
+  const emptyInput = withdrawalAmountInEth === '' || +withdrawalAmountInEth === 0
+  if (emptyInput || insufficientLiquidity) return null
 
   return (
     <Flex flexDirection="column" gap={8} width="100%" px={12}>

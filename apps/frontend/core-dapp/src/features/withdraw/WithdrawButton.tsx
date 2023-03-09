@@ -10,17 +10,19 @@ const WithdrawButton: React.FC = () => {
   const {
     insufficientBalance,
     insufficientLiquidity,
+    priceImpactTooHigh,
+    withdrawalDisabled,
     withdrawButtonInitialLoading,
     withdrawUILoading,
-    withdrawalDisabled,
   } = withdrawStore
 
   const buttonText = useMemo(() => {
     if (withdrawButtonInitialLoading) return ''
     if (insufficientLiquidity) return 'Insufficient Liquidity'
+    if (priceImpactTooHigh) return 'Price Impact Too High'
     if (insufficientBalance) return 'Insufficient Balance'
     return 'Withdraw'
-  }, [insufficientBalance, insufficientLiquidity, withdrawButtonInitialLoading])
+  }, [insufficientBalance, insufficientLiquidity, priceImpactTooHigh, withdrawButtonInitialLoading])
 
   if (!connected || !isNetworkSupported) return <ConnectButton block />
 
