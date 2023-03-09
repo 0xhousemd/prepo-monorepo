@@ -1,9 +1,11 @@
 import styled from 'styled-components'
 import { FC } from 'react'
+import { observer } from 'mobx-react-lite'
 import { Icon, spacingIncrement } from 'prepo-ui'
 import SummaryRecord from './SummaryRecord'
 import { PPOReward } from '../features/definitions'
 import { displayEth } from '../utils/number-utils'
+import { useRootStore } from '../context/RootStoreProvider'
 
 const PPORewardAmountWrapper = styled.div`
   align-items: center;
@@ -27,7 +29,9 @@ const Wrapper = styled.div`
 export const PPORewardSummaryRecord: FC<{
   fee: string | undefined
   ppoReward: string | undefined
-}> = ({ fee, ppoReward }) => {
+}> = observer(({ fee, ppoReward }) => {
+  const { tokenSenderStore } = useRootStore()
+
   // if reward is undefined, show loading skeleton.
   // if has reward, show reward UI.
   // If no reward, show nothing
@@ -35,10 +39,12 @@ export const PPORewardSummaryRecord: FC<{
     return null
   }
 
+  const rewardValue = tokenSenderStore.calculateRewardValue(ppoReward)
+
   return (
     <SummaryRecord
       label="Estimated Rewards"
-      loading={ppoReward === undefined || fee === undefined}
+      loading={ppoReward === undefined || fee === undefined || rewardValue === undefined}
       tooltip={<PPOReward />}
     >
       <Wrapper>
@@ -53,8 +59,8 @@ export const PPORewardSummaryRecord: FC<{
           </PPORewardAmount>
           <Icon name="ppo-logo" height="12" width="12" />
         </PPORewardAmountWrapper>
-        <p>({displayEth(+(fee ?? 0))})</p>
+        <p>({displayEth(+(rewardValue ?? 0))})</p>
       </Wrapper>
     </SummaryRecord>
   )
-}
+})

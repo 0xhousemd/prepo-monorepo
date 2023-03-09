@@ -139,17 +139,22 @@ export class DepositStore {
     return this.depositToken.erc20.parseUnits(this.depositAmount)
   }
 
+  get depositAmountAfterSlippageBN(): BigNumber | undefined {
+    if (this.depositAmountBN === undefined) return undefined
+    return this.root.advancedSettingsStore.getAmountAfterSlippage(this.depositAmountBN)
+  }
+
   get depositFeesBN(): BigNumber | undefined {
     const { collateralStore } = this.root
     const { percentDenominator, depositFee } = collateralStore
     if (
       depositFee === undefined ||
-      this.depositAmountBN === undefined ||
+      this.depositAmountAfterSlippageBN === undefined ||
       percentDenominator === undefined
     )
       return undefined
 
-    return this.depositAmountBN.mul(depositFee).div(percentDenominator)
+    return this.depositAmountAfterSlippageBN.mul(depositFee).div(percentDenominator)
   }
 
   get depositFees(): string | undefined {

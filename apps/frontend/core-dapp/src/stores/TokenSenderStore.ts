@@ -4,8 +4,11 @@ import { RootStore } from './RootStore'
 import { TokenSenderAbi, TokenSenderAbi__factory } from '../../generated/typechain'
 import { SupportedContracts } from '../lib/contract.types'
 
+type GetPriceMultiplier = TokenSenderAbi['functions']['getPriceMultiplier']
+type GetMultiplierDenominator = TokenSenderAbi['functions']['MULTIPLIER_DENOMINATOR']
 type GetScaledPrice = TokenSenderAbi['functions']['getScaledPrice']
 type GetScaledPriceLowerBound = TokenSenderAbi['functions']['getScaledPriceLowerBound']
+
 export class TokenSenderStore extends ContractStore<RootStore, SupportedContracts> {
   constructor(rootStore: RootStore) {
     super(rootStore, 'TOKEN_SENDER', TokenSenderAbi__factory as unknown as Factory)
@@ -21,6 +24,18 @@ export class TokenSenderStore extends ContractStore<RootStore, SupportedContract
     return this.call<GetScaledPriceLowerBound>('getScaledPriceLowerBound', params)
   }
 
+  private getPriceMultiplier(): ContractReturn<GetPriceMultiplier> {
+    return this.call<GetPriceMultiplier>('getPriceMultiplier', [])
+  }
+
+  private getMultiplierDenominator(): ContractReturn<GetMultiplierDenominator> {
+    return this.call<GetMultiplierDenominator>('MULTIPLIER_DENOMINATOR', [])
+  }
+
+  private get multiplierDenominator(): BigNumber | undefined {
+    return this.getMultiplierDenominator()?.[0]
+  }
+
   private get scaledPrice(): BigNumber | undefined {
     const scaledPrice = this.getScaledPrice()?.[0]
     const scaledPriceLowerBound = this.getScaledPriceLowerBound()?.[0]
@@ -28,6 +43,20 @@ export class TokenSenderStore extends ContractStore<RootStore, SupportedContract
     if (scaledPrice === undefined || scaledPriceLowerBound === undefined) return undefined
 
     return scaledPrice.lte(scaledPriceLowerBound) ? BigNumber.from(0) : scaledPrice
+  }
+
+  get priceBN(): BigNumber | undefined {
+    if (
+      this.priceMultiplier === undefined ||
+      this.scaledPrice === undefined ||
+      this.multiplierDenominator === undefined
+    )
+      return undefined
+    return this.scaledPrice.mul(this.multiplierDenominator).div(this.priceMultiplier)
+  }
+
+  get priceMultiplier(): BigNumber | undefined {
+    return this.getPriceMultiplier()?.[0]
   }
 
   calculateReward(feeInEth: BigNumber): BigNumber | undefined {
@@ -38,5 +67,12 @@ export class TokenSenderStore extends ContractStore<RootStore, SupportedContract
     if (scaledPrice.eq(0)) return scaledPrice
 
     return feeInEth.mul(BigNumber.from(10).pow(ppoDecimals)).div(scaledPrice)
+  }
+
+  calculateRewardValue(ppo?: string): number | undefined {
+    if (this.priceBN === undefined || ppo === undefined) return undefined
+    const price = this.root.ppoTokenStore.formatUnits(this.priceBN)
+    if (price === undefined) return undefined
+    return +ppo * +price
   }
 }
