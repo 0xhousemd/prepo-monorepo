@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { ethers, network } from 'hardhat'
-import { FakeContract, smock } from '@defi-wonderland/smock'
+import { smock } from '@defi-wonderland/smock'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { BigNumber } from 'ethers'
 import { formatBytes32String } from 'ethers/lib/utils'

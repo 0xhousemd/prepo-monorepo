@@ -25,7 +25,6 @@ interface IArbitrageBroker {
 
   error InvalidMarket(address market);
 
-  /// @dev Assumes contract already has collateral needed for a trade.
   function buyAndRedeem(
     IPrePOMarket market,
     OffChainTradeParams calldata tradeParams
@@ -37,7 +36,6 @@ interface IArbitrageBroker {
       uint256 collateralToBuyShort
     );
 
-  /// @dev Assumes contract already has collateral needed for a trade.
   function mintAndSell(
     IPrePOMarket market,
     OffChainTradeParams calldata tradeParams

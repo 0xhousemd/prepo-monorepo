@@ -33,20 +33,6 @@ interface IDepositTradeHelper {
     OffChainBalancerParams calldata balancerParams
   ) external payable returns (uint256);
 
-  /**
-   * @dev `baseTokenAmount` will be taken from msg.sender (assumes that
-   * msg.sender has already approved at least `baseTokenAmount` of the
-   * Collateral's base token) and then deposited to mint Collateral. This
-   * minted Collateral will be used entirely towards purchasing either Long or
-   * Short tokens from the corresponding UniswapV3 pool.
-   *
-   * The UniswapV3 pool address does not need to be provided since the
-   * SwapRouter will automatically identify the pool based on token inputs.
-   * @param baseTokenAmount Base Token to be used towards position
-   * @param baseTokenPermit Permit to let contract take user's base token
-   * @param collateralPermit Permit to let contract take user's collateral
-   * @param tradeParams Swap parameters determined off-chain
-   */
   function depositAndTrade(
     uint256 baseTokenAmount,
     Permit calldata baseTokenPermit,
