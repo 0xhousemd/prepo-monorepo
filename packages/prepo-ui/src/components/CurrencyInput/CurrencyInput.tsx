@@ -128,6 +128,7 @@ const CurrencyInput: React.FC<
   Omit<InputProps, 'onChange'> &
     Props & {
       currency: CurrencyType
+      max?: number
     }
 > = ({
   balance,
@@ -142,6 +143,7 @@ const CurrencyInput: React.FC<
   currency,
   children,
   showBalance,
+  max = 99_999,
 }) => {
   const [focused, setFocused] = useState(false)
 
@@ -156,7 +158,13 @@ const CurrencyInput: React.FC<
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     try {
-      if (onChange) onChange(e.target.value)
+      if (!onChange) return
+
+      if (!Number.isNaN(+e.target.value) && +e.target.value > max) {
+        onChange(max.toString())
+      } else {
+        onChange(e.target.value)
+      }
     } catch (error) {
       // invalid input
     }
