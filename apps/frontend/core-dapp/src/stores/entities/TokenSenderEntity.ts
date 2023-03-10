@@ -61,15 +61,19 @@ export class TokenSenderEntity extends ContractStore<RootStore, SupportedContrac
   }
 
   calculateReward(feeInEth: BigNumber): BigNumber | undefined {
-    const { scaledPrice } = this
+    const { ppoBalance, scaledPrice } = this
     const { decimalsNumber: ppoDecimals } = this.root.ppoTokenStore
 
-    if (ppoDecimals === undefined || scaledPrice === undefined) return undefined
+    if (ppoDecimals === undefined || scaledPrice === undefined || ppoBalance === undefined)
+      return undefined
     if (scaledPrice.eq(0)) return scaledPrice
 
     const reward = feeInEth.mul(BigNumber.from(10).pow(ppoDecimals)).div(scaledPrice)
 
-    // TODO: if reward > tokensender's ppo balance, return 0
+    if (reward.gt(ppoBalance)) {
+      return BigNumber.from(0)
+    }
+
     return reward
   }
 
@@ -78,5 +82,11 @@ export class TokenSenderEntity extends ContractStore<RootStore, SupportedContrac
     const price = this.root.ppoTokenStore.formatUnits(this.priceBN)
     if (price === undefined) return undefined
     return +ppo * +price
+  }
+
+  private get ppoBalance(): BigNumber | undefined {
+    const { address } = this
+    if (address === undefined) return undefined
+    return this.root.ppoTokenStore.balanceOf(address)?.[0]
   }
 }
