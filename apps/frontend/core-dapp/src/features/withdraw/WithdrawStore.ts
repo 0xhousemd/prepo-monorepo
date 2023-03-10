@@ -205,7 +205,7 @@ export class WithdrawStore {
       withdrawalMarketValueInEth.status === 'not-enough-liquidity'
     )
       return undefined
-    return withdrawalMarketValueInEth.value
+    return this.root.advancedSettingsStore.getAmountAfterSlippage(withdrawalMarketValueInEth.value)
   }
 
   private get withdrawalAmountInWstEthBN(): BigNumber | undefined {
