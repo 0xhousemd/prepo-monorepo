@@ -12,10 +12,11 @@ const WithdrawSummary: React.FC = () => {
   const { symbolString } = baseTokenStore
   const {
     insufficientLiquidity,
-    ppoReward,
-    receivedAmountInEth,
     withdrawalAmountInEth,
+    receivedAmountInEth,
     withdrawalFeesAmount,
+    ppoReward,
+    ppoRewardValue,
   } = withdrawStore
 
   // empty input or 0 input
@@ -32,7 +33,11 @@ const WithdrawSummary: React.FC = () => {
         )}
       </SummaryRecord>
 
-      <PPORewardSummaryRecord fee={withdrawalFeesAmount} ppoReward={ppoReward} />
+      <PPORewardSummaryRecord
+        fee={withdrawalFeesAmount}
+        ppoReward={ppoReward}
+        ppoValue={ppoRewardValue}
+      />
     </Flex>
   )
 }

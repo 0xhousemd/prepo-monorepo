@@ -6,11 +6,16 @@ import { DepositHookAbi__factory } from '../../generated/typechain/factories/Dep
 import { DepositHookAbi } from '../../generated/typechain/DepositHookAbi'
 
 type DepositsAllowed = DepositHookAbi['functions']['depositsAllowed']
+type GetTokenSender = DepositHookAbi['functions']['getTokenSender']
 
 export class DepositHookStore extends ContractStore<RootStore, SupportedContracts> {
   constructor(public root: RootStore) {
     super(root, 'DEPOSIT_HOOK', DepositHookAbi__factory)
     makeObservable(this, { depositsAllowed: computed })
+  }
+
+  get tokenSender(): string | undefined {
+    return this.call<GetTokenSender>('getTokenSender', [])?.[0]
   }
 
   get depositsAllowed(): boolean | undefined {

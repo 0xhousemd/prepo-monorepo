@@ -11,6 +11,7 @@ type GetGlobalPeriodLength = WithdrawHookAbi['functions']['getGlobalPeriodLength
 type GetGlobalWithdrawLimitPerPeriod =
   WithdrawHookAbi['functions']['getGlobalWithdrawLimitPerPeriod']
 type GetLastGlobalPeriodReset = WithdrawHookAbi['functions']['getLastGlobalPeriodReset']
+type GetTokenSender = WithdrawHookAbi['functions']['getTokenSender']
 
 export class WithdrawHookStore extends ContractStore<RootStore, SupportedContracts> {
   constructor(rootStore: RootStore) {
@@ -42,6 +43,10 @@ export class WithdrawHookStore extends ContractStore<RootStore, SupportedContrac
     ...params: Parameters<GetLastGlobalPeriodReset>
   ): ContractReturn<GetLastGlobalPeriodReset> {
     return this.call<GetLastGlobalPeriodReset>('getLastGlobalPeriodReset', params)
+  }
+
+  get tokenSender(): string | undefined {
+    return this.call<GetTokenSender>('getTokenSender', [])?.[0]
   }
 
   get globalAmountWithdrawnThisPeriod(): BigNumber | undefined {

@@ -7,6 +7,7 @@ import { RootStore } from '../../stores/RootStore'
 import { getBalanceLimitInfo } from '../../utils/balance-limits'
 import { addDuration } from '../../utils/date-utils'
 import { DurationInMs } from '../../utils/date-types'
+import { TokenSenderEntity } from '../../stores/entities/TokenSenderEntity'
 
 export type WithdrawLimit =
   | {
@@ -37,6 +38,7 @@ export class WithdrawStore {
     status: 'not-queried',
   }
 
+  private tokenSender?: TokenSenderEntity = undefined
   constructor(public root: RootStore) {
     makeAutoObservable(this, {}, { autoBind: true })
 
@@ -49,6 +51,20 @@ export class WithdrawStore {
           if (a === undefined || b === undefined) return false
           return a.eq(b)
         },
+      }
+    )
+
+    this.initializeTokenSender()
+  }
+
+  initializeTokenSender(): void {
+    const cleanup = reaction(
+      () => this.root.withdrawHookStore.tokenSender,
+      (tokenSenderAddress) => {
+        if (tokenSenderAddress) {
+          this.tokenSender = new TokenSenderEntity(this.root, tokenSenderAddress)
+          cleanup()
+        }
       }
     )
   }
@@ -234,13 +250,18 @@ export class WithdrawStore {
     const { withdrawalFeesAmountBN } = this
 
     // If there's no fee, there's no PPO reimbursement
-    if (withdrawalFeesAmountBN === undefined || withdrawalFeesAmountBN.eq(0)) return '0'
+    if (withdrawalFeesAmountBN === undefined || withdrawalFeesAmountBN.eq(0) || !this.tokenSender)
+      return '0'
 
-    const rewardBN = this.root.tokenSenderStore.calculateReward(withdrawalFeesAmountBN)
+    const rewardBN = this.tokenSender.calculateReward(withdrawalFeesAmountBN)
 
     if (rewardBN === undefined) return undefined
 
     return this.root.ppoTokenStore.formatUnits(rewardBN)
+  }
+
+  get ppoRewardValue(): number | undefined {
+    return this.tokenSender?.calculateRewardValue(this.ppoReward)
   }
 
   get withdrawLimit(): WithdrawLimit {

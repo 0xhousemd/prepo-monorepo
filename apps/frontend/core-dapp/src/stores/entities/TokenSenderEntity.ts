@@ -1,17 +1,18 @@
 import { ContractReturn, ContractStore, Factory } from 'prepo-stores'
 import { BigNumber } from 'ethers'
-import { RootStore } from './RootStore'
-import { TokenSenderAbi, TokenSenderAbi__factory } from '../../generated/typechain'
-import { SupportedContracts } from '../lib/contract.types'
+import { RootStore } from '../RootStore'
+import { TokenSenderAbi, TokenSenderAbi__factory } from '../../../generated/typechain'
+import { SupportedContracts } from '../../lib/contract.types'
 
 type GetPriceMultiplier = TokenSenderAbi['functions']['getPriceMultiplier']
 type GetMultiplierDenominator = TokenSenderAbi['functions']['MULTIPLIER_DENOMINATOR']
 type GetScaledPrice = TokenSenderAbi['functions']['getScaledPrice']
 type GetScaledPriceLowerBound = TokenSenderAbi['functions']['getScaledPriceLowerBound']
 
-export class TokenSenderStore extends ContractStore<RootStore, SupportedContracts> {
-  constructor(rootStore: RootStore) {
-    super(rootStore, 'TOKEN_SENDER', TokenSenderAbi__factory as unknown as Factory)
+export class TokenSenderEntity extends ContractStore<RootStore, SupportedContracts> {
+  constructor(rootStore: RootStore, address: string) {
+    super(rootStore, 'DYNAMIC', TokenSenderAbi__factory as unknown as Factory)
+    this.updateAddress(address)
   }
 
   private getScaledPrice(...params: Parameters<GetScaledPrice>): ContractReturn<GetScaledPrice> {
@@ -66,7 +67,10 @@ export class TokenSenderStore extends ContractStore<RootStore, SupportedContract
     if (ppoDecimals === undefined || scaledPrice === undefined) return undefined
     if (scaledPrice.eq(0)) return scaledPrice
 
-    return feeInEth.mul(BigNumber.from(10).pow(ppoDecimals)).div(scaledPrice)
+    const reward = feeInEth.mul(BigNumber.from(10).pow(ppoDecimals)).div(scaledPrice)
+
+    // TODO: if reward > tokensender's ppo balance, return 0
+    return reward
   }
 
   calculateRewardValue(ppo?: string): number | undefined {

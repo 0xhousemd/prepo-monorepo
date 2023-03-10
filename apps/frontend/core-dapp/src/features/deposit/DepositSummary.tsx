@@ -24,7 +24,11 @@ const DepositSummary: React.FC = () => {
         )}
       </SummaryRecord>
 
-      <PPORewardSummaryRecord fee={depositFees} ppoReward={ppoReward} />
+      <PPORewardSummaryRecord
+        fee={depositFees}
+        ppoReward={ppoReward}
+        ppoValue={depositStore.ppoRewardValue}
+      />
     </Flex>
   )
 }

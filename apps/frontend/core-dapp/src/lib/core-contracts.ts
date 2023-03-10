@@ -1,4 +1,4 @@
-import { ZERO_ADDRESS } from 'prepo-constants'
+import { DYNAMIC_CONTRACT_ADDRESS } from 'prepo-stores'
 import { ExternalContract } from './contract.types'
 
 export type CoreTokenContractNames =
@@ -12,6 +12,7 @@ export type CoreTokenContractNames =
   | 'DEPOSIT_TRADE_HELPER'
   | 'TOKEN_SENDER'
   | 'WITHDRAW_HOOK'
+  | 'DYNAMIC'
 
 export type CoreContracts = {
   [key in CoreTokenContractNames]: ExternalContract
@@ -64,6 +65,10 @@ export const DEPOSIT_TRADE_HELPER_ADDRESS: ExternalContract = {
   arbitrumOne: '0xE33175Df39F739db937E62198b67263F9d2Dd1C0',
 }
 
+export const DYNAMIC_ADDRESS: ExternalContract = {
+  arbitrumOne: DYNAMIC_CONTRACT_ADDRESS,
+}
+
 export const coreContracts: CoreContracts = {
   WSTETH: BASE_TOKEN_ADDRESS,
   WETH: WETH_ADDRESS,
@@ -75,4 +80,5 @@ export const coreContracts: CoreContracts = {
   DEPOSIT_TRADE_HELPER: DEPOSIT_TRADE_HELPER_ADDRESS,
   TOKEN_SENDER: TOKEN_SENDER_ADDRESS,
   WITHDRAW_HOOK: WITHDRAW_HOOK_ADDRESS,
+  DYNAMIC: DYNAMIC_ADDRESS,
 }

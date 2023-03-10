@@ -6,6 +6,7 @@ import minBy from 'lodash/minBy'
 import { RootStore } from '../../stores/RootStore'
 import { BalanceLimitInfo, getBalanceLimitInfo } from '../../utils/balance-limits'
 import { Token } from '../../stores/TokensStore'
+import { TokenSenderEntity } from '../../stores/entities/TokenSenderEntity'
 
 export type DepositLimit =
   | {
@@ -33,10 +34,12 @@ export class DepositStore {
   depositing = false
   depositTokenOverride?: Token = undefined
   showCurrencySlideUp = false
+  private tokenSender?: TokenSenderEntity = undefined
 
   constructor(public root: RootStore) {
     makeAutoObservable(this, {}, { autoBind: true })
     this.subscribeDepositBalance()
+    this.initializeTokenSender()
   }
 
   subscribeDepositBalance(): void {
@@ -44,6 +47,18 @@ export class DepositStore {
       () => this.root.tokensStore.getTokenBalance(this.depositToken),
       (balance) => {
         if (balance !== undefined) this.depositAmount = balance
+      }
+    )
+  }
+
+  initializeTokenSender(): void {
+    const cleanup = reaction(
+      () => this.root.depositHookStore.tokenSender,
+      (tokenSenderAddress) => {
+        if (tokenSenderAddress) {
+          this.tokenSender = new TokenSenderEntity(this.root, tokenSenderAddress)
+          cleanup()
+        }
       }
     )
   }
@@ -271,12 +286,16 @@ export class DepositStore {
     const { depositFeesBN } = this
 
     // If there's no fee, there's no PPO reimbursement
-    if (depositFeesBN === undefined || depositFeesBN.eq(0)) return '0'
+    if (depositFeesBN === undefined || !this.tokenSender || depositFeesBN.eq(0)) return '0'
 
-    const rewardBN = this.root.tokenSenderStore.calculateReward(depositFeesBN)
+    const rewardBN = this.tokenSender.calculateReward(depositFeesBN)
 
     if (rewardBN === undefined) return undefined
 
     return this.root.ppoTokenStore.formatUnits(rewardBN)
+  }
+
+  get ppoRewardValue(): number | undefined {
+    return this.tokenSender?.calculateRewardValue(this.ppoReward)
   }
 }

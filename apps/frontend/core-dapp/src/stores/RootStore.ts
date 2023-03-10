@@ -14,7 +14,6 @@ import { TimerStore } from './TimerStore'
 import { UniswapV3GraphStore } from './graphs/UniswapV3GraphStore'
 import { SwapStore } from './SwapStore'
 import { DepositRecordStore } from './DepositRecordStore'
-import { TokenSenderStore } from './TokenSenderStore'
 import { MediaQueryStore } from './MediaQueryStore'
 import { WithdrawHookStore } from './WithdrawHookStore'
 import { DepositTradeHelperStore } from './DepositTradeHelperStore'
@@ -78,7 +77,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
   tokensStore: TokensStore
   ppoTokenStore: Erc20Store
   ppoHistoryStore: PpoHistoryStore
-  tokenSenderStore: TokenSenderStore
   unstakeStore: UnstakeStore
   mediaQueryStore: MediaQueryStore
   debugStore: DebugStore
@@ -100,7 +98,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
       tokenName: 'WETH',
       symbolOverride: 'WETH',
     })
-    this.depositHookStore = new DepositHookStore(this)
     this.baseTokenStore = new Erc20Store({
       root: this,
       tokenName: 'WSTETH',
@@ -111,11 +108,12 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.tokensStore = new TokensStore(this)
     this.marketStore = new MarketStore(this)
     this.portfolioStore = new PortfolioStore(this)
+    this.depositHookStore = new DepositHookStore(this)
     this.depositStore = new DepositStore(this)
     this.depositRecordStore = new DepositRecordStore(this)
     this.depositTradeHelperStore = new DepositTradeHelperStore(this)
-    this.withdrawStore = new WithdrawStore(this)
     this.withdrawHookStore = new WithdrawHookStore(this)
+    this.withdrawStore = new WithdrawStore(this)
     this.tradeStore = new TradeStore(this)
     this.advancedSettingsStore = new AdvancedSettingsStore(this)
     this.uniswapRouterStore = new UniswapRouterStore(this)
@@ -128,7 +126,6 @@ export class RootStore extends PRootStore<SupportedContracts> {
     this.ppoHistoryStore = new PpoHistoryStore(this)
     this.stakeStore = new StakeStore(this)
     this.ppoStakingStore = new PPOStakingStore(this)
-    this.tokenSenderStore = new TokenSenderStore(this)
     this.unstakeStore = new UnstakeStore(this)
     this.mediaQueryStore = new MediaQueryStore()
     this.debugStore = new DebugStore()
