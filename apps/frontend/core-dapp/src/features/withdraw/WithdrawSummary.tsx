@@ -25,7 +25,7 @@ const WithdrawSummary: React.FC = () => {
 
   return (
     <Flex flexDirection="column" gap={8} width="100%" px={12}>
-      <SummaryRecord label="Received Amount" tooltip={<EstimatedWithdrawalReceivedAmount />}>
+      <SummaryRecord label="Estimated Amount" tooltip={<EstimatedWithdrawalReceivedAmount />}>
         {receivedAmountInEth === undefined || symbolString === undefined ? (
           <Skeleton height="22px" width="64px" />
         ) : (

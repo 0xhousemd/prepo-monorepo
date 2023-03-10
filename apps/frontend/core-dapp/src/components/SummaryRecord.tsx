@@ -29,7 +29,7 @@ const SummaryRecord: React.FC<Props> = ({ children, label, loading, tooltip }) =
       <LabelText>{label}</LabelText>
       {tooltip !== undefined && (
         <Tooltip overlay={tooltip}>
-          <Icon name="info" color="neutral5" height="14" width="14" />
+          <Icon name="info-outlined" color="neutral5" height="14" width="14" />
         </Tooltip>
       )}
     </Flex>

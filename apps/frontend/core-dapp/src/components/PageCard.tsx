@@ -106,7 +106,7 @@ const PageCard: React.FC<Props> = ({ backUrl, children, onClickSettings, title, 
           {titleTooltip && (
             <TitleTooltipWrapper>
               <Tooltip overlay={titleTooltip}>
-                <Icon name="info" color="neutral5" height="14" width="14" />
+                <Icon name="info-outlined" color="neutral5" height="14" width="14" />
               </Tooltip>
             </TitleTooltipWrapper>
           )}

@@ -1,7 +1,13 @@
 import { InputProps } from 'antd'
 import { displayDecimals } from 'prepo-utils'
 import { useMemo, useState } from 'react'
-import styled, { css, DefaultTheme, FlattenInterpolation, ThemeProps } from 'styled-components'
+import styled, {
+  css,
+  DefaultTheme,
+  FlattenInterpolation,
+  SimpleInterpolation,
+  ThemeProps,
+} from 'styled-components'
 import { spacingIncrement } from '../../common-utils'
 import { removeUserSelect } from '../../themes/core-dapp'
 import Flex from '../Flex'
@@ -26,11 +32,27 @@ const Balance = styled(Flex)`
 `
 
 const MaxButton = styled.button`
+  ${({ theme }): SimpleInterpolation =>
+    theme.isDarkMode
+      ? css`
+          color: ${theme.color.darkPrimaryLight};
+
+          :hover {
+            color: ${theme.color.white};
+          }
+        `
+      : css`
+          color: ${theme.color.primary};
+
+          :hover {
+            color: ${theme.color.darkPrimaryLight};
+          }
+        `};
+
   align-items: center;
   background: rgba(155, 157, 255, 0.25);
   border: none;
   border-radius: ${({ theme }): string => theme.borderRadius.xs};
-  color: ${({ theme }): string => theme.color.darkPrimaryLight};
   cursor: ${({ disabled }): string => (disabled ? 'not-allowed' : 'pointer')};
   display: flex;
   font-size: ${spacingIncrement(11)};
@@ -71,7 +93,7 @@ const FlexText = styled(Flex)<{ clickable?: boolean; disabled?: boolean }>`
   ${({ clickable, disabled }): FlattenInterpolation<ThemeProps<DefaultTheme>> =>
     clickable
       ? css`
-          box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08);
           cursor: ${disabled ? 'default' : 'pointer'};
         `
       : css``}

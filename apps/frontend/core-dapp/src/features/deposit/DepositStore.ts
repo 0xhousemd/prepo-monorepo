@@ -46,7 +46,13 @@ export class DepositStore {
     reaction(
       () => this.root.tokensStore.getTokenBalance(this.depositToken),
       (balance) => {
-        if (balance !== undefined) this.depositAmount = balance
+        if (balance === undefined) return
+
+        if (+balance === 0) {
+          this.depositAmount = ''
+        } else {
+          this.depositAmount = balance
+        }
       }
     )
   }

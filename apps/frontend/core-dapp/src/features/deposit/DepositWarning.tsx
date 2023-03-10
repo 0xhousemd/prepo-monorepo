@@ -30,8 +30,6 @@ export const Alert = styled(BaseAlert).attrs({
   type: 'warning',
 })`
   &&& {
-    justify-content: center;
-
     .ant-alert-message {
       font-size: ${({ theme }): string => theme.fontSize.xs};
       font-weight: ${({ theme }): number => theme.fontWeight.medium};
@@ -91,13 +89,12 @@ const DepositWarning: React.FC = () => {
         <Alert
           message={
             <p>
-              Deposit limit exceeded. <br />
-              Only{' '}
+              Deposit limit exceeded. Only{' '}
               <InlineTextButton
                 onClick={(): void => {
                   setDepositAmount(depositLimit.remainingEth)
                 }}
-                title={`Deposit ${formattedRemainingAmount} instead`}
+                aria-label={`Deposit ${formattedRemainingAmount} instead`}
               >
                 {formattedRemainingAmount}
               </InlineTextButton>{' '}

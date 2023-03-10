@@ -11,7 +11,6 @@ const DepositButton: React.FC = () => {
     depositDisabled,
     depositButtonLoading,
     insufficientBalance,
-    depositLimit,
     needApproval,
   } = depositStore
   const { depositsAllowed } = depositHookStore
@@ -20,17 +19,10 @@ const DepositButton: React.FC = () => {
   const buttonText = useMemo(() => {
     if (depositButtonInitialLoading) return ''
     if (!depositsAllowed) return 'Coming Soon'
-    if (depositLimit.status === 'already-exceeded') return 'Deposit Cap Reached'
     if (insufficientBalance) return 'Insufficient Balance'
     if (needApproval) return 'Approve'
     return 'Deposit'
-  }, [
-    depositButtonInitialLoading,
-    depositLimit.status,
-    depositsAllowed,
-    insufficientBalance,
-    needApproval,
-  ])
+  }, [depositButtonInitialLoading, depositsAllowed, insufficientBalance, needApproval])
 
   if (!connected || !isNetworkSupported) return <ConnectButton block />
 

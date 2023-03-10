@@ -1,16 +1,11 @@
 import { Trans } from '@lingui/macro'
 import React from 'react'
 import styled from 'styled-components'
-
-const Link = styled.a`
-  font-weight: ${({ theme }): number => theme.fontWeight.bold};
-  text-decoration: underline;
-  white-space: nowrap;
-`
+import Link from '../../components/Link'
 
 const LearnMore: React.FC<{ link: string }> = ({ link }) => (
-  <Link target="_blank" href={link} rel="noopener noreferrer">
-    <Trans>Learn More</Trans>
+  <Link target="_blank" href={link}>
+    <Trans>Learn More ↗</Trans>
   </Link>
 )
 
@@ -51,15 +46,6 @@ export const EstimateYourProfitLoss: React.FC = () => (
   </Paragraph>
 )
 
-export const ExpiryDate: React.FC = () => (
-  <Paragraph>
-    <Trans>
-      After this date, the market will automatically resolve at the lower bound of the valuation
-      range.
-    </Trans>
-  </Paragraph>
-)
-
 export const PayoutRange: React.FC = () => (
   <Paragraph>
     <Trans>
@@ -76,11 +62,10 @@ export const PPOReward: React.FC = () => (
     <Trans>
       The amount of PPO that you will receive immediately as a rebate incentive. PPO is prePO’s
       governance and utility token.
-    </Trans>
+    </Trans>{' '}
+    <LearnMore link="https://docs.prepo.io/faq#token" />
   </Paragraph>
 )
-
-export const TransactionFee: React.FC = () => <Paragraph>Fee paid to the prePO Treasury</Paragraph>
 
 export const ValuationRange: React.FC = () => (
   <Paragraph>
@@ -89,5 +74,15 @@ export const ValuationRange: React.FC = () => (
       dollars.&nbsp;
     </Trans>
     <LearnMore link="https://docs.prepo.io/concepts/markets#valuation-range" />
+  </Paragraph>
+)
+
+export const EthYield: React.FC = () => (
+  <Paragraph>
+    <Trans>
+      Your ETH will be automatically converted into Lido Wrapped Staked ETH (wstETH) before being
+      deposited, in order to earn staking yield.
+    </Trans>{' '}
+    <LearnMore link="https://lido.fi" />
   </Paragraph>
 )

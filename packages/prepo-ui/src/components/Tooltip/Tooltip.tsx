@@ -1,6 +1,6 @@
 import { Tooltip as ATooltip } from 'antd'
 import { css } from 'styled-components'
-import { centered } from '../../common-utils'
+import { centered, spacingIncrement } from '../../common-utils'
 
 export const tooltipStyles = css`
   .ant-tooltip-arrow {
@@ -12,14 +12,14 @@ export const tooltipStyles = css`
   }
 
   .ant-tooltip-inner {
-    ${centered}
+    ${centered};
     background: ${({ theme }): string => theme.color.neutral10};
     background-color: ${({ theme }): string => theme.color.neutral10};
     border: solid 1px ${({ theme }): string => theme.color.neutral7};
     border-radius: 5px;
     box-shadow: ${({ theme }): string => theme.shadow.prepo};
     color: ${({ theme }): string => theme.color.neutral1};
-    font-size: ${({ theme }): string => theme.fontSize.sm};
+    font-size: ${({ theme }): string => theme.fontSize.xs};
     font-weight: ${({ theme }): number => theme.fontWeight.regular};
     text-align: center;
     z-index: 0;
@@ -32,6 +32,10 @@ export const tooltipStyles = css`
   .ant-input-affix-wrapper-focused {
     border-color: ${({ theme }): string => theme.color.primary};
     box-shadow: 0 0 0 2px ${({ theme }): string => theme.color.success};
+  }
+
+  .ant-tooltip-placement-top {
+    padding-bottom: ${spacingIncrement(4)};
   }
 `
 

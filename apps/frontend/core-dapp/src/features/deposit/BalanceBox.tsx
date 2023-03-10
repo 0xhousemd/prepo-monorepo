@@ -5,7 +5,7 @@ import { useRootStore } from '../../context/RootStoreProvider'
 import { displayEth } from '../../utils/number-utils'
 import Skeleton from '../../components/Skeleton'
 import SpecialPrePoLogo from '../../SpecialPrePOLogo'
-import Link from '../../components/Link'
+import { EthYield } from '../definitions'
 
 const Wrapper = styled.div`
   max-width: ${spacingIncrement(380)};
@@ -92,19 +92,9 @@ const BalanceBox: React.FC<{ apr: unknown }> = ({ apr }) => {
               }}
             >
               <p>ETH Yield</p>
-              <Tooltip
-                overlay={
-                  <p>
-                    Your ETH will be automatically converted into Lido Wrapped Staked ETH (wstETH)
-                    before being deposited, in order to earn staking yield.{' '}
-                    <Link href="https://lido.fi" target="_blank">
-                      Learn more ↗
-                    </Link>
-                  </p>
-                }
-              >
+              <Tooltip overlay={<EthYield />}>
                 <div>
-                  <Icon name="info" width="14" height="14" color="neutral5" />
+                  <Icon name="info-outlined" width="14" height="14" color="neutral5" />
                 </div>
               </Tooltip>
             </div>
